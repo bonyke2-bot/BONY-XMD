@@ -1,4 +1,6 @@
 const settings = require("../settings");
+const fs = require("fs");
+const path = require("path");
 
 module.exports = async (sock, m) => {
     const sender = m.sender || m.key.participant || m.key.remoteJid || "";
@@ -17,11 +19,23 @@ module.exports = async (sock, m) => {
 
     const uptime = runtime(process.uptime());
 
+    // Automatically count command files in the commands folder
+    let totalCommands = 29; // Fallback value
+    try {
+        const commandsDir = path.join(__dirname, "../commands"); // Adjust path if needed
+        if (fs.existsSync(commandsDir)) {
+            const commandFiles = fs.readdirSync(commandsDir).filter(file => file.endsWith(".js"));
+            totalCommands = commandFiles.length;
+        }
+    } catch (e) {
+        console.error("Error counting commands:", e);
+    }
+
     const menu = `
 *╭┈───〔 𝐑𝐈𝐅𝐓-𝐌𝐃 〕┈───⊷*
 *├▢ 🤖 ᴏᴡɴᴇʀ:* ᴡᴇᴇᴅ ᴛᴇᴄʜ
 *├▢ 👤 ᴜsᴇʀ:* ${pushName}
-*├▢ 📜 ᴄᴏᴍᴍᴀɴᴅs:* 29
+*├▢ 📜 ᴄᴏᴍᴍᴀɴᴅs:* ${totalCommands}
 *├▢ ⏱️ ʀᴜɴᴛɪᴍᴇ:* ${uptime}
 *├▢ 📦 ᴘʀᴇғɪx:* ${prefix}
 *├▢ ⚙️ ᴍᴏᴅᴇ:* public
@@ -86,13 +100,13 @@ module.exports = async (sock, m) => {
         caption: menu,
         mentions: [sender],
         contextInfo: {
-            externalAdReply: {
-                title: "RIFT-MD OFFICIAL",
-                body: "Join our channel for updates",
-                thumbnailUrl: "https://files.catbox.moe/vv674d.jpg",
-                sourceUrl: "https://whatsapp.com/channel/0029Vb2J9C91dAw7vxA75y2V",
-                mediaType: 1,
-                renderLargerThumbnail: false
+            mentionedJid: [sender],
+            forwardingScore: 999,
+            isForwarded: true,
+            forwardedNewsletterMessageInfo: {
+                newsletterJid: "120363407561123100@newsletter",
+                newsletterName: "RIFT-MD OFFICIAL",
+                serverMessageId: 100
             }
         }
     }, { quoted: m });
