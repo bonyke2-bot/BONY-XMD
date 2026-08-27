@@ -18,6 +18,7 @@
 [![Find On Whatsapp ](https://img.shields.io/badge/➤Click-Here-blue.svg)](https://dashboard.katabump.com/dashboard)
 
 
+# ---BASE BOT MD FREE FOR ALL DEVELOPER 😍
 
 
 
