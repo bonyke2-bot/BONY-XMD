@@ -73,7 +73,24 @@ async function startBot() {
         } else if (connection === "open") {
             const ownerJid = settings.ownerNumber.replace(/[^0-9]/g, '') + "@s.whatsapp.net"
             console.log(`\n🎊 RIFT-MD IS CONNECTED!`)
-            await sock.sendMessage(ownerJid, { text: "✨ *RIFT-MD IS ONLINE & READY* ✨" })
+            
+            const channelInfo = {
+                contextInfo: {
+                    forwardingScore: 999,
+                    isForwarded: true,
+                    forwardedNewsletterMessageInfo: {
+                        newsletterJid: '120363407561123100@newsletter',
+                        newsletterName: 'RIFT-MD',
+                        serverMessageId: -1
+                    }
+                }
+            };
+
+            await sock.sendMessage(ownerJid, {
+                image: { url: "https://files.catbox.moe/vv674d.jpg" },
+                caption: `╭━━━〔 🤖 *RIFT-MD STATUS* 〕━━━⬣\n┃ ✨ *Bot:* Online & Ready!\n┃ 🚀 *Status:* Fully Connected\n┃ ⚡ *Mode:* Active\n╰━━━━━━━━━━━━━━━━━━━━⬣`,
+                ...channelInfo
+            });
         }
     })
 
