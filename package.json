@@ -1,0 +1,14 @@
+{
+  "name": "colambia-bot",
+  "version": "1.1.0",
+  "description": "WhatsApp MD Bot Stable",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "latest",
+    "pino": "^8.19.0",
+    "qrcode-terminal": "^0.12.0"
+  }
+}
