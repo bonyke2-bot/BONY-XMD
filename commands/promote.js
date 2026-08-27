@@ -11,11 +11,15 @@ module.exports = async (sock, m) => {
         const groupMetadata = await sock.groupMetadata(chatJid);
         const participants = groupMetadata.participants;
         
-        // List of all group admins
+        // List of all group admins (Cleaned to numbers/JIDs properly)
         const groupAdmins = participants.filter(p => p.admin !== null).map(p => p.id);
         
+        // Get sender JID safely (handles multi-device and standard formats)
+        const senderJid = m.sender || m.key.participant;
+        const cleanSender = senderJid ? senderJid.split('@')[0] : '';
+
         // Check if the sender is an admin
-        const isSenderAdmin = groupAdmins.includes(m.sender);
+        const isSenderAdmin = groupAdmins.some(admin => admin.includes(cleanSender) || admin === senderJid);
 
         // SECURITY: If the person typing is NOT an admin, stop here
         if (!isSenderAdmin) {
@@ -38,7 +42,7 @@ module.exports = async (sock, m) => {
 │
 │ 👤 *User:* @${user.split('@')[0]}
 │ 📈 *Status:* Promoted to Admin
-│ 🤖 *Bot:* QUEEN COLAMBIA
+│ 🤖 *Bot:* RIFT-MD 
 │
 *╰──────────────⭐*
         `.trim();
@@ -46,8 +50,7 @@ module.exports = async (sock, m) => {
         await sock.sendMessage(chatJid, { text: response, mentions: [user] }, { quoted: m });
 
     } catch (err) {
-        // This error usually happens if the bot itself is not an admin
         await sock.sendMessage(chatJid, { text: "⚠️ Error: Make sure the bot is an Admin to perform this action!" }, { quoted: m });
         console.error(err);
     }
-}
+};
