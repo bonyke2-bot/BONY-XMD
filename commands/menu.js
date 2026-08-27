@@ -2,11 +2,10 @@ const settings = require("../settings");
 const fs = require("fs");
 const path = require("path");
 
-module.exports = async (sock, m) => {
+module.exports = async (sock, m, args) => {
     const sender = m.sender || m.key.participant || m.key.remoteJid || "";
     const pushName = sender.split('@')[0] || "User";
     const chatId = m.key.remoteJid;
-
     const prefix = settings.prefix || ".";
 
     function runtime(seconds) {
@@ -20,21 +19,48 @@ module.exports = async (sock, m) => {
 
     const uptime = runtime(process.uptime());
 
-    // Automatically count command files in the commands folder
-    let totalCommands = 29; // Fallback value
+    // Li tout dosye ki nan katab commands yo otomatikman
+    let commandList = [];
     try {
         const commandsDir = path.join(__dirname, "../commands");
         if (fs.existsSync(commandsDir)) {
-            const commandFiles = fs.readdirSync(commandsDir).filter(file => file.endsWith(".js"));
-            totalCommands = commandFiles.length;
+            commandList = fs.readdirSync(commandsDir)
+                .filter(file => file.endsWith(".js"))
+                .map(file => file.replace(".js", ""));
         }
     } catch (e) {
-        console.error("Error counting commands:", e);
+        console.error("Error reading commands folder:", e);
+    }
+
+    const totalCommands = commandList.length;
+
+    // Kategori predefined pou kòmand ou yo
+    const categories = {
+        "BOT INFO": ["alive", "ping", "menu", "owner", "runtime", "info", "jid", "gstatut", "jidnewsletter", "fb"],
+        "TOOLS": ["play", "search", "ytmp3", "igdl", "twitter", "translate", "clear", "date"],
+        "GROUP": ["kick", "kickall", "add", "promote", "demote", "delete", "tagall", "open", "close", "link", "hidetag"],
+        "SETTINGS": ["antilink", "setprefix", "setpp", "help", "welcome", "goodbye"]
+    };
+
+    // Verifye si gen lòt kòmand ki pa nan lis kategori yo pou n mete yo nan "OTHER"
+    const categorizedCommands = new Set(Object.values(categories).flat());
+    const otherCommands = commandList.filter(cmd => !categorizedCommands.has(cmd));
+    if (otherCommands.length > 0) {
+        categories["OTHER"] = otherCommands;
+    }
+
+    // Jenere tèks bwat pou chak kategori
+    let menuCategoriesText = "";
+    for (const [catName, cmds] of Object.entries(categories)) {
+        if (cmds.length === 0) continue;
+        
+        const formattedCmds = cmds.map(cmd => `*┋ ⬡ ${cmd}*`).join("\n");
+        menuCategoriesText += `\n\`『 ${catName} 』\`\n╭───────────────────⊷\n${formattedCmds}\n╰───────────────────⊷\n`;
     }
 
     try {
-        // 1. Voye mesaj "Loading..." an premye menm jan ak nan imaj la
-        const loadingMsg = await sock.sendMessage(chatId, { text: "⚡ Loading..." }, { quoted: m });
+        // Voye mesaj "Loading..." an premye
+        await sock.sendMessage(chatId, { text: "⚡ Loading menu..." }, { quoted: m });
 
         const menu = `
 *╭┈───〔 𝐑𝐈𝐅𝐓-𝐌𝐃 〕┈───⊷*
@@ -46,61 +72,11 @@ module.exports = async (sock, m) => {
 *├▢ ⚙️ ᴍᴏᴅᴇ:* public
 *├▢ 🏷️ ᴠᴇʀsɪᴏɴ:* 2.0.0
 *╰───────────────────⊷*
-
-\`『 ʙᴏᴛ ɪɴғᴏ 』\`
-╭───────────────────⊷
-*┋ ⬡ ping*
-*┋ ⬡ alive*
-*┋ ⬡ menu*
-*┋ ⬡ owner*
-*┋ ⬡ runtime*
-*┋ ⬡ status*
-*┋ ⬡ system*
-╰───────────────────⊷
-
-\`『 ᴛᴏᴏʟs 』\`
-╭───────────────────⊷
-*┋ ⬡ play*
-*┋ ⬡ jid*
-*┋ ⬡ restart*
-*┋ ⬡ search*
-*┋ ⬡ ytmp3*
-*┋ ⬡ igdl*
-*┋ ⬡ twitter*
-*┋ ⬡ translate*
-╰───────────────────⊷
-
-\`『 ɢʀᴏᴜᴘ 』\`
-╭───────────────────⊷
-*┋ ⬡ kick*
-*┋ ⬡ add*
-*┋ ⬡ promote*
-*┋ ⬡ demote*
-*┋ ⬡ delete*
-*┋ ⬡ tagall*
-*┋ ⬡ open*
-*┋ ⬡ close*
-*┋ ⬡ link*
-*┋ ⬡ hidetag*
-╰───────────────────⊷
-
-\`『 sᴇᴛᴛɪɴɢs 』\`
-╭───────────────────⊷
-*┋ ⬡ setprefix*
-*┋ ⬡ setpp*
-*┋ ⬡ help*
-*┋ ⬡ welcome*
-*┋ ⬡ goodbye*
-╰───────────────────⊷
-
-> *©️ 𝓹𝓸𝔀𝓮𝓻𝓮𝓭 𝓫𝔂 𝔀𝓮𝓮𝓭 𝓽𝓮𝓬𝓱*
+${menuCategoriesText}
+> *©️ 𝓹𝓸𝔀𝓮𝓻𝓮𝓭 𝓫𝔂 𝔀𝓮𝓮𝓭 𝓽𝓮ᑦ𝒽*
     `.trim();
 
-        // 2. Voye imaj meni an apre sa
-        await sock.sendMessage(chatId, {
-            image: { url: "https://files.catbox.moe/vv674d.jpg" },
-            caption: menu,
-            mentions: [sender],
+        const channelInfo = {
             contextInfo: {
                 mentionedJid: [sender],
                 forwardingScore: 999,
@@ -108,9 +84,16 @@ module.exports = async (sock, m) => {
                 forwardedNewsletterMessageInfo: {
                     newsletterJid: "120363407561123100@newsletter",
                     newsletterName: "RIFT-MD OFFICIAL",
-                    serverMessageId: 100
+                    serverMessageId: -1
                 }
             }
+        };
+
+        // Voye imaj orijinal la ak tout kategori yo separe net
+        await sock.sendMessage(chatId, {
+            image: { url: "https://files.catbox.moe/vv674d.jpg" },
+            caption: menu,
+            ...channelInfo
         }, { quoted: m });
 
     } catch (e) {
