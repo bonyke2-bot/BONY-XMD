@@ -1,53 +1,58 @@
 module.exports = async (sock, m, args) => {
-    const from = m.key.remoteJid;
+    const chatId = m.key.remoteJid;
+    const prefix = m.message?.conversation?.charAt(0) || '.';
     const query = args.join(" ");
 
-    if (!query) return sock.sendMessage(from, { text: "🔍 *QUEEN COLAMBIA*\n\nKisa w ap chèche sou YouTube?" }, { quoted: m });
+    if (!query) {
+        return await sock.sendMessage(chatId, { 
+            text: `╭━━━〔 *RIFT-MD YOUTUBE SEARCH* 〕━━━⡱\n┃ ❌ *Please provide a search query!*\n┃ 💡 *Example:* \`${prefix}yts Alan Walker\`\n╰━━━━━━━━━━━━━━━━━━━━⬣` 
+        }, { quoted: m });
+    }
 
     try {
-        // Reyaji pandan l ap chèche
-        await sock.sendMessage(from, { react: { text: "🔎", key: m.key } });
+        // Reaction "🔎" while searching
+        await sock.sendMessage(chatId, { react: { text: "🔎", key: m.key } });
 
-        // Nou itilize yon API piblik pou evite yt-search
         const searchApi = `https://api.vreden.my.id/api/ytsearch?query=${encodeURIComponent(query)}`;
         const response = await fetch(searchApi);
         const data = await response.json();
 
         if (!data.result || data.result.length === 0) {
-            await sock.sendMessage(from, { react: { text: "❌", key: m.key } });
-            return sock.sendMessage(from, { text: "❌ Mwen pa jwenn anyen pou rechèch sa a." });
+            await sock.sendMessage(chatId, { react: { text: "❌", key: m.key } });
+            return await sock.sendMessage(chatId, { text: "❌ *Error:* No results found for your search query." }, { quoted: m });
         }
 
-        const list = data.result.slice(0, 5); // Nou pran 5 premye rezilta yo
-        let text = `👑 *QUEEN COLAMBIA SEARCH*\n\n🔎 *Rechèch:* ${query}\n\n`;
+        const list = data.result.slice(0, 5); // Take top 5 results
+        let text = `╭━━━〔 *YOUTUBE SEARCH RESULTS* 〕━━━⡱\n┃ 🔎 *Query:* ${query}\n╰━━━━━━━━━━━━━━━━━━━━⬣\n\n`;
         
         list.forEach((v, i) => {
-            text += `*${i + 1}.* 🏷️ *Tit:* ${v.title}\n`;
-            text += `🕒 *Dire:* ${v.duration || v.timestamp}\n`;
+            text += `*${i + 1}.* 📌 *Title:* ${v.title}\n`;
+            text += `⏱️ *Duration:* ${v.duration || v.timestamp || 'N/A'}\n`;
             text += `🔗 *Link:* ${v.url}\n\n`;
         });
 
-        text += `*_Sèvi ak .play [non mizik] pou w telechaje odyo a._*`;
+        text += `> _💡 Use .play [song name] to download the audio._`;
 
-        await sock.sendMessage(from, { 
+        await sock.sendMessage(chatId, { 
             text: text,
             contextInfo: {
                 externalAdReply: {
-                    title: "YOUTUBE SEARCH RESULTS",
-                    body: `Top 5 rezilta pou: ${query}`,
-                    thumbnailUrl: list[0].image || list[0].thumbnail,
+                    title: "RIFT-MD YOUTUBE SEARCH",
+                    body: `Top results for: ${query}`,
+                    thumbnailUrl: list[0].image || list[0].thumbnail || "",
                     mediaType: 1,
-                    renderLargerThumbnail: true
+                    renderLargerThumbnail: true,
+                    sourceUrl: list[0].url
                 }
             }
         }, { quoted: m });
 
-        // Reaction siksè
-        await sock.sendMessage(from, { react: { text: "✅", key: m.key } });
+        // Success reaction
+        await sock.sendMessage(chatId, { react: { text: "✅", key: m.key } });
 
-    } catch (e) {
-        console.error(e);
-        await sock.sendMessage(from, { react: { text: "❌", key: m.key } });
-        sock.sendMessage(from, { text: "❌ Yon erè rive nan rechèch la." });
+    } catch (error) {
+        console.error("YouTube Search Error:", error);
+        await sock.sendMessage(chatId, { react: { text: "❌", key: m.key } });
+        await sock.sendMessage(chatId, { text: "❌ *Critical Error:* Failed to fetch YouTube search results." }, { quoted: m });
     }
-}
+};
