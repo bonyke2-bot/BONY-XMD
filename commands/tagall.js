@@ -1,28 +1,36 @@
 module.exports = async (sock, m) => {
-    // 1. Tcheke si se nan yon gwoup kòmand lan fèt
-    if (!m.key.remoteJid.endsWith('@g.us')) {
-        return sock.sendMessage(m.key.remoteJid, { text: "Kòmand sa fèt pou gwoup sèlman!" });
+    const chatId = m.key.remoteJid;
+
+    // 1. Check if the command is used in a group
+    if (!chatId.endsWith('@g.us')) {
+        return await sock.sendMessage(chatId, { 
+            text: "❌ *Access Denied:* This command can only be used inside groups!" 
+        }, { quoted: m });
     }
 
     try {
-        // 2. Jwenn tout moun ki nan gwoup la
-        const groupMetadata = await sock.groupMetadata(m.key.remoteJid);
+        // Reaction to show it's processing
+        await sock.sendMessage(chatId, { react: { text: "📢", key: m.key } });
+
+        // 2. Fetch group metadata and participants
+        const groupMetadata = await sock.groupMetadata(chatId);
         const participants = groupMetadata.participants;
+        const groupName = groupMetadata.subject;
         
-        // 3. Prepare tèks mesaj la
-        let teks = `*📢 TAG ALL*\n\n`;
+        // 3. Prepare the message text and mentions array
+        let teks = `╭━━━〔 *ANNOUNCEMENT* 〕━━━⡱\n┃ 📢 *Group:* ${groupName}\n╰━━━━━━━━━━━━━━━━━━━━⬣\n\n`;
         let mentions = [];
 
         for (let mem of participants) {
-            teks += `➡️ @${mem.id.split('@')[0]}\n`;
-            mentions.push(mem.id); // Sa a enpòtan pou notifikasyon an rive sou telefòn yo
+            teks += ` 🔹 @${mem.id.split('@')[0]}\n`;
+            mentions.push(mem.id); // Crucial for triggering notifications on their phones
         }
 
-        teks += `\n*Made with ❤️ by Queen Colambia*`;
+        teks += `\n> _©️ Powered by RIFT-MD MULTI-DEVICE_`;
 
-        // 4. Voye mesaj la ak tout mentions yo
+        // 4. Send the message with all mentions
         await sock.sendMessage(
-            m.key.remoteJid,
+            chatId,
             { 
                 text: teks, 
                 mentions: mentions 
@@ -30,8 +38,11 @@ module.exports = async (sock, m) => {
             { quoted: m }
         );
 
-    } catch (e) {
-        console.error(e);
-        await sock.sendMessage(m.key.remoteJid, { text: "Mwen pa ka jwenn lis manm yo." });
+    } catch (error) {
+        console.error("Tagall Error:", error);
+        await sock.sendMessage(chatId, { react: { text: "❌", key: m.key } });
+        await sock.sendMessage(chatId, { 
+            text: "❌ *Error:* Failed to fetch group members. Please try again later." 
+        }, { quoted: m });
     }
-}
+};
