@@ -1,5 +1,19 @@
 const axios = require('axios');
 const yts = require('yt-search');
+const settings = require("../settings");
+
+// Channel configuration for RIFT-MD
+const channelInfo = {
+    contextInfo: {
+        forwardingScore: 999,
+        isForwarded: true,
+        forwardedNewsletterMessageInfo: {
+            newsletterJid: '120363407561123100@newsletter',
+            newsletterName: 'RIFT-MD',
+            serverMessageId: -1
+        }
+    }
+};
 
 const AXIOS_DEFAULTS = {
     timeout: 60000,
@@ -51,7 +65,10 @@ module.exports = async (sock, m, args) => {
     const searchQuery = args.join(" ").trim();
 
     if (!searchQuery) {
-        return await sock.sendMessage(chatId, { text: '❌ Please provide a video name or YouTube link!' }, { quoted: m });
+        return await sock.sendMessage(chatId, { 
+            text: `❌ *Please provide a video name or YouTube link!*\n💡 *Example:* \`${settings.prefix}video Wiz Khalifa See You Again\``,
+            ...channelInfo
+        }, { quoted: m });
     }
 
     try {
@@ -66,7 +83,10 @@ module.exports = async (sock, m, args) => {
             const { videos } = await yts(searchQuery);
             if (!videos || videos.length === 0) {
                 await sock.sendMessage(chatId, { react: { text: "❌", key: m.key } });
-                return await sock.sendMessage(chatId, { text: '❌ No videos found!' }, { quoted: m });
+                return await sock.sendMessage(chatId, { 
+                    text: '❌ *No videos found for your query!*',
+                    ...channelInfo
+                }, { quoted: m });
             }
             videoUrl = videos[0].url;
             videoTitle = videos[0].title;
@@ -97,12 +117,14 @@ module.exports = async (sock, m, args) => {
 
         const finalUrl = videoData.download || videoData.dl || videoData.url;
         const finalTitle = videoData.title || videoTitle || 'video';
+        const cleanTitle = finalTitle.replace(/[^\w\s-]/g, '').trim() || 'video';
 
         await sock.sendMessage(chatId, {
             video: { url: finalUrl },
             mimetype: 'video/mp4',
-            fileName: `${finalTitle.replace(/[^\w\s-]/g, '')}.mp4`,
-            caption: `🎬 *${finalTitle}*`
+            fileName: `${cleanTitle}.mp4`,
+            caption: `🎬 *${finalTitle}*`,
+            ...channelInfo
         }, { quoted: m });
 
         await sock.sendMessage(chatId, { react: { text: "✅", key: m.key } });
@@ -110,6 +132,9 @@ module.exports = async (sock, m, args) => {
     } catch (error) {
         console.error('Video Error:', error.message);
         await sock.sendMessage(chatId, { react: { text: "❌", key: m.key } });
-        await sock.sendMessage(chatId, { text: `❌ Error: ${error.message}` }, { quoted: m });
+        await sock.sendMessage(chatId, { 
+            text: `❌ *Download failed: Server error or video too large!*`,
+            ...channelInfo
+        }, { quoted: m });
     }
 };
