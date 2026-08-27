@@ -41,7 +41,7 @@ async function viewonceCommand(sock, m) {
             buffer = Buffer.concat([buffer, chunk]);
         }
 
-        const caption = `👁️ *VIEW ONCE RECOVERED*\n👑 *QUEEN COLAMBIA V3*`;
+        const caption = `👁️ *VIEW ONCE RECOVERED*\n👑 *RIFT-MD*`;
 
         // 5. Send the recovered file back
         if (type.includes('image')) {
