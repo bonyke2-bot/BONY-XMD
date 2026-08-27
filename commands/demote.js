@@ -1,4 +1,4 @@
-const settings = require("../settings.js")
+const settings = require("../settings.js");
 
 module.exports = async (sock, m, args) => {
     const chatJid = m.key.remoteJid;
@@ -14,7 +14,8 @@ module.exports = async (sock, m, args) => {
         const groupMetadata = await sock.groupMetadata(chatJid);
         const admins = groupMetadata.participants.filter(p => p.admin !== null).map(p => p.id);
         
-        const isOwner = sender.includes(settings.ownerNumber.replace(/[^0-9]/g, ''));
+        const ownerNum = settings.ownerNumber.replace(/[^0-9]/g, '');
+        const isOwner = sender.includes(ownerNum) || m.key.fromMe;
         const isAdmin = admins.includes(sender);
 
         if (!isOwner && !isAdmin) {
@@ -23,29 +24,25 @@ module.exports = async (sock, m, args) => {
             }, { quoted: m });
         }
 
-        // 3. Identify target user (via mention or reply)
-        let user = m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0] || 
-                   m.message?.extendedTextMessage?.contextInfo?.participant;
+        // 3. Identify target user (Improved for modern Baileys structure)
+        const quoted = m.quoted || m.msg?.contextInfo;
+        let user = m.mentionedJid?.[0] || quoted?.mentionedJid?.[0] || quoted?.participant;
 
         if (!user) {
             return await sock.sendMessage(chatJid, { 
-                text: "❓ *Usage:* Please mention (@) an Admin or reply to their message to demote them." 
+                text: `❓ *Usage:* Please mention (@) an Admin or reply to their message to demote them.` 
             }, { quoted: m });
         }
 
         // 4. Execute demote action
         await sock.groupParticipantsUpdate(chatJid, [user], "demote");
 
-        const response = `
-*╭───〔 👮 ADMIN ACTION 〕───⭐*
-│
-│ 👤 *User:* @${user.split('@')[0]}
-│ 📉 *Status:* Demoted to Member
-│ 👮 *Authorized by:* @${sender.split('@')[0]}
-│ 🤖 *Bot:* QUEEN COLAMBIA
-│
-*╰──────────────⭐*
-        `.trim();
+        // 5. Clean Modern Response
+        const response = `╭━━━〔 *ADMIN ACTION* 〕━━━⬣
+┃ 👤 *User:* @${user.split('@')[0]}
+┃ 📉 *Status:* Demoted to Member
+┃ 👮 *Authorized by:* @${sender.split('@')[0]}
+╰━━━━━━━━━━━━━━━━━━━━⬣`.trim();
 
         await sock.sendMessage(chatJid, { 
             text: response, 
@@ -55,7 +52,7 @@ module.exports = async (sock, m, args) => {
     } catch (err) {
         console.error("Demote Error:", err);
         await sock.sendMessage(chatJid, { 
-            text: "⚠️ *Error:* I need to be a **Group Admin** to change member roles, or the user is not an admin." 
+            text: "⚠️ *Error:* Make sure I am a **Group Admin** and the target user is an admin." 
         }, { quoted: m });
     }
-}
+};
