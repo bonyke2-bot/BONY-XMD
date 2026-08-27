@@ -1,31 +1,57 @@
-// --- API SOURCES (MODIFYE POU FETCH) ---
-async function getEliteProTechVideoByUrl(youtubeUrl) {
+const axios = require('axios');
+const yts = require('yt-search');
+
+const AXIOS_DEFAULTS = {
+    timeout: 60000,
+    headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*'
+    }
+};
+
+const tryRequest = async (getter, attempts = 3) => {
+    for (let attempt = 1; attempt <= attempts; attempt++) {
+        try {
+            return await getter();
+        } catch (err) {
+            if (attempt === attempts) throw err;
+            await new Promise(r => setTimeout(r, 1000 * attempt));
+        }
+    }
+};
+
+const getEliteProTechVideoByUrl = async (youtubeUrl) => {
     const apiUrl = `https://eliteprotech-apis.zone.id/ytdown?url=${encodeURIComponent(youtubeUrl)}&format=mp4`;
-    const res = await fetch(apiUrl);
-    const data = await res.json();
-    if (data?.success && data?.downloadURL) {
-        return { download: data.downloadURL, title: data.title };
-    }
-    throw new Error('EliteProTech failed');
-}
+    const res = await tryRequest(() => axios.get(apiUrl, AXIOS_DEFAULTS));
+    const { success, downloadURL: download, title } = res?.data || {};
+    if (success && download) return { download, title };
+    throw new Error('EliteProTech ytdown returned no download');
+};
 
-async function getYupraVideoByUrl(youtubeUrl) {
+const getYupraVideoByUrl = async (youtubeUrl) => {
     const apiUrl = `https://api.yupra.my.id/api/downloader/ytmp4?url=${encodeURIComponent(youtubeUrl)}`;
-    const res = await fetch(apiUrl);
-    const data = await res.json();
-    if (data?.success && data?.data?.download_url) {
-        return { download: data.data.download_url, title: data.data.title };
+    const res = await tryRequest(() => axios.get(apiUrl, AXIOS_DEFAULTS));
+    const { success, data } = res?.data || {};
+    if (success && data?.download_url) {
+        return { download: data.download_url, title: data.title, thumbnail: data.thumbnail };
     }
-    throw new Error('Yupra failed');
-}
+    throw new Error('Yupra returned no download');
+};
 
-// --- MAIN COMMAND ---
+const getOkatsuVideoByUrl = async (youtubeUrl) => {
+    const apiUrl = `https://okatsu-rolezapiiz.vercel.app/downloader/ytmp4?url=${encodeURIComponent(youtubeUrl)}`;
+    const res = await tryRequest(() => axios.get(apiUrl, AXIOS_DEFAULTS));
+    const { mp4: download, title } = res?.data?.result || {};
+    if (download) return { download, title };
+    throw new Error('Okatsu ytmp4 returned no mp4');
+};
+
 module.exports = async (sock, m, args) => {
     const chatId = m.key.remoteJid;
-    const searchQuery = args.join(" ");
+    const searchQuery = args.join(" ").trim();
 
     if (!searchQuery) {
-        return await sock.sendMessage(chatId, { text: '📽️ *QUEEN COLAMBIA*\n\nKi videyo ou vle m telechaje?' }, { quoted: m });
+        return await sock.sendMessage(chatId, { text: '❌ Please provide a video name or YouTube link!' }, { quoted: m });
     }
 
     try {
@@ -33,57 +59,57 @@ module.exports = async (sock, m, args) => {
 
         let videoUrl = '';
         let videoTitle = '';
-        let videoThumbnail = '';
 
-        if (searchQuery.startsWith('http')) {
+        if (/^https?:\/\//.test(searchQuery)) {
             videoUrl = searchQuery;
         } else {
-            // Sèvi ak yon API rechèch olye de yt-search
-            const sRes = await fetch(`https://api.vreden.my.id/api/ytsearch?query=${encodeURIComponent(searchQuery)}`);
-            const sData = await sRes.json();
-            if (!sData.result || sData.result.length === 0) return sock.sendMessage(chatId, { text: '❌ Videyo pa jwenn!' });
-            
-            videoUrl = sData.result[0].url;
-            videoTitle = sData.result[0].title;
-            videoThumbnail = sData.result[0].image || sData.result[0].thumbnail;
+            const { videos } = await yts(searchQuery);
+            if (!videos || videos.length === 0) {
+                await sock.sendMessage(chatId, { react: { text: "❌", key: m.key } });
+                return await sock.sendMessage(chatId, { text: '❌ No videos found!' }, { quoted: m });
+            }
+            videoUrl = videos[0].url;
+            videoTitle = videos[0].title;
         }
-
-        // Voye yon ti preview
-        await sock.sendMessage(chatId, { 
-            image: { url: videoThumbnail || 'https://files.catbox.moe/3dwe96.jpg' }, 
-            caption: `🎬 *M ap prepare:* ${videoTitle || searchQuery}\n\n_Tanpri tann..._` 
-        }, { quoted: m });
 
         let videoData;
-        let downloadSuccess = false;
-        
-        // Eseye sous yo youn apre lòt
-        try {
-            videoData = await getEliteProTechVideoByUrl(videoUrl);
-            if (videoData.download) downloadSuccess = true;
-        } catch (e) {
+        const apiMethods = [
+            { name: 'EliteProTech', run: () => getEliteProTechVideoByUrl(videoUrl) },
+            { name: 'Yupra', run: () => getYupraVideoByUrl(videoUrl) },
+            { name: 'Okatsu', run: () => getOkatsuVideoByUrl(videoUrl) }
+        ];
+
+        for (const api of apiMethods) {
             try {
-                videoData = await getYupraVideoByUrl(videoUrl);
-                if (videoData.download) downloadSuccess = true;
+                const res = await api.run();
+                if (res?.download || res?.dl || res?.url) {
+                    videoData = res;
+                    break;
+                }
             } catch (err) {
-                console.log("Tout API echwe");
+                console.log(`${api.name} API failed:`, err.message);
             }
         }
-        
-        if (!downloadSuccess) throw new Error('Tout sous yo echwe.');
 
-        // Voye videyo a
+        if (!videoData) {
+            throw new Error('All download sources failed.');
+        }
+
+        const finalUrl = videoData.download || videoData.dl || videoData.url;
+        const finalTitle = videoData.title || videoTitle || 'video';
+
         await sock.sendMessage(chatId, {
-            video: { url: videoData.download },
+            video: { url: finalUrl },
             mimetype: 'video/mp4',
-            caption: `👑 *QUEEN COLAMBIA*\n\n🎥 *Tit:* ${videoData.title || videoTitle}`
+            fileName: `${finalTitle.replace(/[^\w\s-]/g, '')}.mp4`,
+            caption: `🎬 *${finalTitle}*`
         }, { quoted: m });
 
         await sock.sendMessage(chatId, { react: { text: "✅", key: m.key } });
 
     } catch (error) {
-        console.error(error);
+        console.error('Video Error:', error.message);
         await sock.sendMessage(chatId, { react: { text: "❌", key: m.key } });
-        await sock.sendMessage(chatId, { text: '❌ Erè: Mwen pa ka telechaje videyo sa a kounye a.' });
+        await sock.sendMessage(chatId, { text: `❌ Error: ${error.message}` }, { quoted: m });
     }
-}
+};
