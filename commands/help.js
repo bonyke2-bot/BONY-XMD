@@ -1,29 +1,34 @@
-
 module.exports = async (sock, m) => {
+    const { remoteJid, sender } = m.key;
 
-    const message = `
-*Hello! 👋*
+    // 1. Modern text with a box-style aesthetic and symbols
+    const message = `╭━━━〔 *COMMAND NOT FOUND* 〕━━━⬣
+┃ *Hello @${sender.split('@')[0]}!* 👋
+┃ 
+┃ ⚠️ I couldn't recognize that command.
+┃ Please check the available features below:
+┃
+┃ 📜 *Command:* \`.menu\`
+┃ 🤖 *Bot:* \`RIFT-MD\`
+╰━━━━━━━━━━━━━━━━━━━━⬣
 
-I couldn't recognize that command. Please use the button or command below to see what I can do for you:
+> _Reply with *\.menu* to explore all my features._ 💜`.trim();
 
-📜 *Command:* .menu
-🤖 *Bot:* QUEEN COLAMBIA
-
-_Type .menu to explore all features._
-    `.trim();
-
-    await sock.sendMessage(m.key.remoteJid, {
+    // 2. Send the message with a rich, large preview card
+    await sock.sendMessage(remoteJid, {
         text: message,
+        mentions: [sender], // This tags the user automatically (@phone)
         contextInfo: {
+            forwardingScore: 999, // Gives it an "Official / Forwarded" look
+            isForwarded: true,
             externalAdReply: {
-                title: "QUEEN COLAMBIA HELP CENTER",
-                body: "Click to see my command list",
-                thumbnailUrl: "https://files.catbox.moe/3dwe96.jpg", // Foto bot ou a
-                sourceUrl: "https://whatsapp.com/channel/0029Vb2J9C91dAw7vxA75y2V", 
+                title: "👑 RIFT-MD HELP CENTER 👑",
+                body: "Tap here to explore the command list",
+                thumbnailUrl: "https://files.catbox.moe/vv674d.jpg",
+                sourceUrl: "https://whatsapp.com/channel/0029Vb2J9C91dAw7vxA75y2V",
                 mediaType: 1,
-                renderLargerThumbnail: false // Mete l 'true' si ou vle gwo foto
+                renderLargerThumbnail: true // Makes the image appear large
             }
         }
     }, { quoted: m });
-
-}
+};
