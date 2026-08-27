@@ -1,6 +1,6 @@
 {
-  "name": "colambia-bot",
-  "version": "1.1.0",
+  "name": "rift-md",
+  "version": "2.0.0",
   "description": "WhatsApp MD Bot Stable",
   "main": "main.js",
   "scripts": {
@@ -8,7 +8,18 @@
   },
   "dependencies": {
     "@whiskeysockets/baileys": "latest",
+    "axios": "^1.6.8",
+    "chalk": "^4.1.2",
+    "cheerio": "^1.0.0-rc.12",
+    "file-type": "^16.5.3",
+    "form-data": "^4.0.0",
+    "fs-extra": "^11.2.0",
+    "mime-types": "^2.1.35",
+    "moment-timezone": "^0.5.45",
+    "mongoose": "^8.3.1",
+    "node-fetch": "^2.7.0",
     "pino": "^8.19.0",
-    "qrcode-terminal": "^0.12.0"
+    "qrcode-terminal": "^0.12.0",
+    "simple-git": "^3.22.0"
   }
 }
