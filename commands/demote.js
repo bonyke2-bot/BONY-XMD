@@ -12,7 +12,8 @@ module.exports = async (sock, m, args) => {
     try {
         // 2. SECURITY CHECK (Only Owner or Admins can demote)
         const groupMetadata = await sock.groupMetadata(chatJid);
-        const admins = groupMetadata.participants.filter(p => p.admin !== null).map(p => p.id);
+        const participants = groupMetadata.participants;
+        const admins = participants.filter(p => p.admin !== null).map(p => p.id);
         
         const ownerNum = settings.ownerNumber.replace(/[^0-9]/g, '');
         const isOwner = sender.includes(ownerNum) || m.key.fromMe;
@@ -24,9 +25,13 @@ module.exports = async (sock, m, args) => {
             }, { quoted: m });
         }
 
-        // 3. Identify target user (Improved for modern Baileys structure)
-        const quoted = m.quoted || m.msg?.contextInfo;
-        let user = m.mentionedJid?.[0] || quoted?.mentionedJid?.[0] || quoted?.participant;
+        // 3. Identify target user (Robust detection for Baileys)
+        let user = m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0] || 
+                   m.message?.extendedTextMessage?.contextInfo?.participant;
+
+        if (!user && args[0]) {
+            user = args[0].replace(/[^0-9]/g, '') + '@s.whatsapp.net';
+        }
 
         if (!user) {
             return await sock.sendMessage(chatJid, { 
@@ -34,13 +39,22 @@ module.exports = async (sock, m, args) => {
             }, { quoted: m });
         }
 
-        // 4. Execute demote action
+        // 4. Check if bot is admin
+        const botId = sock.user.id.split(':')[0] + '@s.whatsapp.net';
+        const isBotAdmin = admins.includes(botId);
+
+        if (!isBotAdmin) {
+            return await sock.sendMessage(chatJid, { text: "❌ *Error:* Please make me a **Group Admin** first!" }, { quoted: m });
+        }
+
+        // 5. Execute demote action
         await sock.groupParticipantsUpdate(chatJid, [user], "demote");
 
-        // 5. Clean Modern Response
-        const response = `╭━━━〔 *ADMIN ACTION* 〕━━━⬣
+        // 6. Clean Modern Response (Updated with RIFT-MD)
+        const response = `╭━━━〔 *RIFT-MD ADMIN ACTION* 〕━━━⬣
 ┃ 👤 *User:* @${user.split('@')[0]}
 ┃ 📉 *Status:* Demoted to Member
+┃ 🤖 *Bot:* RIFT-MD
 ┃ 👮 *Authorized by:* @${sender.split('@')[0]}
 ╰━━━━━━━━━━━━━━━━━━━━⬣`.trim();
 
@@ -52,7 +66,7 @@ module.exports = async (sock, m, args) => {
     } catch (err) {
         console.error("Demote Error:", err);
         await sock.sendMessage(chatJid, { 
-            text: "⚠️ *Error:* Make sure I am a **Group Admin** and the target user is an admin." 
+            text: "⚠️ *Error:* Failed to demote the user. Make sure they are currently an admin." 
         }, { quoted: m });
     }
 };
