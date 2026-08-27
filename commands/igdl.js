@@ -1,39 +1,41 @@
+const axios = require('axios');
+
 module.exports = async (sock, m, args) => {
-    const from = m.key.remoteJid;
+    const chatId = m.key.remoteJid;
+    const body = m.message?.conversation || m.message?.extendedTextMessage?.text || "";
+    const prefix = body.charAt(0);
+    const command = body.slice(prefix.length).trim().split(/ +/)[0].toLowerCase();
+
+    if (command !== 'ig' && command !== 'instagram' && command !== 'igdl') return;
+
     const url = args[0];
 
     if (!url || !url.includes('instagram.com')) {
-        return sock.sendMessage(from, { 
-            text: "亗 *QUEEN COLAMBIA* 亗\n\n❌ *Error:* Please provide a valid Instagram link.\n💡 *Usage:* .ig [link]" 
-        }, { quoted: m });
+        return await sock.sendMessage(chatId, { text: `❌ Please provide a valid Instagram link!\n💡 Example: \`${prefix}${command} https://www.instagram.com/...\`` }, { quoted: m });
     }
 
-    await sock.sendMessage(from, { react: { text: "⏳", key: m.key } });
-
     try {
-        const response = await fetch(`https://api.vreden.my.id/api/igdl?url=${encodeURIComponent(url)}`);
-        const res = await response.json();
+        await sock.sendMessage(chatId, { react: { text: "⏳", key: m.key } });
 
-        if (res.result && res.result[0]) {
-            const caption = 
-                `┏━━━━━━━━━━━━━━━━━━┓\n` +
-                `┃   📸  *INSTAGRAM DOWNLOAD* \n` +
-                `┠━━━━━━━━━━━━━━━━━━┫\n` +
-                `┃ ✅ *Status:* Success\n` +
-                `┃ 👑 *Bot:* QUEEN COLAMBIA\n` +
-                `┗━━━━━━━━━━━━━━━━━━┛`;
+        const apiUrl = `https://api.vreden.my.id/api/igdl?url=${encodeURIComponent(url)}`;
+        const { data } = await axios.get(apiUrl);
 
-            await sock.sendMessage(from, { 
-                video: { url: res.result[0].url }, 
-                caption: caption 
-            }, { quoted: m });
-
-            await sock.sendMessage(from, { react: { text: "✅", key: m.key } });
-        } else {
-            throw new Error();
+        if (!data || !data.result || data.result.length === 0) {
+            throw new Error('No media found.');
         }
-    } catch (e) {
-        await sock.sendMessage(from, { react: { text: "❌", key: m.key } });
-        await sock.sendMessage(from, { text: "❌ *Error:* Failed to download. The link might be private." });
+
+        const mediaUrl = data.result[0].url;
+
+        await sock.sendMessage(chatId, {
+            video: { url: mediaUrl },
+            caption: "🎬 *Downloaded by RIFT-MD*"
+        }, { quoted: m });
+
+        await sock.sendMessage(chatId, { react: { text: "✅", key: m.key } });
+
+    } catch (error) {
+        console.error(error);
+        await sock.sendMessage(chatId, { react: { text: "❌", key: m.key } });
+        await sock.sendMessage(chatId, { text: "❌ Failed to download Instagram video." }, { quoted: m });
     }
 };
