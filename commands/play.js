@@ -1,64 +1,117 @@
+const yts = require('yt-search');
+const axios = require('axios');
+const settings = require("../settings");
+
+// Channel configuration for Rift Md
+const channelInfo = {
+    contextInfo: {
+        forwardingScore: 999,
+        isForwarded: true,
+        forwardedNewsletterMessageInfo: {
+            newsletterJid: '120363407561123100@newsletter',
+            newsletterName: 'RIFT-MD',
+            serverMessageId: -1
+        }
+    }
+};
+
 module.exports = async (sock, m, args) => {
     const chatId = m.key.remoteJid;
-    const text = args.join(" ");
-
-    if (!text) {
-        return await sock.sendMessage(chatId, { 
-            text: "亗 *QUEEN COLAMBIA* 亗\n\n❌ *Error:* Please provide a song name.\n💡 *Example:* .play Bob Marley Is This Love" 
-        }, { quoted: m });
-    }
-
-    // Reaction "⏳" pou montre w ap travay
-    await sock.sendMessage(chatId, { react: { text: "⏳", key: m.key } });
 
     try {
-        // 1. Chèche mizik la sou YouTube (API rapid)
-        const searchRes = await fetch(`https://api.vreden.my.id/api/ytsearch?query=${encodeURIComponent(text)}`);
-        const searchData = await searchRes.json();
-
-        if (!searchData.result || searchData.result.length === 0) {
-            return await sock.sendMessage(chatId, { text: "❌ *Error:* No results found." });
-        }
-
-        const video = searchData.result[0];
-        const videoUrl = video.url;
-
-        // 2. Telechaje Audio a
-        const dlRes = await fetch(`https://api.vreden.my.id/api/ytmp3?url=${encodeURIComponent(videoUrl)}`);
-        const dlData = await dlRes.json();
-
-        if (!dlData.result || !dlData.result.download) {
-            throw new Error("Download link not found");
-        }
-
-        const audioUrl = dlData.result.download;
-
-        const caption = 
-            `┏━━━━━━━━━━━━━━━━━━┓\n` +
-            `┃   🎵  *MUSIC DOWNLOADER* \n` +
-            `┠━━━━━━━━━━━━━━━━━━┫\n` +
-            `┃ 📝 *Title:* ${video.title}\n` +
-            `┃ 🕒 *Duration:* ${video.timestamp}\n` +
-            `┃ 👑 *Bot:* QUEEN COLAMBIA\n` +
-            `┗━━━━━━━━━━━━━━━━━━┛`;
-
-        // 3. Voye Caption an ak Audio a
-        await sock.sendMessage(chatId, { 
-            audio: { url: audioUrl }, 
-            mimetype: 'audio/mp4', 
-            ptt: false 
-        }, { quoted: m });
-
-        await sock.sendMessage(chatId, { text: caption }, { quoted: m });
+        const searchQuery = args.join(' ').trim();
         
-        // Reaction siksè
+        if (!searchQuery) {
+            return await sock.sendMessage(chatId, { 
+                text: `❌ *Please provide a song name or YouTube link!*\n💡 *Example:* \`${settings.prefix}play Bob Marley Is This Love\``,
+                ...channelInfo
+            }, { quoted: m });
+        }
+
+        // Reaction "⏳" while searching
+        await sock.sendMessage(chatId, { react: { text: "⏳", key: m.key } });
+
+        // Search for the song using yt-search
+        const { videos } = await yts(searchQuery);
+        if (!videos || videos.length === 0) {
+            await sock.sendMessage(chatId, { react: { text: "❌", key: m.key } });
+            return await sock.sendMessage(chatId, { 
+                text: "❌ *No results found for your query!*",
+                ...channelInfo
+            }, { quoted: m });
+        }
+
+        const video = videos[0];
+        const urlYt = video.url;
+
+        // Information text format styled for Queen Colambia
+        const infoText = `╭━━━〔 *RIFT-MD MUSIC* 〕━━━⬣
+┃ 🎵 *Title:* ${video.title}
+┃ 🕒 *Duration:* ${video.timestamp}
+┃ 👁️ *Views:* ${video.views.toLocaleString()}
+┃ 🤖 *Bot:* RIFT-MD 
+╰━━━━━━━━━━━━━━━━━━━━⬣
+
+> ⚡ *Downloading instantly (Audio + Document)...*`.trim();
+
+        // Send info message and fetch API data concurrently for maximum speed
+        const [, response] = await Promise.all([
+            sock.sendMessage(chatId, { text: infoText, ...channelInfo }, { quoted: m }),
+            axios.get(`https://apis-keith.vercel.app/download/dlmp3?url=${urlYt}`)
+        ]);
+
+        const data = response.data;
+        if (!data || !data.status || !data.result || !data.result.downloadUrl) {
+            await sock.sendMessage(chatId, { react: { text: "❌", key: m.key } });
+            return await sock.sendMessage(chatId, { 
+                text: "❌ *Failed to fetch audio from the server. Please try again later.*",
+                ...channelInfo
+            }, { quoted: m });
+        }
+
+        const audioUrl = data.result.downloadUrl;
+        const title = data.result.title || video.title;
+        const cleanTitle = title.replace(/[^\w\s]/gi, ''); // Sanitize filename for safety
+
+        // Send both Audio and Document simultaneously in parallel for lightning-fast delivery
+        await Promise.all([
+            // 1. Send as an Audio Player with External Ad Reply
+            sock.sendMessage(chatId, {
+                audio: { url: audioUrl },
+                mimetype: "audio/mpeg",
+                fileName: `${cleanTitle}.mp3`,
+                contextInfo: {
+                    ...channelInfo.contextInfo,
+                    externalAdReply: {
+                        title: title,
+                        body: "QUEEN COLAMBIA MULTIMEDIA",
+                        thumbnailUrl: video.thumbnail,
+                        sourceUrl: urlYt,
+                        mediaType: 1,
+                        renderLargerThumbnail: true
+                    }
+                }
+            }, { quoted: m }),
+
+            // 2. Send as a Document File
+            sock.sendMessage(chatId, {
+                document: { url: audioUrl },
+                mimetype: "audio/mpeg",
+                fileName: `${cleanTitle}.mp3`,
+                caption: `🎵 *${title}* (Document Format)`,
+                ...channelInfo
+            }, { quoted: m })
+        ]);
+
+        // Success reaction "✅"
         await sock.sendMessage(chatId, { react: { text: "✅", key: m.key } });
 
-    } catch (e) {
-        console.error("Play Error:", e);
+    } catch (error) {
+        console.error('Error in play command:', error.message);
         await sock.sendMessage(chatId, { react: { text: "❌", key: m.key } });
         await sock.sendMessage(chatId, { 
-            text: "⚠️ *Error:* I couldn't download the song. Please try another title." 
+            text: "❌ *Download failed. Extraction server error or time-out!*",
+            ...channelInfo
         }, { quoted: m });
     }
 };
