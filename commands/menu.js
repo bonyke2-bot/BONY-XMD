@@ -18,14 +18,14 @@ module.exports = async (sock, m) => {
     const uptime = runtime(process.uptime());
 
     const menu = `
-*╭┈───〔 QUEEN COLAMBIA 〕┈───⊷*
-*├▢ 🤖 ᴏᴡɴᴇʀ:* Weed
+*╭┈───〔 𝐑𝐈𝐅𝐓-𝐌𝐃 〕┈───⊷*
+*├▢ 🤖 ᴏᴡɴᴇʀ:* ᴡᴇᴇᴅ ᴛᴇᴄʜ
 *├▢ 👤 ᴜsᴇʀ:* ${pushName}
 *├▢ 📜 ᴄᴏᴍᴍᴀɴᴅs:* 29
 *├▢ ⏱️ ʀᴜɴᴛɪᴍᴇ:* ${uptime}
 *├▢ 📦 ᴘʀᴇғɪx:* ${prefix}
 *├▢ ⚙️ ᴍᴏᴅᴇ:* public
-*├▢ 🏷️ ᴠᴇʀsɪᴏɴ:* 1.0.0
+*├▢ 🏷️ ᴠᴇʀsɪᴏɴ:* 2.0.0
 *╰───────────────────⊷*
 
 \`『 ʙᴏᴛ ɪɴғᴏ 』\`
@@ -78,18 +78,18 @@ module.exports = async (sock, m) => {
 *┋ ⬡ goodbye*
 ╰───────────────────⊷
 
-> *©️ ᴘᴏᴡᴇʀᴇᴅ ʙʏ WEED TECH*
+> *©️ 𝓹𝓸𝔀𝓮𝓻𝓮𝓭 𝓫𝔂 𝔀𝓮𝓮𝓭 𝓽𝓮𝓬𝓱*
     `.trim();
 
     await sock.sendMessage(m.key.remoteJid, {
-        image: { url: "https://files.catbox.moe/3dwe96.jpg" },
+        image: { url: "https://files.catbox.moe/vv674d.jpg" },
         caption: menu,
         mentions: [sender],
         contextInfo: {
             externalAdReply: {
-                title: "QUEEN COLAMBIA OFFICIAL",
+                title: "RIFT-MD OFFICIAL",
                 body: "Join our channel for updates",
-                thumbnailUrl: "https://files.catbox.moe/3dwe96.jpg",
+                thumbnailUrl: "https://files.catbox.moe/vv674d.jpg",
                 sourceUrl: "https://whatsapp.com/channel/0029Vb2J9C91dAw7vxA75y2V",
                 mediaType: 1,
                 renderLargerThumbnail: false
