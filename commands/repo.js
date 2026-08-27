@@ -1,28 +1,25 @@
-const settings = require("../settings");
-
-module.exports = async (sock, m, { text }) => {
-    const chatId = m.key.remoteJid;
-    const prefix = settings.prefix || ".";
-
-    let repoInfo = `╭━━━〔 *RIFT-MD REPOSITORY* 〕━━━⡱
+module.exports = async (sock, m, args) => {
+    const repoText = `╭━━━〔 🤖 *RIFT-MD REPOSITORY* 〕━━━⬣
 ┃ 🤖 *Bot Name:* RIFT-MD
 ┃ 👑 *Owner:* WeedDev
 ┃ 📦 *GitHub:* https://github.com/WeedTech/RIFT-MD
-╰━━━━━━━━━━━━━━━━━━━━⬣
+╰━━━━━━━━━━━━━━━━━━━━⬣`;
 
-> _©️ Powered by RIFT-MD MULTI-DEVICE_`.trim();
-
-    await sock.sendMessage(chatId, {
-        text: repoInfo,
+    const channelInfo = {
         contextInfo: {
-            externalAdReply: {
-                title: "RIFT-MD OFFICIAL REPO",
-                body: "Click here to view the source code",
-                thumbnailUrl: "https://files.catbox.moe/vv674d.jpg",
-                sourceUrl: "https://github.com/WeedTech/RIFT-MD",
-                mediaType: 1,
-                renderLargerThumbnail: true
+            forwardingScore: 999,
+            isForwarded: true,
+            forwardedNewsletterMessageInfo: {
+                newsletterJid: '120363407561123100@newsletter',
+                newsletterName: 'RIFT-MD',
+                serverMessageId: -1
             }
         }
+    };
+
+    await sock.sendMessage(m.key.remoteJid, {
+        image: { url: "https://files.catbox.moe/k9we12.png" },
+        caption: repoText,
+        ...channelInfo
     }, { quoted: m });
 };
