@@ -1,27 +1,46 @@
 module.exports = async (sock, m, args) => {
     const chatJid = m.key.remoteJid;
 
-    // 1. Tcheke si se nan yon gwoup
+    const channelInfo = {
+        contextInfo: {
+            forwardingScore: 999,
+            isForwarded: true,
+            forwardedNewsletterMessageInfo: {
+                newsletterJid: '120363407561123100@newsletter',
+                newsletterName: 'RIFT-MD',
+                serverMessageId: -1
+            }
+        }
+    };
+
+    // 1. Check if it is a group
     if (!chatJid.endsWith('@g.us')) {
-        return await sock.sendMessage(chatJid, { text: "❌ Kòmand sa fèt pou gwoup sèlman!" }, { quoted: m });
+        return await sock.sendMessage(chatJid, { 
+            text: "❌ *This command can only be used in groups!*", 
+            ...channelInfo 
+        }, { quoted: m });
     }
 
     try {
-        // 2. Jwenn enfòmasyon gwoup la ak tout moun ki ladan l
+        // 2. Get group metadata and all participants
         const groupMetadata = await sock.groupMetadata(chatJid);
         const participants = groupMetadata.participants;
         
-        // 3. Pran mesaj itilizatè a ekri apre .hidetag la
-        const messageText = args.join(" ") || "📢 Atansyon tout moun!";
+        // 3. Get the text written after the hidetag command
+        const messageText = args.join(" ") || "📢 *Attention everyone!*";
 
-        // 4. Voye mesaj la ak yon "mention" envizib pou tout moun
+        // 4. Send the message with an invisible mention for all participants
         await sock.sendMessage(chatJid, { 
             text: messageText, 
-            mentions: participants.map(a => a.id) 
+            mentions: participants.map(a => a.id),
+            ...channelInfo 
         });
 
     } catch (err) {
-        console.error("Erè nan hidetag:", err);
-        await sock.sendMessage(chatJid, { text: "⚠️ Mwen pa ka jwenn lis moun yo. Asire m se Admin mwen ye!" }, { quoted: m });
+        console.error("Hidetag Error:", err);
+        await sock.sendMessage(chatJid, { 
+            text: "⚠️ *Failed to retrieve participant list. Make sure the bot is an admin!*", 
+            ...channelInfo 
+        }, { quoted: m });
     }
-}
+};
