@@ -1,6 +1,7 @@
-
 module.exports = async (sock, m) => {
-    // Fonksyon pou konvèti segonn yo an fòma ki lizib
+    const { remoteJid } = m.key;
+
+    // Function to convert seconds into a readable format
     function runtime(seconds) {
         seconds = Number(seconds);
         var d = Math.floor(seconds / (3600 * 24));
@@ -13,7 +14,7 @@ module.exports = async (sock, m) => {
         var mDisplay = m > 0 ? m + (m == 1 ? " minute, " : " minutes, ") : "";
         var sDisplay = s > 0 ? s + (s == 1 ? " second" : " seconds") : "";
         
-        // Si tout bagay zero, montre omwen 0 segonn
+        // If everything is zero, show at least 0 seconds
         if (!dDisplay && !hDisplay && !mDisplay && !sDisplay) return "0 seconds";
         
         return dDisplay + hDisplay + mDisplay + sDisplay;
@@ -21,18 +22,29 @@ module.exports = async (sock, m) => {
 
     const uptime = runtime(process.uptime());
 
-    const runtimeMessage = `
-*╭───〔 ⏳ UPTIME INFO 〕───⭐*
-│
-│ 🚀 *Status:* Active
-│ ⏱️ *Runtime:* ${uptime}
-│ ⚙️ *System:* Stable
-│
-*╰──────────────⭐*
-    `.trim();
+    // 1. Modern Cyberpunk / Tech Design Template
+    const runtimeMessage = `╭━━━〔 *SYSTEM UPTIME* 〕━━━⬣
+┃ 🚀 *Status:* \`Active & Online\`
+┃ ⏱️ *Runtime:* \`${uptime}\`
+┃ ⚙️ *System:* \`Stable\`
+╰━━━━━━━━━━━━━━━━━━━━⬣
 
-    // Nou voye sèlman tèks la, san contextInfo (AdReply)
-    await sock.sendMessage(m.key.remoteJid, { 
-        text: runtimeMessage 
+> *Rift-Md is running smoothly.* 💜`.trim();
+
+    // 2. Send message with rich card preview (AdReply enabled for a modern look)
+    await sock.sendMessage(remoteJid, { 
+        text: runtimeMessage,
+        contextInfo: {
+            forwardingScore: 999,
+            isForwarded: true,
+            externalAdReply: {
+                title: "RIFT-MD UPTIME ⏱️",
+                body: `Active for: ${uptime}`,
+                thumbnailUrl: "https://files.catbox.moe/yg3xc1.png", 
+                sourceUrl: "https://whatsapp.com/channel/0029Vb2J9C91dAw7vxA75y2V",
+                mediaType: 1,
+                renderLargerThumbnail: true
+            }
+        }
     }, { quoted: m });
-}
+};
