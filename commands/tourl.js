@@ -1,54 +1,63 @@
 const axios = require('axios');
+const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
 const FormData = require('form-data');
-const fs = require('fs');
-const path = require('path');
+
+async function getStreamBuffer(stream) {
+    let buffer = Buffer.from([]);
+    for await (const chunk of stream) {
+        buffer = Buffer.concat([buffer, chunk]);
+    }
+    return buffer;
+}
 
 module.exports = async (sock, m, args) => {
     const chatId = m.key.remoteJid;
 
     try {
-        // Check if replying to an image, video, or document
         const quoted = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
-        const mediaMessage = m.message?.imageMessage || m.message?.videoMessage || m.message?.documentMessage || 
-                             quoted?.imageMessage || quoted?.videoMessage || quoted?.documentMessage;
+        
+        let mediaMessage = null;
+        let mediaType = '';
+
+        if (m.message?.imageMessage) { mediaMessage = m.message.imageMessage; mediaType = 'image'; }
+        else if (m.message?.videoMessage) { mediaMessage = m.message.videoMessage; mediaType = 'video'; }
+        else if (m.message?.audioMessage) { mediaMessage = m.message.audioMessage; mediaType = 'audio'; }
+        else if (quoted?.imageMessage) { mediaMessage = quoted.imageMessage; mediaType = 'image'; }
+        else if (quoted?.videoMessage) { mediaMessage = quoted.videoMessage; mediaType = 'video'; }
+        else if (quoted?.documentMessage) { mediaMessage = quoted.documentMessage; mediaType = 'document'; }
 
         if (!mediaMessage) {
             return await sock.sendMessage(chatId, { 
-                text: `❌ *Please reply to an image, video, or document to generate a URL!*` 
+                text: `❌ *[ RIFT-MD ] Please reply (quote) to an image, video, or audio to get the URL!*` 
             }, { quoted: m });
         }
 
         await sock.sendMessage(chatId, { react: { text: "⏳", key: m.key } });
 
-        // Download the media file
-        const stream = await sock.downloadMediaMessage(mediaMessage);
-        const tmpFile = path.join(__dirname, `../tmp_${Date.now()}.jpg`);
-        fs.writeFileSync(tmpFile, stream);
+        const typeStr = mediaType === 'image' ? 'image' : mediaType === 'video' ? 'video' : mediaType === 'audio' ? 'audio' : 'document';
+        const stream = await downloadContentFromMessage(mediaMessage, typeStr);
+        const buffer = await getStreamBuffer(stream);
 
-        // Prepare form data for Catbox API
         const form = new FormData();
-        form.append('reqtype', 'fileupload');
-        form.append('fileToUpload', fs.createReadStream(tmpFile));
+        form.append('file', buffer, { filename: 'file.' + (mediaType === 'video' ? 'mp4' : mediaType === 'audio' ? 'mp3' : 'jpg') });
 
-        const response = await axios.post('https://catbox.moe/user/api.php', form, {
+        const response = await axios.post('https://tmpfiles.org/api/v1/upload', form, {
             headers: {
                 ...form.getHeaders()
             }
         });
 
-        // Clean up temporary local file
-        if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
-
-        const fileUrl = response.data;
-
-        if (!fileUrl || !fileUrl.startsWith('http')) {
-            await sock.sendMessage(chatId, { react: { text: "❌", key: m.key } });
-            return await sock.sendMessage(chatId, { text: `❌ *Upload failed! Server error.*` }, { quoted: m });
+        let fileUrl = response.data?.data?.url;
+        if (fileUrl) {
+            fileUrl = fileUrl.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
         }
 
-        // Send the generated URL back to the user
-        const resultText = `╭━━━〔 *TO-URL UPLOADER* 〕━━━⬣
-┃ ✅ *Uploaded Successfully!*
+        if (!fileUrl) {
+            throw new Error('Upload failed to generate link');
+        }
+
+        const resultText = `╭━━━〔 *RIFT-MD UPLOADER* 〕━━━⬣
+┃ ✅ *Success!*
 ┃ 🔗 *URL:* ${fileUrl}
 ╰━━━━━━━━━━━━━━━━━━━━⬣`;
 
@@ -56,8 +65,8 @@ module.exports = async (sock, m, args) => {
         await sock.sendMessage(chatId, { react: { text: "✅", key: m.key } });
 
     } catch (err) {
-        console.error("ToUrl Error:", err);
+        console.error("ToUrl Detailed Error:", err.message);
         await sock.sendMessage(chatId, { react: { text: "❌", key: m.key } });
-        await sock.sendMessage(chatId, { text: `⚠️ *Error uploading file to server.*` }, { quoted: m });
+        await sock.sendMessage(chatId, { text: `⚠️ *[ RIFT-MD ] Error: Failed during upload process.*` }, { quoted: m });
     }
 };
