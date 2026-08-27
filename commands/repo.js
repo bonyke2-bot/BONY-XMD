@@ -1,26 +1,25 @@
 const settings = require("../settings");
 
 module.exports = async (sock, m, { text }) => {
+    const chatId = m.key.remoteJid;
     const prefix = settings.prefix || ".";
 
-    let repoInfo = `
-*╭──〔 REPOSITORY INFO 〕──⊷*
-*├ 🤖 Bot Name:* QUEEN COLAMBIA
-*├ 👑 Owner:* Weed Tech
-*├ 📦 GitHub:* https://github.com/TECHGOAT333/QUEEN-COLOMBIA
-*╰──────────────────────⊷*
+    let repoInfo = `╭━━━〔 *RIFT-MD REPOSITORY* 〕━━━⡱
+┃ 🤖 *Bot Name:* RIFT-MD
+┃ 👑 *Owner:* WeedDev
+┃ 📦 *GitHub:* https://github.com/TECHGOAT333/QUEEN-COLOMBIA
+╰━━━━━━━━━━━━━━━━━━━━⬣
 
-> *©️ ᴘᴏᴡᴇʀᴇᴅ ʙʏ WEED TECH*
-    `.trim();
+> _©️ Powered by RIFT-MD MULTI-DEVICE_`.trim();
 
-    await sock.sendMessage(m.key.remoteJid, {
+    await sock.sendMessage(chatId, {
         text: repoInfo,
         contextInfo: {
             externalAdReply: {
-                title: "QUEEN COLAMBIA REPO",
-                body: "Click here to view source code",
-                thumbnailUrl: "https://files.catbox.moe/3dwe96.jpg",
-                sourceUrl: "https://github.com/TECHGOAT333/QUEEN-COLOMBIA",
+                title: "RIFT-MD OFFICIAL REPO",
+                body: "Click here to view the source code",
+                thumbnailUrl: "https://files.catbox.moe/vv674d.jpg",
+                sourceUrl: "https://github.com/WeedTech/---",
                 mediaType: 1,
                 renderLargerThumbnail: true
             }
