@@ -1,28 +1,32 @@
 module.exports = async (sock, m) => {
     const { remoteJid } = m.key;
 
-    // 1. Calculate response speed (Latency)
+    // 1. Precise Latency Calculation (Ping)
     const start = Date.now();
+    await sock.sendMessage(remoteJid, { react: { text: "⚡", key: m.key } });
     const latency = Date.now() - start;
 
-    const aliveTemplate = `*───「 ＱＵＥＥＮ  ＳＴＡＴＵＳ 」───*
+    // 2. Modern Cyber/Tech Design Template
+    const aliveTemplate = `╭━━━〔 *RIFT-MD* 〕━━━⬣
+┃ 🚀 *Ping:* \`${latency}ms\`
+┃ 🛰️ *Status:* \`Online & Stable\`
+┃ ⚙️ *Version:* \`2.0.0\`
+┃ 💎 *Platform:* \`Pterodactyl / Cloud\`
+╰━━━━━━━━━━━━━━━━━━━━⬣
 
-🚀 *Latency:* ${latency} _ms_
-🛰️ *Server:* _Online_
-⚙️ *Version:* _3.0.0_
-💎 *System:* _Operational_
+> *Rift Md is fully operational and ready to serve.* 💜`.trim();
 
-*──────────────────────*
-*Queen Colambia is active and responding.*`.trim();
-
-    // 2. Send the status card with a professional preview
+    // 3. Send Message with Rich Preview Card
     await sock.sendMessage(remoteJid, { 
         text: aliveTemplate,
         contextInfo: {
+            mentionedJid: [m.sender],
+            forwardingScore: 999,
+            isForwarded: true,
             externalAdReply: {
-                title: "QUEEN COLAMBIA V3",
-                body: "System is Operational 💎",
-                thumbnailUrl: "https://files.catbox.moe/zdk50s.jpg",
+                title: "RIFT-MD 👑",
+                body: "Tap to join official channel",
+                thumbnailUrl: "https://files.catbox.moe/yg3xc1.png",
                 sourceUrl: "https://whatsapp.com/channel/0029Vb2J9C91dAw7vxA75y2V",
                 mediaType: 1,
                 renderLargerThumbnail: true
@@ -30,7 +34,7 @@ module.exports = async (sock, m) => {
         }
     }, { quoted: m });
 
-    // 3. Send the audio file as a Voice Note (PTT)
+    // 4. Send Voice Note (PTT) smoothly
     await sock.sendMessage(remoteJid, { 
         audio: { url: "https://files.catbox.moe/pframr.mp3" }, 
         mimetype: 'audio/mp4', 
