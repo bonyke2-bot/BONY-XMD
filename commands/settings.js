@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
-// Chemen pou database.json la (menm jan ak nan main.js)
+// Path to database.json
 const dbPath = path.join(__dirname, "..", "database.json");
 
 function getDatabase() {
@@ -24,19 +24,19 @@ function isEmoji(text) {
     return emojiRegex.test(text);
 }
 
-// Sa a se fonksyon prensipal kòmand loader a ap rele
+// Main function called by the command loader
 module.exports = async function (sock, m, args) {
     const body = m.message.conversation || m.message.extendedTextMessage?.text || m.message.imageMessage?.caption || m.message.videoMessage?.caption || "";
-    const prefix = require("../settings").prefix || "."; // Li prefix la nan settings.js deyò a
+    const prefix = require("../settings").prefix || "."; // Get prefix from external settings.js
     
-    // Detekte kòmand lan nan kòd la
+    // Detect command from input text
     const command = body.slice(prefix.length).trim().split(/ +/).shift().toLowerCase();
 
     const userId = sock.user.id.split(':')[0];
     const jid = m.key.remoteJid;
     const senderId = m.key.participant ? m.key.participant.split(':')[0] : jid.split(':')[0];
     
-    // Tcheke si se Owner la nan settings yo
+    // Check if the sender is the owner from settings
     const settingsFile = require("../settings");
     const isOwner = senderId.includes(settingsFile.ownerNumber.replace(/[^0-9]/g, '')) || m.key.fromMe;
 
@@ -49,7 +49,7 @@ module.exports = async function (sock, m, args) {
             const prefixArg = args[0] || '';
             db.users[userId].prefix = prefixArg;
             saveDatabase(db);
-            await sock.sendMessage(jid, { text: `✅ Prefix chanje avèk siksè: "${prefixArg}"` }, { quoted: m });
+            await sock.sendMessage(jid, { text: `✅ Prefix successfully changed to: "${prefixArg}"` }, { quoted: m });
             break;
         }
 
@@ -58,9 +58,9 @@ module.exports = async function (sock, m, args) {
             if (emojiArg && isEmoji(emojiArg)) {
                 db.users[userId].reaction = emojiArg;
                 saveDatabase(db);
-                await sock.sendMessage(jid, { text: `✅ Emoji reaksyon chanje: ${emojiArg}` }, { quoted: m });
+                await sock.sendMessage(jid, { text: `✅ Reaction emoji changed to: ${emojiArg}` }, { quoted: m });
             } else {
-                await sock.sendMessage(jid, { text: `❌ Tanpri mete yon emoji valab. Egzanp: ${prefix}setreaction ❤️` }, { quoted: m });
+                await sock.sendMessage(jid, { text: `❌ Please provide a valid emoji. Example: ${prefix}setreaction ❤️` }, { quoted: m });
             }
             break;
         }
@@ -70,9 +70,9 @@ module.exports = async function (sock, m, args) {
             if (status === 'on' || status === 'off') {
                 db.users[userId].welcome = (status === 'on');
                 saveDatabase(db);
-                await sock.sendMessage(jid, { text: `✅ Mesaj Byenveni (Welcome) mete sou: ${status.toUpperCase()}` }, { quoted: m });
+                await sock.sendMessage(jid, { text: `✅ Welcome message set to: ${status.toUpperCase()}` }, { quoted: m });
             } else {
-                await sock.sendMessage(jid, { text: `❌ Chwazi yon opsyon: ${prefix}setwelcome on oswa off` }, { quoted: m });
+                await sock.sendMessage(jid, { text: `❌ Choose an option: ${prefix}setwelcome on or off` }, { quoted: m });
             }
             break;
         }
@@ -82,9 +82,9 @@ module.exports = async function (sock, m, args) {
             if (status === 'on' || status === 'off') {
                 db.users[userId].record = (status === 'on');
                 saveDatabase(db);
-                await sock.sendMessage(jid, { text: `✅ Autorecord mete sou: ${status.toUpperCase()}` }, { quoted: m });
+                await sock.sendMessage(jid, { text: `✅ Autorecord set to: ${status.toUpperCase()}` }, { quoted: m });
             } else {
-                await sock.sendMessage(jid, { text: `❌ Chwazi yon opsyon: ${prefix}setautorecord on oswa off` }, { quoted: m });
+                await sock.sendMessage(jid, { text: `❌ Choose an option: ${prefix}setautorecord on or off` }, { quoted: m });
             }
             break;
         }
@@ -94,26 +94,26 @@ module.exports = async function (sock, m, args) {
             if (status === 'on' || status === 'off') {
                 db.users[userId].type = (status === 'on');
                 saveDatabase(db);
-                await sock.sendMessage(jid, { text: `✅ Autotype mete sou: ${status.toUpperCase()}` }, { quoted: m });
+                await sock.sendMessage(jid, { text: `✅ Autotype set to: ${status.toUpperCase()}` }, { quoted: m });
             } else {
-                await sock.sendMessage(jid, { text: `❌ Chwazi yon opsyon: ${prefix}setautotype on oswa off` }, { quoted: m });
+                await sock.sendMessage(jid, { text: `❌ Choose an option: ${prefix}setautotype on or off` }, { quoted: m });
             }
             break;
         }
 
         case 'public': {
-            if (!isOwner) return await sock.sendMessage(jid, { text: `> *⚠️ Sèlman mèt bot la ki ka itilize kòmand sa a!*` }, { quoted: m });
+            if (!isOwner) return await sock.sendMessage(jid, { text: `> *⚠️ Only the bot owner can use this command!*` }, { quoted: m });
             const status = args[0]?.toLowerCase();
             if (status === 'on') {
                 db.users[userId].publicMode = true;
                 saveDatabase(db);
-                await sock.sendMessage(jid, { text: '✅ Mode public activé' }, { quoted: m });
+                await sock.sendMessage(jid, { text: '✅ Public mode enabled' }, { quoted: m });
             } else if (status === 'off') {
                 db.users[userId].publicMode = false;
                 saveDatabase(db);
-                await sock.sendMessage(jid, { text: '🚫 Mode public désactivé' }, { quoted: m });
+                await sock.sendMessage(jid, { text: '🚫 Public mode disabled' }, { quoted: m });
             } else {
-                await sock.sendMessage(jid, { text: `❌ Itilize: ${prefix}public on oswa off` }, { quoted: m });
+                await sock.sendMessage(jid, { text: `❌ Usage: ${prefix}public on or off` }, { quoted: m });
             }
             break;
         }
