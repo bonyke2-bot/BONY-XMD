@@ -15,7 +15,7 @@ const settings = require("./settings")
 const startServer = (port) => {
     const server = http.createServer((req, res) => {
         res.writeHead(200);
-        res.end('QUEEN COLAMBIA IS ONLINE');
+        res.end('RIFT-MD IS ONLINE');
     });
     server.listen(port).on('error', (e) => {
         if (e.code === 'EADDRINUSE') startServer(port + 1);
@@ -72,8 +72,8 @@ async function startBot() {
             if (lastDisconnect.error?.output?.statusCode !== DisconnectReason.loggedOut) startBot()
         } else if (connection === "open") {
             const ownerJid = settings.ownerNumber.replace(/[^0-9]/g, '') + "@s.whatsapp.net"
-            console.log(`\n🎊 QUEEN COLAMBIA IS CONNECTED!`)
-            await sock.sendMessage(ownerJid, { text: "✨ *QUEEN COLAMBIA IS ONLINE* ✨" })
+            console.log(`\n🎊 RIFT-MD IS CONNECTED!`)
+            await sock.sendMessage(ownerJid, { text: "✨ *RIFT-MD IS ONLINE & READY* ✨" })
         }
     })
 
@@ -128,7 +128,7 @@ async function startBot() {
                         if (!isSenderAdmin && !isOwner && isBotAdmin) {
                             await sock.sendMessage(from, { delete: m.key })
                             await sock.sendMessage(from, { 
-                                text: `🚫 *Link Detected:* @${sender.split('@')[0]}, links are not allowed!`, 
+                                text: `🚫 *Link Detected:* @${sender.split('@')[0]}, links are not allowed here!`, 
                                 mentions: [sender] 
                             })
                         }
@@ -143,7 +143,7 @@ async function startBot() {
 
         try {
             if (commandName === "antilink") {
-                if (!isOwner) return await sock.sendMessage(from, { text: "❌ *Access Denied:* Only the Bot Owner can use this." });
+                if (!isOwner) return await sock.sendMessage(from, { text: "❌ *Access Denied:* Only the Bot Owner can use this command." });
 
                 let db = { antilink: [] };
                 if (fs.existsSync(dbPath)) {
@@ -155,20 +155,20 @@ async function startBot() {
                         db.antilink.push(from);
                         fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
                     }
-                    await sock.sendMessage(from, { text: "🛡️ *AntiLink:* Activated! ✅" });
+                    await sock.sendMessage(from, { text: "🛡️ *AntiLink System:* Activated! ✅" });
                 } else if (args[0] === "off") {
                     db.antilink = db.antilink.filter(id => id !== from);
                     fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
-                    await sock.sendMessage(from, { text: "🛡️ *AntiLink:* Deactivated! ❌" });
+                    await sock.sendMessage(from, { text: "🛡️ *AntiLink System:* Deactivated! ❌" });
                 } else {
-                    await sock.sendMessage(from, { text: `Usage: ${prefix}antilink on/off` });
+                    await sock.sendMessage(from, { text: `❌ *Usage:* \`${prefix}antilink on/off\`` });
                 }
             }
             else if (commandName === "setprefix") {
-                if (!isOwner) return await sock.sendMessage(from, { text: "❌ *Access Denied:* Only the Bot Owner can use this." });
+                if (!isOwner) return await sock.sendMessage(from, { text: "❌ *Access Denied:* Only the Bot Owner can use this command." });
 
                 if (!args[0]) {
-                    return await sock.sendMessage(from, { text: `❌ *Usage:* ${prefix}setprefix [nouvo prefix]\n*Egzanp:* ${prefix}setprefix !` });
+                    return await sock.sendMessage(from, { text: `❌ *Usage:* \`${prefix}setprefix [new_prefix]\`\n💡 *Example:* \`${prefix}setprefix !\`` });
                 }
 
                 const newPrefix = args[0];
@@ -180,10 +180,10 @@ async function startBot() {
                     settingsContent = settingsContent.replace(/prefix:\s*["'`].*?["'`]/, `prefix: "${newPrefix}"`);
                     fs.writeFileSync(settingsPath, settingsContent, "utf-8");
 
-                    // Ajouye l nan memwa a imedyatman pou l ka travay sou kreyon san restart
+                    // Update memory instantly
                     settings.prefix = newPrefix;
 
-                    await sock.sendMessage(from, { text: `✅ *Prefix successfully changed to:* \`${newPrefix}\`\n✨ *Ou ka itilize nouvo prefix la touswit!*` });
+                    await sock.sendMessage(from, { text: `✅ *Prefix successfully changed to:* \`${newPrefix}\`\n✨ *You can now use the new prefix immediately!*` });
 
                 } catch (e) {
                     console.error("SetPrefix Error:", e);
