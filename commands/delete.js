@@ -1,33 +1,38 @@
 module.exports = async (sock, m) => {
     const { remoteJid } = m.key;
 
-    // 1. Check if there is a quoted message (reply)
-    const quoted = m.message?.extendedTextMessage?.contextInfo;
+    // 1. Safe extraction of quoted message info (Modern Baileys compatible)
+    const contextInfo = m.message?.extendedTextMessage?.contextInfo || m.msg?.contextInfo;
     
-    if (!quoted || !quoted.stanzaId) {
+    if (!contextInfo || !contextInfo.stanzaId) {
         return await sock.sendMessage(remoteJid, { 
             text: "❓ *Error:* Please reply to the message you want me to delete." 
         }, { quoted: m });
     }
 
     try {
-        // 2. Prepare the deletion key
-        const keyToDelete = {
+        // 2. Prepare the key for the quoted message
+        const targetKey = {
             remoteJid: remoteJid,
-            // Check if the message was sent by the bot itself
-            fromMe: quoted.participant === (sock.user.id.split(':')[0] + '@s.whatsapp.net'), 
-            id: quoted.stanzaId,
-            participant: quoted.participant // Crucial for group message identification
+            fromMe: contextInfo.participant?.includes(sock.user.id.split(':')[0]) || false,
+            id: contextInfo.stanzaId,
+            participant: contextInfo.participant
         };
 
-        // 3. Execute "Delete for Everyone"
-        await sock.sendMessage(remoteJid, { delete: keyToDelete });
+        // 3. Delete BOTH the target message and the command message smoothly
+        await sock.sendMessage(remoteJid, { delete: targetKey }); // Efase mesaj ou reponn nan
+        await sock.sendMessage(remoteJid, { delete: m.key });      // Efase komand la (.delete)
 
     } catch (err) {
         console.error("Delete Command Error:", err);
-        // This error usually triggers if the bot is not a Group Admin
-        await sock.sendMessage(remoteJid, { 
-            text: "⚠️ *Permission Denied:* I need to be a **Group Admin** to delete messages from other members." 
-        }, { quoted: m });
+        
+        // Modern styled error response
+        const errorText = `╭━━━〔 *DELETE ERROR* 〕━━━⬣
+┃ ⚠️ *Failed to delete message!*
+┃ Make sure I am a **Group Admin** 
+┃ if you want to delete others' messages.
+╰━━━━━━━━━━━━━━━━━━━━⬣`.trim();
+
+        await sock.sendMessage(remoteJid, { text: errorText }, { quoted: m });
     }
-}
+};
