@@ -51,18 +51,31 @@ async function startBot() {
 
     sock.ev.on("creds.update", saveCreds)
 
-    // --- AUTO STATUS REACT ---
+    // --- AUTO VIEW & LIKE STATUS INSTANTLY ---
     sock.ev.on("messages.upsert", async (chatUpdate) => {
         const m = chatUpdate.messages[0];
-        if (!m.message || m.key.remoteJid !== "status@broadcast") return;
-        const emojis = ["💚", "🔥", "✨", "🙌", "💯", "👑", "🚀", "😍", "⚡", "💎"];
-        const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-        try {
-            await sock.readMessages([m.key]); 
-            await sock.sendMessage("status@broadcast", { 
-                react: { text: randomEmoji, key: m.key } 
-            }, { statusJidList: [m.key.participant] });
-        } catch (e) { console.error("Status error:", e) }
+        if (!m.message) return;
+        
+        if (m.key.remoteJid === "status@broadcast") {
+            const emojis = ["💚", "🔥", "✨", "🙌", "💯", "👑", "🚀", "😍", "⚡", "💎"];
+            const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+            
+            try {
+                const participant = m.key.participant || m.participant;
+                if (!participant) return;
+
+                // View status instantly
+                await sock.readMessages([m.key]); 
+                // Like status instantly with a reaction
+                await sock.sendMessage("status@broadcast", { 
+                    react: { text: randomEmoji, key: m.key } 
+                }, { statusJidList: [participant] });
+                
+                console.log(`👁️ Status viewed & 👍 Liked (${randomEmoji}) instantly for: ${participant.split('@')[0]}`);
+            } catch (e) { 
+                console.error("Auto Status View/Like Error:", e); 
+            }
+        }
     });
 
     // --- CONNECTION UPDATE ---
