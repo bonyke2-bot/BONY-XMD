@@ -15,7 +15,7 @@ module.exports = async (sock, m) => {
 │
 │ 📢 *Status:* Only Admins can send messages now.
 │ 👮 *Action by:* @${(m.sender || m.key.participant || "").split('@')[0]}
-│ 🤖 *Bot:* QUEEN COLAMBIA
+│ 🤖 *Bot:* RIFT-MD 
 │
 *╰──────────────⭐*
         `.trim();
