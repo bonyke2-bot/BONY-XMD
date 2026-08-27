@@ -5,6 +5,7 @@ const path = require("path");
 module.exports = async (sock, m) => {
     const sender = m.sender || m.key.participant || m.key.remoteJid || "";
     const pushName = sender.split('@')[0] || "User";
+    const chatId = m.key.remoteJid;
 
     const prefix = settings.prefix || ".";
 
@@ -22,7 +23,7 @@ module.exports = async (sock, m) => {
     // Automatically count command files in the commands folder
     let totalCommands = 29; // Fallback value
     try {
-        const commandsDir = path.join(__dirname, "../commands"); // Adjust path if needed
+        const commandsDir = path.join(__dirname, "../commands");
         if (fs.existsSync(commandsDir)) {
             const commandFiles = fs.readdirSync(commandsDir).filter(file => file.endsWith(".js"));
             totalCommands = commandFiles.length;
@@ -31,7 +32,11 @@ module.exports = async (sock, m) => {
         console.error("Error counting commands:", e);
     }
 
-    const menu = `
+    try {
+        // 1. Voye mesaj "Loading..." an premye menm jan ak nan imaj la
+        const loadingMsg = await sock.sendMessage(chatId, { text: "⚡ Loading..." }, { quoted: m });
+
+        const menu = `
 *╭┈───〔 𝐑𝐈𝐅𝐓-𝐌𝐃 〕┈───⊷*
 *├▢ 🤖 ᴏᴡɴᴇʀ:* ᴡᴇᴇᴅ ᴛᴇᴄʜ
 *├▢ 👤 ᴜsᴇʀ:* ${pushName}
@@ -55,13 +60,10 @@ module.exports = async (sock, m) => {
 
 \`『 ᴛᴏᴏʟs 』\`
 ╭───────────────────⊷
-*┋ ⬡ say*
-*┋ ⬡ time*
-*┋ ⬡ date*
+*┋ ⬡ play*
 *┋ ⬡ jid*
 *┋ ⬡ restart*
 *┋ ⬡ search*
-*┋ ⬡ ytmp4*
 *┋ ⬡ ytmp3*
 *┋ ⬡ igdl*
 *┋ ⬡ twitter*
@@ -87,7 +89,6 @@ module.exports = async (sock, m) => {
 *┋ ⬡ setprefix*
 *┋ ⬡ setpp*
 *┋ ⬡ help*
-*┋ ⬡ echo*
 *┋ ⬡ welcome*
 *┋ ⬡ goodbye*
 ╰───────────────────⊷
@@ -95,19 +96,24 @@ module.exports = async (sock, m) => {
 > *©️ 𝓹𝓸𝔀𝓮𝓻𝓮𝓭 𝓫𝔂 𝔀𝓮𝓮𝓭 𝓽𝓮𝓬𝓱*
     `.trim();
 
-    await sock.sendMessage(m.key.remoteJid, {
-        image: { url: "https://files.catbox.moe/vv674d.jpg" },
-        caption: menu,
-        mentions: [sender],
-        contextInfo: {
-            mentionedJid: [sender],
-            forwardingScore: 999,
-            isForwarded: true,
-            forwardedNewsletterMessageInfo: {
-                newsletterJid: "120363407561123100@newsletter",
-                newsletterName: "RIFT-MD OFFICIAL",
-                serverMessageId: 100
+        // 2. Voye imaj meni an apre sa
+        await sock.sendMessage(chatId, {
+            image: { url: "https://files.catbox.moe/vv674d.jpg" },
+            caption: menu,
+            mentions: [sender],
+            contextInfo: {
+                mentionedJid: [sender],
+                forwardingScore: 999,
+                isForwarded: true,
+                forwardedNewsletterMessageInfo: {
+                    newsletterJid: "120363407561123100@newsletter",
+                    newsletterName: "RIFT-MD OFFICIAL",
+                    serverMessageId: 100
+                }
             }
-        }
-    }, { quoted: m });
+        }, { quoted: m });
+
+    } catch (e) {
+        console.error("Menu Error:", e);
+    }
 };
