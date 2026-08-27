@@ -7,7 +7,6 @@ module.exports = async (sock, m, args) => {
     const sender = m.key.participant || m.key.remoteJid;
     const settings = require("../settings");
     
-    // Security check: Verify if the sender is the Bot Owner or the Bot itself
     const isOwner = sender.includes(settings.ownerNumber.replace(/[^0-9]/g, '')) || m.key.fromMe;
 
     if (!isGroup) {
@@ -20,46 +19,54 @@ module.exports = async (sock, m, args) => {
 
     if (!args[0]) {
         return await sock.sendMessage(from, { 
-            text: "👑 *RIFT-MD - ANTILINK*\n\n📌 *Usage:* `.antilink on` or `.antilink off`" 
+            text: "👑 *RIFT-MD - ANTILINK SETUP*\n\n📌 *Usage:*\n• `.antilink on` (Default Warn 3x)\n• `.antilink kick` (Instant Kick)\n• `.antilink off` (Deactivate)" 
         }, { quoted: m });
     }
 
     const dbPath = path.join(__dirname, "../database.json");
-    
-    // Load database safely
-    let db = { antilink: [] };
+    let db = { antilink: [], antilinkMode: {} };
     if (fs.existsSync(dbPath)) {
         try {
             db = JSON.parse(fs.readFileSync(dbPath, "utf-8"));
             if (!Array.isArray(db.antilink)) db.antilink = [];
+            if (!db.antilinkMode) db.antilinkMode = {};
         } catch (e) {
-            db = { antilink: [] };
+            db = { antilink: [], antilinkMode: {} };
         }
     }
 
     const action = args[0].toLowerCase();
 
-    if (action === "on") {
-        if (!db.antilink.includes(from)) {
-            db.antilink.push(from);
-            fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
-        }
+    if (action === "on" || action === "warn") {
+        if (!db.antilink.includes(from)) db.antilink.push(from);
+        db.antilinkMode[from] = "warn"; // 3 warns then kick
+        fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+
         await sock.sendMessage(from, { 
-            text: "╭━━━〔 *ANTILINK SYSTEM* 〕━━━⡱\n┃ 🛡️ *Status:* Activated ✅\n┃ 🤖 *Bot:* RIFT-MD\n╰━━━━━━━━━━━━━━━━━━━━⬣" 
+            text: "╭━━━〔 *ANTILINK SYSTEM* 〕━━━⡱\n┃ 🛡️ *Status:* Activated ✅\n┃ ⚡ *Mode:* Warn (3 Warnings = Kick)\n┃ 🤖 *Bot:* RIFT-MD\n╰━━━━━━━━━━━━━━━━━━━━⬣" 
         }, { quoted: m });
     } 
+    else if (action === "kick") {
+        if (!db.antilink.includes(from)) db.antilink.push(from);
+        db.antilinkMode[from] = "kick"; // Instant kick
+        fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+
+        await sock.sendMessage(from, { 
+            text: "╭━━━〔 *ANTILINK SYSTEM* 〕━━━⡱\n┃ 🛡️ *Status:* Activated ✅\n┃ ⚡ *Mode:* Instant Kick ❌\n┃ 🤖 *Bot:* RIFT-MD\n╰━━━━━━━━━━━━━━━━━━━━⬣" 
+        }, { quoted: m });
+    }
     else if (action === "off") {
-        if (db.antilink.includes(from)) {
-            db.antilink = db.antilink.filter(id => id !== from);
-            fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
-        }
+        db.antilink = db.antilink.filter(id => id !== from);
+        delete db.antilinkMode[from];
+        fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+
         await sock.sendMessage(from, { 
             text: "╭━━━〔 *ANTILINK SYSTEM* 〕━━━⡱\n┃ 🛡️ *Status:* Deactivated ❌\n┃ 🤖 *Bot:* RIFT-MD\n╰━━━━━━━━━━━━━━━━━━━━⬣" 
         }, { quoted: m });
     } 
     else {
         await sock.sendMessage(from, { 
-            text: "❌ *Invalid Option!*\n💡 *Please use:* `.antilink on` or `.antilink off`" 
+            text: "❌ *Invalid Option!*\n💡 *Please use:* `.antilink on`, `.antilink kick`, or `.antilink off`" 
         }, { quoted: m });
     }
 };
