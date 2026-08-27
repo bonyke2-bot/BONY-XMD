@@ -1,35 +1,48 @@
-
 module.exports = async (sock, m, args) => {
-    const text = args.slice(1).join(" ");
-    const lang = args[0]; // Egzanp: .translate en Bonjou
+    const chatId = m.key.remoteJid;
+    const body = m.message?.conversation || m.message?.extendedTextMessage?.text || "";
+    const prefix = body.charAt(0) || ".";
+    
+    const lang = args[0]; // Example: en, fr, ht, es
+    const text = args.slice(1).join(" "); // The text to translate
 
-    if (!text || !lang) {
-        return sock.sendMessage(m.key.remoteJid, { 
-            text: "👑 *QUEEN COLAMBIA*\n\n❌ Fòma: .translate [lang] [tèks]\n*Egzanp:* .translate en Bonjou" 
-        });
+    if (!lang || !text) {
+        return await sock.sendMessage(chatId, { 
+            text: `╭━━━〔 *RIFT-MD TRANSLATOR* 〕━━━⡱\n┃ ❌ *Invalid Usage!*\n┃ 📌 *Format:* \`${prefix}translate [lang] [text]\`\n┃ 💡 *Example:* \`${prefix}translate en Bonjou\`` 
+        }, { quoted: m });
     }
 
-    // Reaction ⏳
-    await sock.sendMessage(m.key.remoteJid, { react: { text: "🌎", key: m.key } });
-
     try {
-        const apiUrl = `https://api.popcat.xyz/translate?to=${lang}&text=${encodeURIComponent(text)}`;
+        // Reaction 🌎
+        await sock.sendMessage(chatId, { react: { text: "🌎", key: m.key } });
+
+        const apiUrl = `https://api.popcat.xyz/translate?to=${encodeURIComponent(lang)}&text=${encodeURIComponent(text)}`;
         const response = await fetch(apiUrl);
         const data = await response.json();
 
-        if (!data.translated) {
-            return sock.sendMessage(m.key.remoteJid, { text: "❌ Mwen pa ka tradui tèks sa a kounye a." });
+        if (!data || !data.translated) {
+            await sock.sendMessage(chatId, { react: { text: "❌", key: m.key } });
+            return await sock.sendMessage(chatId, { text: "❌ *Error:* Translation failed or unsupported language code." }, { quoted: m });
         }
 
-        await sock.sendMessage(m.key.remoteJid, { 
-            text: `🌎 *TRADIKSYON (${lang.toUpperCase()}):* \n\n${data.translated}` 
+        const responseText = `╭━━━〔 *TRANSLATION RESULT* 〕━━━⡱
+┃ 🌐 *Target Lang:* ${lang.toUpperCase()}
+┃ 📝 *Translated Text:* 
+┃ 
+┃ ${data.translated}
+┃ 🤖 *Bot:* RIFT-MD
+╰━━━━━━━━━━━━━━━━━━━━⬣`;
+
+        await sock.sendMessage(chatId, { 
+            text: responseText 
         }, { quoted: m });
 
         // Reaction ✅
-        await sock.sendMessage(m.key.remoteJid, { react: { text: "✅", key: m.key } });
+        await sock.sendMessage(chatId, { react: { text: "✅", key: m.key } });
 
-    } catch (e) {
-        console.error("Translate Error:", e);
-        sock.sendMessage(m.key.remoteJid, { text: "❌ Erè rive nan tradiksyon an. API a ka gen pwoblèm." });
+    } catch (error) {
+        console.error("Translate Error:", error);
+        await sock.sendMessage(chatId, { react: { text: "❌", key: m.key } });
+        await sock.sendMessage(chatId, { text: "❌ *Critical Error:* Translation API encountered a problem." }, { quoted: m });
     }
-}
+};
