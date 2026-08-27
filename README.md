@@ -13,7 +13,9 @@
 
   ***
 
+⭕  DEPLOY ON [ PANEL KATABUMP ]
 
+[![Find On Whatsapp ](https://img.shields.io/badge/➤Click-Here-blue.svg)](https://dashboard.katabump.com/dashboard
 
 
 
