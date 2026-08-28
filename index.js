@@ -50,7 +50,9 @@ if (!fs.existsSync(dbPath)) {
     fs.writeFileSync(
         dbPath,
         JSON.stringify({
-            antilink: []
+            antilink: [],
+            autoreact: false,
+            autoread: false
         }, null, 2)
     );
 }
@@ -416,6 +418,43 @@ async function startBot() {
                     from === "status@broadcast"
                 ) {
                     return;
+                }
+
+                // ======================================
+                // DATABASE READ FOR GLOBAL FEATURES (AUTOREAD / AUTOREACT)
+                // ======================================
+                let globalDb = { antilink: [], autoreact: false, autoread: false };
+                if (fs.existsSync(dbPath)) {
+                    try {
+                        globalDb = JSON.parse(fs.readFileSync(dbPath, "utf8"));
+                    } catch {
+                        globalDb = { antilink: [], autoreact: false, autoread: false };
+                    }
+                }
+
+                // AUTOREAD FEATURE
+                if (globalDb.autoread) {
+                    try {
+                        await sock.readMessages([m.key]);
+                    } catch (e) {
+                        console.error("AutoRead Error:", e.message);
+                    }
+                }
+
+                // AUTOREACT FEATURE
+                if (globalDb.autoreact) {
+                    try {
+                        const emojis = ["💚", "🔥", "✨", "🙌", "💯", "👑", "🚀", "😍", "⚡", "💎"];
+                        const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+                        await sock.sendMessage(from, {
+                            react: {
+                                text: randomEmoji,
+                                key: m.key
+                            }
+                        });
+                    } catch (e) {
+                        console.error("AutoReact Error:", e.message);
+                    }
                 }
 
                 const isGroup =
