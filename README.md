@@ -13,15 +13,6 @@
   </p>
 
 </div>
-
-
-  <p align="center" style="color: #00ffcc; font-size: 13px; letter-spacing: 2px; margin-top: 15px; text-shadow: 0 0 8px rgba(0,255,204,0.4);">
-    ⚡ POWERED BY RIFT-MD • ULTIMATE EXPERIENCE ⚡
-  </p>
-
-</div>
-
-
 ---
 <div style="background-color: #0d1117; padding: 25px; border-radius: 12px; border: 1px solid #30363d; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
   ***
