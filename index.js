@@ -1,230 +1,889 @@
-const { 
-    default: makeWASocket, 
-    useMultiFileAuthState, 
-    fetchLatestBaileysVersion, 
-    DisconnectReason,
-    downloadContentFromMessage
-} = require("@whiskeysockets/baileys")
-const pino = require("pino")
-const fs = require("fs")
-const http = require("http")
-const path = require("path") 
-const settings = require("./settings")
+const {
+    default: makeWASocket,
+    useMultiFileAuthState,
+    fetchLatestBaileysVersion,
+    DisconnectReason
+} = require("@whiskeysockets/baileys");
 
-// --- UPTIME SERVER ---
+const pino = require("pino");
+const fs = require("fs");
+const http = require("http");
+const path = require("path");
+const settings = require("./settings");
+
+// ======================================================
+// RIFT-MD UPTIME SERVER
+// ======================================================
+
 const startServer = (port) => {
     const server = http.createServer((req, res) => {
-        res.writeHead(200);
-        res.end('RIFT-MD IS ONLINE');
+        res.writeHead(200, {
+            "Content-Type": "text/plain"
+        });
+
+        res.end("RIFT-MD IS ONLINE");
     });
-    server.listen(port).on('error', (e) => {
-        if (e.code === 'EADDRINUSE') startServer(port + 1);
+
+    server.listen(port, () => {
+        console.log(`🌐 RIFT-MD server running on port ${port}`);
+    });
+
+    server.on("error", (e) => {
+        if (e.code === "EADDRINUSE") {
+            console.log(`⚠️ Port ${port} busy, trying ${port + 1}...`);
+            startServer(port + 1);
+        } else {
+            console.error("Server Error:", e);
+        }
     });
 };
+
 startServer(process.env.PORT || 3000);
+
+// ======================================================
+// DATABASE
+// ======================================================
 
 const dbPath = path.join(__dirname, "database.json");
 
+if (!fs.existsSync(dbPath)) {
+    fs.writeFileSync(
+        dbPath,
+        JSON.stringify({
+            antilink: []
+        }, null, 2)
+    );
+}
+
+// ======================================================
+// LOAD COMMANDS
+// ======================================================
+
+const commands = {};
+const commandsPath = path.join(__dirname, "commands");
+
+function loadCommands() {
+
+    if (!fs.existsSync(commandsPath)) {
+        fs.mkdirSync(commandsPath, {
+            recursive: true
+        });
+
+        console.log("⚠️ commands folder created.");
+        return;
+    }
+
+    const files = fs
+        .readdirSync(commandsPath)
+        .filter(file => file.endsWith(".js"));
+
+    console.log(`\n📦 Loading ${files.length} command(s)...\n`);
+
+    for (const file of files) {
+
+        const commandName = path
+            .basename(file, ".js")
+            .toLowerCase();
+
+        const filePath = path.join(commandsPath, file);
+
+        try {
+
+            // Clear require cache
+            delete require.cache[require.resolve(filePath)];
+
+            const command = require(filePath);
+
+            if (typeof command !== "function") {
+                console.error(
+                    `❌ Command ${file} does not export a function.`
+                );
+                continue;
+            }
+
+            commands[commandName] = command;
+
+            console.log(`✅ Loaded command: ${file}`);
+
+        } catch (error) {
+
+            console.error(`\n❌ Failed to load command: ${file}`);
+            console.error(`➡️ Error: ${error.message}`);
+
+            if (error.stack) {
+                console.error(error.stack);
+            }
+
+            console.error("");
+        }
+    }
+
+    console.log(
+        `📦 Commands loaded successfully: ${Object.keys(commands).length}\n`
+    );
+}
+
+loadCommands();
+
+// ======================================================
+// START BOT
+// ======================================================
+
 async function startBot() {
-    const { state, saveCreds } = await useMultiFileAuthState("session")
-    const { version } = await fetchLatestBaileysVersion()
+
+    const {
+        state,
+        saveCreds
+    } = await useMultiFileAuthState("session");
+
+    const {
+        version
+    } = await fetchLatestBaileysVersion();
 
     const sock = makeWASocket({
         version,
-        logger: pino({ level: "silent" }),
+        logger: pino({
+            level: "silent"
+        }),
         auth: state,
-        browser: ["Ubuntu", "Chrome", "20.0.04"],
+        browser: [
+            "Ubuntu",
+            "Chrome",
+            "20.0.04"
+        ],
         printQRInTerminal: false
-    })
-
-    if (!sock.authState.creds.registered) {
-        const ownerPhone = settings.ownerNumber.replace(/[^0-9]/g, '')
-        console.log(`\n🔄 Requesting pairing code for: ${ownerPhone}...`)
-        setTimeout(async () => {
-            try {
-                let code = await sock.requestPairingCode(ownerPhone)
-                code = code?.match(/.{1,4}/g)?.join("-") || code
-                console.log(`\n✅ YOUR PAIRING CODE: ${code}\n`)
-            } catch (err) { console.log("Pairing Error:", err.message) }
-        }, 5000)
-    }
-
-    sock.ev.on("creds.update", saveCreds)
-
-    // --- AUTO VIEW & LIKE STATUS INSTANTLY ---
-    sock.ev.on("messages.upsert", async (chatUpdate) => {
-        const m = chatUpdate.messages[0];
-        if (!m.message) return;
-        
-        if (m.key.remoteJid === "status@broadcast") {
-            const emojis = ["💚", "🔥", "✨", "🙌", "💯", "👑", "🚀", "😍", "⚡", "💎"];
-            const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-            
-            try {
-                const participant = m.key.participant || m.participant;
-                if (!participant) return;
-
-                // View status instantly
-                await sock.readMessages([m.key]); 
-                // Like status instantly with a reaction
-                await sock.sendMessage("status@broadcast", { 
-                    react: { text: randomEmoji, key: m.key } 
-                }, { statusJidList: [participant] });
-                
-                console.log(`👁️ Status viewed & 👍 Liked (${randomEmoji}) instantly for: ${participant.split('@')[0]}`);
-            } catch (e) { 
-                console.error("Auto Status View/Like Error:", e); 
-            }
-        }
     });
 
-    // --- CONNECTION UPDATE ---
-    sock.ev.on("connection.update", async (update) => {
-        const { connection, lastDisconnect } = update
-        if (connection === "close") {
-            if (lastDisconnect.error?.output?.statusCode !== DisconnectReason.loggedOut) startBot()
-        } else if (connection === "open") {
-            const ownerJid = settings.ownerNumber.replace(/[^0-9]/g, '') + "@s.whatsapp.net"
-            console.log(`\n🎊 RIFT-MD IS CONNECTED!`)
-            
-            const channelInfo = {
-                contextInfo: {
-                    forwardingScore: 999,
-                    isForwarded: true,
-                    forwardedNewsletterMessageInfo: {
-                        newsletterJid: '120363407561123100@newsletter',
-                        newsletterName: 'RIFT-MD',
-                        serverMessageId: -1
-                    }
-                }
-            };
+    // ==================================================
+    // PAIRING CODE
+    // ==================================================
 
-            await sock.sendMessage(ownerJid, {
-                image: { url: "https://files.catbox.moe/vv674d.jpg" },
-                caption: `╭━━━〔 🤖 *RIFT-MD STATUS* 〕━━━⬣\n┃ ✨ *Bot:* Online & Ready!\n┃ 🚀 *Status:* Fully Connected\n┃ ⚡ *Mode:* Active\n╰━━━━━━━━━━━━━━━━━━━━⬣`,
-                ...channelInfo
-            });
-        }
-    })
+    if (!sock.authState.creds.registered) {
 
-    // --- COMMAND LOADER ---
-    const commands = {}
-    const commandsPath = path.join(__dirname, "commands")
-    const loadCommands = () => {
-        if (fs.existsSync(commandsPath)) {
-            fs.readdirSync(commandsPath).forEach(file => {
-                if (file.endsWith(".js")) {
-                    try {
-                        const cmdName = file.replace(".js", "");
-                        commands[cmdName] = require(path.join(commandsPath, file));
-                    } catch (e) { console.error(`Failed to load command ${file}`); }
-                }
-            })
-        }
+        const ownerPhone =
+            settings.ownerNumber
+                .replace(/[^0-9]/g, "");
+
+        console.log(
+            `\n🔄 Requesting pairing code for: ${ownerPhone}...`
+        );
+
+        setTimeout(async () => {
+
+            try {
+
+                let code =
+                    await sock.requestPairingCode(ownerPhone);
+
+                code =
+                    code?.match(/.{1,4}/g)?.join("-") ||
+                    code;
+
+                console.log(
+                    `\n✅ YOUR PAIRING CODE: ${code}\n`
+                );
+
+            } catch (err) {
+
+                console.log(
+                    "❌ Pairing Error:",
+                    err.message
+                );
+            }
+
+        }, 5000);
     }
-    loadCommands();
 
-    sock.ev.on("messages.upsert", async ({ messages, type }) => {
-        if (type !== 'notify') return
-        const m = messages[0]
-        if (!m.message || m.key.remoteJid === "status@broadcast") return
-        
-        const from = m.key.remoteJid
-        const isGroup = from.endsWith('@g.us')
-        const sender = m.key.participant || m.key.remoteJid
-        
-        const body = m.message.conversation || m.message.extendedTextMessage?.text || m.message.imageMessage?.caption || m.message.videoMessage?.caption || "";
-        const prefix = settings.prefix || "."
-        const isOwner = sender.includes(settings.ownerNumber.replace(/[^0-9]/g, '')) || m.key.fromMe
+    // ==================================================
+    // SAVE CREDENTIALS
+    // ==================================================
 
-        // --- PERSISTENT ANTILINK SYSTEM ---
-        if (isGroup && body) {
-            let db = { antilink: [] };
-            if (fs.existsSync(dbPath)) {
-                try { db = JSON.parse(fs.readFileSync(dbPath, "utf-8")); } catch (e) { db = { antilink: [] }; }
-            }
+    sock.ev.on(
+        "creds.update",
+        saveCreds
+    );
 
-            if (db.antilink.includes(from)) {
-                const linkRegex = /chat.whatsapp.com\/|https?:\/\//i;
-                
-                if (linkRegex.test(body)) {
-                    try {
-                        const groupMetadata = await sock.groupMetadata(from)
-                        const admins = groupMetadata.participants.filter(p => p.admin !== null).map(p => p.id)
-                        const botId = sock.user.id.split(':')[0] + '@s.whatsapp.net'
-                        const isBotAdmin = admins.includes(botId)
-                        const isSenderAdmin = admins.includes(sender)
+    // ==================================================
+    // AUTO STATUS VIEW + REACTION
+    // ==================================================
 
-                        if (!isSenderAdmin && !isOwner && isBotAdmin) {
-                            await sock.sendMessage(from, { delete: m.key })
-                            await sock.sendMessage(from, { 
-                                text: `🚫 *Link Detected:* @${sender.split('@')[0]}, links are not allowed here!`, 
-                                mentions: [sender] 
-                            })
+    sock.ev.on(
+        "messages.upsert",
+        async (chatUpdate) => {
+
+            try {
+
+                const m =
+                    chatUpdate.messages?.[0];
+
+                if (!m || !m.message) return;
+
+                if (
+                    m.key.remoteJid !==
+                    "status@broadcast"
+                ) {
+                    return;
+                }
+
+                const emojis = [
+                    "💚",
+                    "🔥",
+                    "✨",
+                    "🙌",
+                    "💯",
+                    "👑",
+                    "🚀",
+                    "😍",
+                    "⚡",
+                    "💎"
+                ];
+
+                const randomEmoji =
+                    emojis[
+                        Math.floor(
+                            Math.random() *
+                            emojis.length
+                        )
+                    ];
+
+                const participant =
+                    m.key.participant ||
+                    m.participant;
+
+                if (!participant) return;
+
+                // View status
+                await sock.readMessages([
+                    m.key
+                ]);
+
+                // React to status
+                await sock.sendMessage(
+                    "status@broadcast",
+                    {
+                        react: {
+                            text: randomEmoji,
+                            key: m.key
                         }
-                    } catch (e) { console.error("AntiLink Error:", e) }
+                    },
+                    {
+                        statusJidList: [
+                            participant
+                        ]
+                    }
+                );
+
+                console.log(
+                    `👁️ Status viewed & reacted ${randomEmoji}: ${participant.split("@")[0]}`
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "Auto Status Error:",
+                    error.message
+                );
+            }
+        }
+    );
+
+    // ==================================================
+    // CONNECTION UPDATE
+    // ==================================================
+
+    sock.ev.on(
+        "connection.update",
+        async (update) => {
+
+            const {
+                connection,
+                lastDisconnect
+            } = update;
+
+            if (connection === "close") {
+
+                const statusCode =
+                    lastDisconnect
+                        ?.error
+                        ?.output
+                        ?.statusCode;
+
+                if (
+                    statusCode !==
+                    DisconnectReason.loggedOut
+                ) {
+
+                    console.log(
+                        "🔄 Connection closed. Reconnecting..."
+                    );
+
+                    setTimeout(() => {
+                        startBot();
+                    }, 3000);
+
+                } else {
+
+                    console.log(
+                        "❌ WhatsApp logged out."
+                    );
+                }
+
+            } else if (connection === "open") {
+
+                const ownerJid =
+                    settings.ownerNumber
+                        .replace(/[^0-9]/g, "") +
+                    "@s.whatsapp.net";
+
+                console.log(
+                    "\n🎊 RIFT-MD IS CONNECTED!"
+                );
+
+                const channelInfo = {
+                    contextInfo: {
+                        forwardingScore: 999,
+                        isForwarded: true,
+                        forwardedNewsletterMessageInfo: {
+                            newsletterJid:
+                                "120363407561123100@newsletter",
+                            newsletterName:
+                                "RIFT-MD",
+                            serverMessageId: -1
+                        }
+                    }
+                };
+
+                try {
+
+                    await sock.sendMessage(
+                        ownerJid,
+                        {
+                            image: {
+                                url:
+                                    "https://files.catbox.moe/vv674d.jpg"
+                            },
+
+                            caption:
+                                `╭━━━〔 🤖 *RIFT-MD STATUS* 〕━━━⬣\n` +
+                                `┃ ✨ *Bot:* Online & Ready!\n` +
+                                `┃ 🚀 *Status:* Fully Connected\n` +
+                                `┃ ⚡ *Mode:* Active\n` +
+                                `┃ 📦 *Commands:* ${Object.keys(commands).length}\n` +
+                                `╰━━━━━━━━━━━━━━━━━━━━⬣`,
+
+                            ...channelInfo
+                        }
+                    );
+
+                } catch (error) {
+
+                    console.error(
+                        "Owner notification error:",
+                        error.message
+                    );
                 }
             }
         }
+    );
 
-        if (!body.startsWith(prefix)) return
-        const args = body.slice(prefix.length).trim().split(/ +/)
-        const commandName = args.shift().toLowerCase()
+    // ==================================================
+    // MESSAGE HANDLER
+    // ==================================================
 
-        try {
-            if (commandName === "antilink") {
-                if (!isOwner) return await sock.sendMessage(from, { text: "❌ *Access Denied:* Only the Bot Owner can use this command." });
+    sock.ev.on(
+        "messages.upsert",
+        async ({
+            messages,
+            type
+        }) => {
 
-                let db = { antilink: [] };
-                if (fs.existsSync(dbPath)) {
-                    try { db = JSON.parse(fs.readFileSync(dbPath, "utf-8")); } catch (e) { db = { antilink: [] }; }
+            try {
+
+                if (type !== "notify") return;
+
+                const m =
+                    messages?.[0];
+
+                if (!m || !m.message) return;
+
+                const from =
+                    m.key.remoteJid;
+
+                if (
+                    !from ||
+                    from === "status@broadcast"
+                ) {
+                    return;
                 }
 
-                if (args[0] === "on") {
-                    if (!db.antilink.includes(from)) {
-                        db.antilink.push(from);
-                        fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+                const isGroup =
+                    from.endsWith("@g.us");
+
+                const sender =
+                    m.key.participant ||
+                    m.key.remoteJid;
+
+                // ======================================
+                // MESSAGE BODY
+                // ======================================
+
+                const body =
+                    m.message.conversation ||
+                    m.message.extendedTextMessage?.text ||
+                    m.message.imageMessage?.caption ||
+                    m.message.videoMessage?.caption ||
+                    m.message.documentMessage?.caption ||
+                    "";
+
+                if (!body) return;
+
+                const prefix =
+                    settings.prefix || ".";
+
+                const ownerNumber =
+                    settings.ownerNumber
+                        .replace(/[^0-9]/g, "");
+
+                const isOwner =
+                    sender.includes(ownerNumber) ||
+                    m.key.fromMe;
+
+                // ======================================
+                // ANTILINK
+                // ======================================
+
+                if (isGroup && body) {
+
+                    let db = {
+                        antilink: []
+                    };
+
+                    if (fs.existsSync(dbPath)) {
+
+                        try {
+
+                            db = JSON.parse(
+                                fs.readFileSync(
+                                    dbPath,
+                                    "utf8"
+                                )
+                            );
+
+                        } catch {
+
+                            db = {
+                                antilink: []
+                            };
+                        }
                     }
-                    await sock.sendMessage(from, { text: "🛡️ *AntiLink System:* Activated! ✅" });
-                } else if (args[0] === "off") {
-                    db.antilink = db.antilink.filter(id => id !== from);
-                    fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
-                    await sock.sendMessage(from, { text: "🛡️ *AntiLink System:* Deactivated! ❌" });
-                } else {
-                    await sock.sendMessage(from, { text: `❌ *Usage:* \`${prefix}antilink on/off\`` });
+
+                    if (
+                        Array.isArray(db.antilink) &&
+                        db.antilink.includes(from)
+                    ) {
+
+                        const linkRegex =
+                            /chat\.whatsapp\.com\/|https?:\/\//i;
+
+                        if (
+                            linkRegex.test(body)
+                        ) {
+
+                            try {
+
+                                const metadata =
+                                    await sock.groupMetadata(
+                                        from
+                                    );
+
+                                const admins =
+                                    metadata.participants
+                                        .filter(
+                                            p =>
+                                                p.admin !== null
+                                        )
+                                        .map(
+                                            p => p.id
+                                        );
+
+                                const botId =
+                                    sock.user.id
+                                        .split(":")[0] +
+                                    "@s.whatsapp.net";
+
+                                const isBotAdmin =
+                                    admins.includes(
+                                        botId
+                                    );
+
+                                const isSenderAdmin =
+                                    admins.includes(
+                                        sender
+                                    );
+
+                                if (
+                                    !isSenderAdmin &&
+                                    !isOwner &&
+                                    isBotAdmin
+                                ) {
+
+                                    await sock.sendMessage(
+                                        from,
+                                        {
+                                            delete:
+                                                m.key
+                                        }
+                                    );
+
+                                    await sock.sendMessage(
+                                        from,
+                                        {
+                                            text:
+                                                `🚫 *Link Detected!*\n\n` +
+                                                `@${sender.split("@")[0]}, links are not allowed here!`,
+                                            mentions: [
+                                                sender
+                                            ]
+                                        }
+                                    );
+                                }
+
+                            } catch (error) {
+
+                                console.error(
+                                    "AntiLink Error:",
+                                    error.message
+                                );
+                            }
+                        }
+                    }
                 }
-            }
-            else if (commandName === "setprefix") {
-                if (!isOwner) return await sock.sendMessage(from, { text: "❌ *Access Denied:* Only the Bot Owner can use this command." });
 
-                if (!args[0]) {
-                    return await sock.sendMessage(from, { text: `❌ *Usage:* \`${prefix}setprefix [new_prefix]\`\n💡 *Example:* \`${prefix}setprefix !\`` });
+                // ======================================
+                // PREFIX CHECK
+                // ======================================
+
+                if (
+                    !body.startsWith(prefix)
+                ) {
+                    return;
                 }
 
-                const newPrefix = args[0];
-                
-                try {
-                    const settingsPath = path.join(__dirname, "settings.js");
-                    let settingsContent = fs.readFileSync(settingsPath, "utf-8");
-                    
-                    settingsContent = settingsContent.replace(/prefix:\s*["'`].*?["'`]/, `prefix: "${newPrefix}"`);
-                    fs.writeFileSync(settingsPath, settingsContent, "utf-8");
+                const input =
+                    body
+                        .slice(prefix.length)
+                        .trim();
 
-                    // Update memory instantly
-                    settings.prefix = newPrefix;
+                if (!input) return;
 
-                    await sock.sendMessage(from, { text: `✅ *Prefix successfully changed to:* \`${newPrefix}\`\n✨ *You can now use the new prefix immediately!*` });
+                const parts =
+                    input.split(/\s+/);
 
-                } catch (e) {
-                    console.error("SetPrefix Error:", e);
-                    await sock.sendMessage(from, { text: "❌ *Error:* Failed to update prefix in settings.js" });
+                const commandName =
+                    parts.shift()
+                        .toLowerCase();
+
+                const args = parts;
+
+                console.log(
+                    `📥 Command: ${prefix}${commandName} | From: ${sender.split("@")[0]}`
+                );
+
+                // ======================================
+                // ANTILINK COMMAND
+                // ======================================
+
+                if (
+                    commandName === "antilink"
+                ) {
+
+                    if (!isOwner) {
+
+                        return await sock.sendMessage(
+                            from,
+                            {
+                                text:
+                                    "❌ *Access Denied:* Only the Bot Owner can use this command."
+                            },
+                            {
+                                quoted: m
+                            }
+                        );
+                    }
+
+                    let db = {
+                        antilink: []
+                    };
+
+                    try {
+
+                        if (
+                            fs.existsSync(dbPath)
+                        ) {
+
+                            db = JSON.parse(
+                                fs.readFileSync(
+                                    dbPath,
+                                    "utf8"
+                                )
+                            );
+                        }
+
+                    } catch {
+
+                        db = {
+                            antilink: []
+                        };
+                    }
+
+                    if (
+                        !Array.isArray(
+                            db.antilink
+                        )
+                    ) {
+
+                        db.antilink = [];
+                    }
+
+                    if (
+                        args[0] === "on"
+                    ) {
+
+                        if (
+                            !db.antilink.includes(
+                                from
+                            )
+                        ) {
+
+                            db.antilink.push(
+                                from
+                            );
+                        }
+
+                        fs.writeFileSync(
+                            dbPath,
+                            JSON.stringify(
+                                db,
+                                null,
+                                2
+                            )
+                        );
+
+                        return await sock.sendMessage(
+                            from,
+                            {
+                                text:
+                                    "🛡️ *AntiLink System:* Activated! ✅"
+                            },
+                            {
+                                quoted: m
+                            }
+                        );
+
+                    } else if (
+                        args[0] === "off"
+                    ) {
+
+                        db.antilink =
+                            db.antilink.filter(
+                                id =>
+                                    id !== from
+                            );
+
+                        fs.writeFileSync(
+                            dbPath,
+                            JSON.stringify(
+                                db,
+                                null,
+                                2
+                            )
+                        );
+
+                        return await sock.sendMessage(
+                            from,
+                            {
+                                text:
+                                    "🛡️ *AntiLink System:* Deactivated! ❌"
+                            },
+                            {
+                                quoted: m
+                            }
+                        );
+
+                    } else {
+
+                        return await sock.sendMessage(
+                            from,
+                            {
+                                text:
+                                    `❌ *Usage:* \`${prefix}antilink on/off\``
+                            },
+                            {
+                                quoted: m
+                            }
+                        );
+                    }
                 }
+
+                // ======================================
+                // SET PREFIX
+                // ======================================
+
+                if (
+                    commandName === "setprefix"
+                ) {
+
+                    if (!isOwner) {
+
+                        return await sock.sendMessage(
+                            from,
+                            {
+                                text:
+                                    "❌ *Access Denied:* Only the Bot Owner can use this command."
+                            },
+                            {
+                                quoted: m
+                            }
+                        );
+                    }
+
+                    if (!args[0]) {
+
+                        return await sock.sendMessage(
+                            from,
+                            {
+                                text:
+                                    `❌ *Usage:* \`${prefix}setprefix [new_prefix]\`\n` +
+                                    `💡 *Example:* \`${prefix}setprefix !\``
+                            },
+                            {
+                                quoted: m
+                            }
+                        );
+                    }
+
+                    const newPrefix =
+                        args[0];
+
+                    try {
+
+                        const settingsPath =
+                            path.join(
+                                __dirname,
+                                "settings.js"
+                            );
+
+                        let settingsContent =
+                            fs.readFileSync(
+                                settingsPath,
+                                "utf8"
+                            );
+
+                        settingsContent =
+                            settingsContent.replace(
+                                /prefix:\s*["'`].*?["'`]/,
+                                `prefix: "${newPrefix}"`
+                            );
+
+                        fs.writeFileSync(
+                            settingsPath,
+                            settingsContent,
+                            "utf8"
+                        );
+
+                        settings.prefix =
+                            newPrefix;
+
+                        return await sock.sendMessage(
+                            from,
+                            {
+                                text:
+                                    `✅ *Prefix successfully changed to:* \`${newPrefix}\``
+                            },
+                            {
+                                quoted: m
+                            }
+                        );
+
+                    } catch (error) {
+
+                        console.error(
+                            "SetPrefix Error:",
+                            error.message
+                        );
+
+                        return await sock.sendMessage(
+                            from,
+                            {
+                                text:
+                                    "❌ *Error:* Failed to update settings.js"
+                            },
+                            {
+                                quoted: m
+                            }
+                        );
+                    }
+                }
+
+                // ======================================
+                // COMMAND EXECUTION
+                // ======================================
+
+                if (
+                    commands[commandName]
+                ) {
+
+                    try {
+
+                        await commands[
+                            commandName
+                        ](
+                            sock,
+                            m,
+                            args
+                        );
+
+                    } catch (error) {
+
+                        console.error(
+                            `❌ Error executing ${commandName}:`,
+                            error
+                        );
+
+                        await sock.sendMessage(
+                            from,
+                            {
+                                text:
+                                    `❌ *Command Error:* ${commandName}\n\n` +
+                                    `⚠️ ${error.message}`
+                            },
+                            {
+                                quoted: m
+                            }
+                        );
+                    }
+
+                    return;
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "Message Handler Error:",
+                    error
+                );
             }
-            else if (commands[commandName]) {
-                await commands[commandName](sock, m, args);
-            }
-        } catch (e) { console.log(e) }
-    })
+        }
+    );
 }
 
-startBot().catch(err => console.log(err))
+// ======================================================
+// START
+// ======================================================
+
+startBot().catch(error => {
+    console.error(
+        "❌ FATAL BOT ERROR:",
+        error
+    );
+});
