@@ -24,20 +24,7 @@
 
 ---
 <div style="background-color: #0d1117; padding: 25px; border-radius: 12px; border: 1px solid #30363d; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-
-  <h1 align="center">
-    <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code:wght@700&size=28&duration=5000&color=FF79C6&background=0D111700&center=true&vCenter=true&width=900&lines=LUMINA+MD+%E2%9C%A8+PI+GWO+BOT+WHATSAPP+LAN+%F0%9F%9A%80;PLUS+100+FONKSYON+AVANSE+%F0%9F%94%A5" alt="Typing Animation">
-  </h1>
-
-  <p align="center" style="color: #8b949e; font-size: 14px; letter-spacing: 1px; margin-top: 15px;">
-    <i>Eksperyans teknoloji ki pi rapid ak pi efikas pou WhatsApp ou</i>
-  </p>
-
-</div>
-
-
   ***
-
 ⭕  DEPLOY ON [ PANEL KATABUMP ]
 
 [![Find On Whatsapp ](https://img.shields.io/badge/➤Click-Here-blue.svg)](https://dashboard.katabump.com/dashboard)
