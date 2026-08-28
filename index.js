@@ -155,6 +155,16 @@ async function startBot() {
     });
 
     // ==================================================
+    // LOAD EVENTS (WELCOME / GOODBYE)
+    // ==================================================
+    try {
+        require('./events')(sock);
+        console.log("✅ Events loaded successfully.");
+    } catch (e) {
+        console.error("❌ Failed to load events:", e.message);
+    }
+
+    // ==================================================
     // PAIRING CODE
     // ==================================================
 
