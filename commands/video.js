@@ -40,10 +40,7 @@ async function eliteProTech(url) {
     const data = response.data || {};
 
     if (data.success && data.downloadURL) {
-        return {
-            url: data.downloadURL,
-            title: data.title
-        };
+        return { url: data.downloadURL, title: data.title };
     }
 
     throw new Error("EliteProTech failed");
@@ -83,10 +80,7 @@ async function okatsu(url) {
     const result = response.data?.result || {};
 
     if (result.mp4) {
-        return {
-            url: result.mp4,
-            title: result.title
-        };
+        return { url: result.mp4, title: result.title };
     }
 
     throw new Error("Okatsu failed");
@@ -115,34 +109,21 @@ module.exports = async (sock, m, args) => {
         }
 
         await sock.sendMessage(chatId, {
-            react: {
-                text: "⏳",
-                key: m.key
-            }
+            react: { text: "⏳", key: m.key }
         });
 
         let youtubeUrl;
         let searchTitle = "";
+        let thumbnail = "";
 
-        // ===============================
-        // YOUTUBE LINK
-        // ===============================
         if (/^https?:\/\//i.test(query)) {
             youtubeUrl = query;
-        } 
-        
-        // ===============================
-        // SEARCH YOUTUBE
-        // ===============================
-        else {
+        } else {
             const search = await yts(query);
 
             if (!search.videos || search.videos.length === 0) {
                 await sock.sendMessage(chatId, {
-                    react: {
-                        text: "❌",
-                        key: m.key
-                    }
+                    react: { text: "❌", key: m.key }
                 });
 
                 return await sock.sendMessage(
@@ -155,26 +136,16 @@ module.exports = async (sock, m, args) => {
                 );
             }
 
-            youtubeUrl = search.videos[0].url;
-            searchTitle = search.videos[0].title;
+            const video = search.videos[0];
+            youtubeUrl = video.url || "";
+            searchTitle = typeof video.title === "string" ? video.title : (video.title?.toString() || "");
+            thumbnail = typeof video.thumbnail === "string" ? video.thumbnail : "";
         }
 
-        // ===============================
-        // DOWNLOAD SERVERS
-        // ===============================
         const servers = [
-            {
-                name: "EliteProTech",
-                function: eliteProTech
-            },
-            {
-                name: "Yupra",
-                function: yupra
-            },
-            {
-                name: "Okatsu",
-                function: okatsu
-            }
+            { name: "EliteProTech", function: eliteProTech },
+            { name: "Yupra", function: yupra },
+            { name: "Okatsu", function: okatsu }
         ];
 
         let videoData = null;
@@ -182,20 +153,15 @@ module.exports = async (sock, m, args) => {
         for (const server of servers) {
             try {
                 console.log(`Trying ${server.name}...`);
-
                 const result = await server.function(youtubeUrl);
 
                 if (result && result.url) {
                     videoData = result;
-
                     console.log(`${server.name} SUCCESS`);
                     break;
                 }
             } catch (error) {
-                console.log(
-                    `${server.name} FAILED:`,
-                    error.message
-                );
+                console.log(`${server.name} FAILED:`, error.message);
             }
         }
 
@@ -203,13 +169,7 @@ module.exports = async (sock, m, args) => {
             throw new Error("All video download servers failed");
         }
 
-        // ===============================
-        // FILE NAME
-        // ===============================
-        const title =
-            videoData.title ||
-            searchTitle ||
-            "RIFT-MD Video";
+        const title = videoData.title || searchTitle || "RIFT-MD Video";
 
         const cleanTitle =
             title
@@ -218,5 +178,42 @@ module.exports = async (sock, m, args) => {
                 .trim()
                 .slice(0, 100) || "RIFT-MD-Video";
 
-        // ===============================
-        // SEND VIDEO
+        await sock.sendMessage(
+            chatId,
+            {
+                video: { url: videoData.url },
+                mimetype: "video/mp4",
+                fileName: `${cleanTitle}.mp4`,
+                caption:
+                    `╭━━━〔 *RIFT-MD VIDEO* 〕━━━⬣\n` +
+                    `┃ 🎬 *Title:* ${title}\n` +
+                    `┃ 🤖 *Bot:* RIFT-MD\n` +
+                    `╰━━━━━━━━━━━━━━━━━━━━⬣`,
+                ...channelInfo
+            },
+            { quoted: m }
+        );
+
+        await sock.sendMessage(chatId, {
+            react: { text: "✅", key: m.key }
+        });
+
+    } catch (error) {
+        console.error("VIDEO COMMAND ERROR:", error);
+
+        await sock.sendMessage(chatId, {
+            react: { text: "❌", key: m.key }
+        });
+
+        await sock.sendMessage(
+            chatId,
+            {
+                text:
+                    "❌ *Video download failed!*\n\n" +
+                    "⚠️ All video servers are currently unavailable or timed out.",
+                ...channelInfo
+            },
+            { quoted: m }
+        );
+    }
+};
