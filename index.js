@@ -77,8 +77,6 @@ function loadCommands() {
         .readdirSync(commandsPath)
         .filter(file => file.endsWith(".js"));
 
-    console.log(`\n📦 Loading ${files.length} command(s)...\n`);
-
     for (const file of files) {
 
         const commandName = path
@@ -102,8 +100,6 @@ function loadCommands() {
             }
 
             commands[commandName] = command;
-
-            console.log(`✅ Loaded command: ${file}`);
 
         } catch (error) {
 
