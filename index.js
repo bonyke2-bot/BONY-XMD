@@ -52,7 +52,8 @@ if (!fs.existsSync(dbPath)) {
         JSON.stringify({
             antilink: [],
             autoreact: false,
-            autoread: false
+            autoread: false,
+            mode: "public"
         }, null, 2)
     );
 }
@@ -421,14 +422,14 @@ async function startBot() {
                 }
 
                 // ======================================
-                // DATABASE READ FOR GLOBAL FEATURES (AUTOREAD / AUTOREACT)
+                // DATABASE READ FOR GLOBAL FEATURES
                 // ======================================
-                let globalDb = { antilink: [], autoreact: false, autoread: false };
+                let globalDb = { antilink: [], autoreact: false, autoread: false, mode: "public" };
                 if (fs.existsSync(dbPath)) {
                     try {
                         globalDb = JSON.parse(fs.readFileSync(dbPath, "utf8"));
                     } catch {
-                        globalDb = { antilink: [], autoreact: false, autoread: false };
+                        globalDb = { antilink: [], autoreact: false, autoread: false, mode: "public" };
                     }
                 }
 
@@ -488,6 +489,14 @@ async function startBot() {
                 const isOwner =
                     sender.includes(ownerNumber) ||
                     m.key.fromMe;
+
+                // ======================================
+                // MODE CHECK (PUBLIC / PRIVATE)
+                // ======================================
+                const botMode = globalDb.mode || "public";
+                if (botMode === "private" && !isOwner) {
+                    return; // Bloke tout lòt moun si l an Private epi se pa ou menm
+                }
 
                 // ======================================
                 // ANTILINK
