@@ -1,8 +1,19 @@
 <div style="background-color: #0b0f19; padding: 25px; border-radius: 12px; border: 1px solid #00ffcc55; font-family: 'Share Tech Mono', monospace;">
 
+  <p align="center">
+    <img src="https://files.catbox.moe/vv674d.jpg" width="220" style="border-radius: 50%; border: 2px solid #00FFCC; box-shadow: 0 0 15px rgba(0,255,204,0.5);" alt="RIFT-MD Logo">
+  </p>
+
   <h1 align="center">
     <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code:wght@700&size=28&duration=5000&color=00FFCC&background=0B0F1900&center=true&vCenter=true&width=900&lines=RIFT+MD+%E2%9C%A8+THE+BEST+WHATSAPP+BOT+%F0%9F%9A%80;PLUS+100%2B+ADVANCED+FEATURES+%F0%9F%94%A5" alt="Typing Animation">
   </h1>
+
+  <p align="center" style="color: #00ffcc; font-size: 13px; letter-spacing: 2px; margin-top: 15px; text-shadow: 0 0 8px rgba(0,255,204,0.4);">
+    ⚡ POWERED BY RIFT-MD • ULTIMATE EXPERIENCE ⚡
+  </p>
+
+</div>
+
 
   <p align="center" style="color: #00ffcc; font-size: 13px; letter-spacing: 2px; margin-top: 15px; text-shadow: 0 0 8px rgba(0,255,204,0.4);">
     ⚡ POWERED BY RIFT-MD • ULTIMATE EXPERIENCE ⚡
