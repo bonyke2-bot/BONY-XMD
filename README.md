@@ -1,21 +1,29 @@
-<p align="center">  
-  <a href="https://telegra.ph/file/f03bd3b5a50f2892ec1ee.jpg">
-    <img alt="secktor docs" height="300" src="https://files.catbox.moe/vv674d.jpg">
-    <h1 align="center"> RIFT-MD 
-      BY
-      WEED TECH 333</h1>
-  </a>
-</p>  
-  
-</p>
+<div style="background-color: #0b0f19; padding: 25px; border-radius: 12px; border: 1px solid #00ffcc55; font-family: 'Share Tech Mono', monospace;">
+
+  <h1 align="center">
+    <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code:wght@700&size=28&duration=5000&color=00FFCC&background=0B0F1900&center=true&vCenter=true&width=900&lines=RIFT+MD+%E2%9C%A8+THE+BEST+WHATSAPP+BOT+%F0%9F%9A%80;PLUS+100%2B+ADVANCED+FEATURES+%F0%9F%94%A5" alt="Typing Animation">
+  </h1>
+
+  <p align="center" style="color: #00ffcc; font-size: 13px; letter-spacing: 2px; margin-top: 15px; text-shadow: 0 0 8px rgba(0,255,204,0.4);">
+    ⚡ POWERED BY RIFT-MD • ULTIMATE EXPERIENCE ⚡
+  </p>
+
+</div>
+
 
 ---
+<div style="background-color: #0d1117; padding: 25px; border-radius: 12px; border: 1px solid #30363d; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
 
-<p style="font-family:'Share Tech Mono', monospace; color:#9afff6;">
+  <h1 align="center">
+    <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code:wght@700&size=28&duration=5000&color=FF79C6&background=0D111700&center=true&vCenter=true&width=900&lines=LUMINA+MD+%E2%9C%A8+PI+GWO+BOT+WHATSAPP+LAN+%F0%9F%9A%80;PLUS+100+FONKSYON+AVANSE+%F0%9F%94%A5" alt="Typing Animation">
+  </h1>
 
-<h1 align="center">
-  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code:wght@700&size=32&duration=6000&color=00FF00&background=000000&center=true&vCenter=true&width=900&lines=LUMINA+MD+THE+BEST+BOT+WHATSAPP+100%2B+FEATURES" alt="Typing Animation">
-</h1>
+  <p align="center" style="color: #8b949e; font-size: 14px; letter-spacing: 1px; margin-top: 15px;">
+    <i>Eksperyans teknoloji ki pi rapid ak pi efikas pou WhatsApp ou</i>
+  </p>
+
+</div>
+
 
   ***
 
@@ -41,14 +49,14 @@
   <h3 style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #fff; margin-bottom: 15px;">🔗 Connect With Us</h3>
   
   <p>
-    <a href="https://wa.me/+50939032060?text=*_Hello+Dev+Weed👋_*" target="_blank">
+    <a href="https://wa.me/+50948247470?text=*_Hello+Dev+Weed👋_*" target="_blank">
       <img alt="WhatsApp" src="https://img.shields.io/badge/Contact_Owner-0033CC?style=for-the-badge&logo=whatsapp&logoColor=white&rounded=true"/>
     </a>
   </p>
 
   <!-- Community Links -->
   <p style="margin: 15px 0;">
-    <a href="https://chat.whatsapp.com/KfYnvgj0JTqErxKc0RTNNu" target="_blank" style="margin-right: 8px;">
+    <a href="https://chat.whatsapp.com/H1rZtyq3l613WfqU7MzbmX" target="_blank" style="margin-right: 8px;">
       <img src="https://img.shields.io/badge/Join_Group-00E676?style=for-the-badge&logo=whatsapp&logoColor=white" alt="WhatsApp Group"/>
     </a>
     <a href="https://whatsapp.com/channel/0029Vb2J9C91dAw7vxA75y2V" target="_blank">
