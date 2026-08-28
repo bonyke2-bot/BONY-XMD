@@ -1,3 +1,6 @@
 {
-  "antilink": []
+  "antilink": [],
+  "autoreact": false,
+  "autoread": false,
+  "mode": "public"
 }
