@@ -7,38 +7,27 @@ const {
 
 const pino = require("pino");
 const fs = require("fs");
-const http = require("http");
 const path = require("path");
+const http = require("http");
 const settings = require("./settings");
 
 // ======================================================
-// RIFT-MD UPTIME SERVER
+// RIFT-MD WEB SERVER
 // ======================================================
 
-const startServer = (port) => {
-    const server = http.createServer((req, res) => {
-        res.writeHead(200, {
-            "Content-Type": "text/plain"
-        });
+const PORT = process.env.PORT || 3000;
 
-        res.end("RIFT-MD IS ONLINE");
+const server = http.createServer((req, res) => {
+    res.writeHead(200, {
+        "Content-Type": "text/plain"
     });
 
-    server.listen(port, () => {
-        console.log(`🌐 RIFT-MD server running on port ${port}`);
-    });
+    res.end("RIFT-MD IS ONLINE 🚀");
+});
 
-    server.on("error", (e) => {
-        if (e.code === "EADDRINUSE") {
-            console.log(`⚠️ Port ${port} busy, trying ${port + 1}...`);
-            startServer(port + 1);
-        } else {
-            console.error("Server Error:", e);
-        }
-    });
-};
-
-startServer(process.env.PORT || 3000);
+server.listen(PORT, () => {
+    console.log(`🌐 RIFT-MD running on port ${PORT}`);
+});
 
 // ======================================================
 // DATABASE
@@ -56,71 +45,73 @@ if (!fs.existsSync(dbPath)) {
 }
 
 // ======================================================
-// LOAD COMMANDS
+// COMMAND LOADER
 // ======================================================
 
 const commands = {};
 const commandsPath = path.join(__dirname, "commands");
 
+if (!fs.existsSync(commandsPath)) {
+    fs.mkdirSync(commandsPath, {
+        recursive: true
+    });
+}
+
 function loadCommands() {
-
-    if (!fs.existsSync(commandsPath)) {
-        fs.mkdirSync(commandsPath, {
-            recursive: true
-        });
-
-        console.log("⚠️ commands folder created.");
-        return;
-    }
-
     const files = fs
         .readdirSync(commandsPath)
         .filter(file => file.endsWith(".js"));
 
-    console.log(`\n📦 Loading ${files.length} command(s)...\n`);
+    console.log("\n==============================");
+    console.log("📦 LOADING COMMANDS");
+    console.log("==============================");
 
     for (const file of files) {
-
         const commandName = path
             .basename(file, ".js")
             .toLowerCase();
 
-        const filePath = path.join(commandsPath, file);
+        const filePath = path.join(
+            commandsPath,
+            file
+        );
 
         try {
-
-            // Clear require cache
-            delete require.cache[require.resolve(filePath)];
+            delete require.cache[
+                require.resolve(filePath)
+            ];
 
             const command = require(filePath);
 
             if (typeof command !== "function") {
-                console.error(
-                    `❌ Command ${file} does not export a function.`
+                console.log(
+                    `❌ ${file} → must export a function`
                 );
                 continue;
             }
 
             commands[commandName] = command;
 
-            console.log(`✅ Loaded command: ${file}`);
+            console.log(
+                `✅ Loaded: ${commandName}`
+            );
 
         } catch (error) {
+            console.log(
+                `❌ Failed: ${file}`
+            );
 
-            console.error(`\n❌ Failed to load command: ${file}`);
-            console.error(`➡️ Error: ${error.message}`);
-
-            if (error.stack) {
-                console.error(error.stack);
-            }
-
-            console.error("");
+            console.log(
+                `   ${error.message}`
+            );
         }
     }
 
+    console.log("==============================");
     console.log(
-        `📦 Commands loaded successfully: ${Object.keys(commands).length}\n`
+        `📦 TOTAL COMMANDS: ${Object.keys(commands).length}`
     );
+    console.log("==============================\n");
 }
 
 loadCommands();
@@ -131,10 +122,14 @@ loadCommands();
 
 async function startBot() {
 
+    console.log("🔄 Starting RIFT-MD...");
+
     const {
         state,
         saveCreds
-    } = await useMultiFileAuthState("session");
+    } = await useMultiFileAuthState(
+        path.join(__dirname, "session")
+    );
 
     const {
         version
@@ -142,70 +137,26 @@ async function startBot() {
 
     const sock = makeWASocket({
         version,
+
         logger: pino({
             level: "silent"
         }),
+
         auth: state,
+
         browser: [
-            "Ubuntu",
+            "RIFT-MD",
             "Chrome",
-            "20.0.04"
+            "1.0.0"
         ],
-        printQRInTerminal: false
+
+        printQRInTerminal: false,
+
+        generateHighQualityLinkPreview: true
     });
 
     // ==================================================
-    // LOAD EVENTS (WELCOME / GOODBYE)
-    // ==================================================
-    try {
-        require('./events')(sock);
-        console.log("✅ Events loaded successfully.");
-    } catch (e) {
-        console.error("❌ Failed to load events:", e.message);
-    }
-
-    // ==================================================
-    // PAIRING CODE
-    // ==================================================
-
-    if (!sock.authState.creds.registered) {
-
-        const ownerPhone =
-            settings.ownerNumber
-                .replace(/[^0-9]/g, "");
-
-        console.log(
-            `\n🔄 Requesting pairing code for: ${ownerPhone}...`
-        );
-
-        setTimeout(async () => {
-
-            try {
-
-                let code =
-                    await sock.requestPairingCode(ownerPhone);
-
-                code =
-                    code?.match(/.{1,4}/g)?.join("-") ||
-                    code;
-
-                console.log(
-                    `\n✅ YOUR PAIRING CODE: ${code}\n`
-                );
-
-            } catch (err) {
-
-                console.log(
-                    "❌ Pairing Error:",
-                    err.message
-                );
-            }
-
-        }, 5000);
-    }
-
-    // ==================================================
-    // SAVE CREDENTIALS
+    // SAVE SESSION
     // ==================================================
 
     sock.ev.on(
@@ -214,91 +165,113 @@ async function startBot() {
     );
 
     // ==================================================
-    // AUTO STATUS VIEW + REACTION
+    // WELCOME / GOODBYE EVENTS
     // ==================================================
 
-    sock.ev.on(
-        "messages.upsert",
-        async (chatUpdate) => {
+    try {
 
-            try {
+        const eventsPath = path.join(
+            __dirname,
+            "events.js"
+        );
 
-                const m =
-                    chatUpdate.messages?.[0];
+        if (fs.existsSync(eventsPath)) {
 
-                if (!m || !m.message) return;
+            const events = require(eventsPath);
 
-                if (
-                    m.key.remoteJid !==
-                    "status@broadcast"
-                ) {
-                    return;
-                }
+            if (typeof events === "function") {
 
-                const emojis = [
-                    "💚",
-                    "🔥",
-                    "✨",
-                    "🙌",
-                    "💯",
-                    "👑",
-                    "🚀",
-                    "😍",
-                    "⚡",
-                    "💎"
-                ];
-
-                const randomEmoji =
-                    emojis[
-                        Math.floor(
-                            Math.random() *
-                            emojis.length
-                        )
-                    ];
-
-                const participant =
-                    m.key.participant ||
-                    m.participant;
-
-                if (!participant) return;
-
-                // View status
-                await sock.readMessages([
-                    m.key
-                ]);
-
-                // React to status
-                await sock.sendMessage(
-                    "status@broadcast",
-                    {
-                        react: {
-                            text: randomEmoji,
-                            key: m.key
-                        }
-                    },
-                    {
-                        statusJidList: [
-                            participant
-                        ]
-                    }
-                );
+                events(sock);
 
                 console.log(
-                    `👁️ Status viewed & reacted ${randomEmoji}: ${participant.split("@")[0]}`
+                    "✅ Welcome/Goodbye events loaded."
                 );
 
-            } catch (error) {
+            } else {
 
-                console.error(
-                    "Auto Status Error:",
-                    error.message
+                console.log(
+                    "⚠️ events.js must export a function."
                 );
             }
+
+        } else {
+
+            console.log(
+                "⚠️ events.js not found."
+            );
         }
-    );
+
+    } catch (error) {
+
+        console.error(
+            "❌ Events Error:",
+            error.message
+        );
+    }
 
     // ==================================================
-    // CONNECTION UPDATE
+    // PAIRING CODE
+    // ==================================================
+
+    if (!sock.authState.creds.registered) {
+
+        const ownerNumber =
+            String(settings.ownerNumber || "")
+                .replace(/[^0-9]/g, "");
+
+        if (!ownerNumber) {
+
+            console.log(
+                "❌ ownerNumber missing in settings.js"
+            );
+
+        } else {
+
+            console.log(
+                `📱 Requesting pairing code for ${ownerNumber}...`
+            );
+
+            setTimeout(async () => {
+
+                try {
+
+                    let code =
+                        await sock.requestPairingCode(
+                            ownerNumber
+                        );
+
+                    code =
+                        code
+                            ?.match(/.{1,4}/g)
+                            ?.join("-") ||
+                        code;
+
+                    console.log(
+                        "\n================================"
+                    );
+
+                    console.log(
+                        `🔐 PAIRING CODE: ${code}`
+                    );
+
+                    console.log(
+                        "================================\n"
+                    );
+
+                } catch (error) {
+
+                    console.error(
+                        "❌ Pairing Error:",
+                        error.message
+                    );
+                }
+
+            }, 3000);
+        }
+    }
+
+    // ==================================================
+    // CONNECTION
     // ==================================================
 
     sock.ev.on(
@@ -310,6 +283,21 @@ async function startBot() {
                 lastDisconnect
             } = update;
 
+            if (connection === "open") {
+
+                console.log(
+                    "\n🎉 RIFT-MD CONNECTED SUCCESSFULLY!"
+                );
+
+                console.log(
+                    `📦 Commands: ${Object.keys(commands).length}`
+                );
+
+                console.log(
+                    "🚀 Bot is ready!"
+                );
+            }
+
             if (connection === "close") {
 
                 const statusCode =
@@ -319,79 +307,28 @@ async function startBot() {
                         ?.statusCode;
 
                 if (
-                    statusCode !==
+                    statusCode ===
                     DisconnectReason.loggedOut
                 ) {
 
                     console.log(
-                        "🔄 Connection closed. Reconnecting..."
-                    );
-
-                    setTimeout(() => {
-                        startBot();
-                    }, 3000);
-
-                } else {
-
-                    console.log(
                         "❌ WhatsApp logged out."
                     );
+
+                    return;
                 }
-
-            } else if (connection === "open") {
-
-                const ownerJid =
-                    settings.ownerNumber
-                        .replace(/[^0-9]/g, "") +
-                    "@s.whatsapp.net";
 
                 console.log(
-                    "\n🎊 RIFT-MD IS CONNECTED!"
+                    "🔄 Connection closed."
                 );
 
-                const channelInfo = {
-                    contextInfo: {
-                        forwardingScore: 999,
-                        isForwarded: true,
-                        forwardedNewsletterMessageInfo: {
-                            newsletterJid:
-                                "120363407561123100@newsletter",
-                            newsletterName:
-                                "RIFT-MD",
-                            serverMessageId: -1
-                        }
-                    }
-                };
+                console.log(
+                    "♻️ Reconnecting in 3 seconds..."
+                );
 
-                try {
-
-                    await sock.sendMessage(
-                        ownerJid,
-                        {
-                            image: {
-                                url:
-                                    "https://files.catbox.moe/vv674d.jpg"
-                            },
-
-                            caption:
-                                `╭━━━〔 🤖 *RIFT-MD STATUS* 〕━━━⬣\n` +
-                                `┃ ✨ *Bot:* Online & Ready!\n` +
-                                `┃ 🚀 *Status:* Fully Connected\n` +
-                                `┃ ⚡ *Mode:* Active\n` +
-                                `┃ 📦 *Commands:* ${Object.keys(commands).length}\n` +
-                                `╰━━━━━━━━━━━━━━━━━━━━⬣`,
-
-                            ...channelInfo
-                        }
-                    );
-
-                } catch (error) {
-
-                    console.error(
-                        "Owner notification error:",
-                        error.message
-                    );
-                }
+                setTimeout(() => {
+                    startBot();
+                }, 3000);
             }
         }
     );
@@ -402,39 +339,35 @@ async function startBot() {
 
     sock.ev.on(
         "messages.upsert",
-        async ({
-            messages,
-            type
-        }) => {
+        async ({ messages, type }) => {
 
             try {
 
-                if (type !== "notify") return;
+                if (type !== "notify") {
+                    return;
+                }
 
-                const m =
-                    messages?.[0];
+                const m = messages?.[0];
 
-                if (!m || !m.message) return;
+                if (!m || !m.message) {
+                    return;
+                }
 
                 const from =
                     m.key.remoteJid;
 
+                if (!from) {
+                    return;
+                }
+
                 if (
-                    !from ||
                     from === "status@broadcast"
                 ) {
                     return;
                 }
 
-                const isGroup =
-                    from.endsWith("@g.us");
-
-                const sender =
-                    m.key.participant ||
-                    m.key.remoteJid;
-
                 // ======================================
-                // MESSAGE BODY
+                // MESSAGE TEXT
                 // ======================================
 
                 const body =
@@ -445,133 +378,16 @@ async function startBot() {
                     m.message.documentMessage?.caption ||
                     "";
 
-                if (!body) return;
-
-                const prefix =
-                    settings.prefix || ".";
-
-                const ownerNumber =
-                    settings.ownerNumber
-                        .replace(/[^0-9]/g, "");
-
-                const isOwner =
-                    sender.includes(ownerNumber) ||
-                    m.key.fromMe;
-
-                // ======================================
-                // ANTILINK
-                // ======================================
-
-                if (isGroup && body) {
-
-                    let db = {
-                        antilink: []
-                    };
-
-                    if (fs.existsSync(dbPath)) {
-
-                        try {
-
-                            db = JSON.parse(
-                                fs.readFileSync(
-                                    dbPath,
-                                    "utf8"
-                                )
-                            );
-
-                        } catch {
-
-                            db = {
-                                antilink: []
-                            };
-                        }
-                    }
-
-                    if (
-                        Array.isArray(db.antilink) &&
-                        db.antilink.includes(from)
-                    ) {
-
-                        const linkRegex =
-                            /chat\.whatsapp\.com\/|https?:\/\//i;
-
-                        if (
-                            linkRegex.test(body)
-                        ) {
-
-                            try {
-
-                                const metadata =
-                                    await sock.groupMetadata(
-                                        from
-                                    );
-
-                                const admins =
-                                    metadata.participants
-                                        .filter(
-                                            p =>
-                                                p.admin !== null
-                                        )
-                                        .map(
-                                            p => p.id
-                                        );
-
-                                const botId =
-                                    sock.user.id
-                                        .split(":")[0] +
-                                    "@s.whatsapp.net";
-
-                                const isBotAdmin =
-                                    admins.includes(
-                                        botId
-                                    );
-
-                                const isSenderAdmin =
-                                    admins.includes(
-                                        sender
-                                    );
-
-                                if (
-                                    !isSenderAdmin &&
-                                    !isOwner &&
-                                    isBotAdmin
-                                ) {
-
-                                    await sock.sendMessage(
-                                        from,
-                                        {
-                                            delete:
-                                                m.key
-                                        }
-                                    );
-
-                                    await sock.sendMessage(
-                                        from,
-                                        {
-                                            text:
-                                                `🚫 *Link Detected!*\n\n` +
-                                                `@${sender.split("@")[0]}, links are not allowed here!`,
-                                            mentions: [
-                                                sender
-                                            ]
-                                        }
-                                    );
-                                }
-
-                            } catch (error) {
-
-                                console.error(
-                                    "AntiLink Error:",
-                                    error.message
-                                );
-                            }
-                        }
-                    }
+                if (!body) {
+                    return;
                 }
 
                 // ======================================
-                // PREFIX CHECK
+                // PREFIX
                 // ======================================
+
+                const prefix =
+                    settings.prefix || ".";
 
                 if (
                     !body.startsWith(prefix)
@@ -579,12 +395,18 @@ async function startBot() {
                     return;
                 }
 
+                // ======================================
+                // PARSE COMMAND
+                // ======================================
+
                 const input =
                     body
                         .slice(prefix.length)
                         .trim();
 
-                if (!input) return;
+                if (!input) {
+                    return;
+                }
 
                 const parts =
                     input.split(/\s+/);
@@ -596,290 +418,66 @@ async function startBot() {
                 const args = parts;
 
                 console.log(
-                    `📥 Command: ${prefix}${commandName} | From: ${sender.split("@")[0]}`
+                    `📥 ${prefix}${commandName} ${args.join(" ")}`
                 );
 
                 // ======================================
-                // ANTILINK COMMAND
+                // UNKNOWN COMMAND
                 // ======================================
 
-                if (
-                    commandName === "antilink"
-                ) {
+                if (!commands[commandName]) {
 
-                    if (!isOwner) {
-
-                        return await sock.sendMessage(
-                            from,
-                            {
-                                text:
-                                    "❌ *Access Denied:* Only the Bot Owner can use this command."
-                            },
-                            {
-                                quoted: m
-                            }
-                        );
-                    }
-
-                    let db = {
-                        antilink: []
-                    };
-
-                    try {
-
-                        if (
-                            fs.existsSync(dbPath)
-                        ) {
-
-                            db = JSON.parse(
-                                fs.readFileSync(
-                                    dbPath,
-                                    "utf8"
-                                )
-                            );
+                    return await sock.sendMessage(
+                        from,
+                        {
+                            text:
+                                `❌ Command *${prefix}${commandName}* not found.\n\n` +
+                                `Use *${prefix}menu* to see available commands.`
+                        },
+                        {
+                            quoted: m
                         }
-
-                    } catch {
-
-                        db = {
-                            antilink: []
-                        };
-                    }
-
-                    if (
-                        !Array.isArray(
-                            db.antilink
-                        )
-                    ) {
-
-                        db.antilink = [];
-                    }
-
-                    if (
-                        args[0] === "on"
-                    ) {
-
-                        if (
-                            !db.antilink.includes(
-                                from
-                            )
-                        ) {
-
-                            db.antilink.push(
-                                from
-                            );
-                        }
-
-                        fs.writeFileSync(
-                            dbPath,
-                            JSON.stringify(
-                                db,
-                                null,
-                                2
-                            )
-                        );
-
-                        return await sock.sendMessage(
-                            from,
-                            {
-                                text:
-                                    "🛡️ *AntiLink System:* Activated! ✅"
-                            },
-                            {
-                                quoted: m
-                            }
-                        );
-
-                    } else if (
-                        args[0] === "off"
-                    ) {
-
-                        db.antilink =
-                            db.antilink.filter(
-                                id =>
-                                    id !== from
-                            );
-
-                        fs.writeFileSync(
-                            dbPath,
-                            JSON.stringify(
-                                db,
-                                null,
-                                2
-                            )
-                        );
-
-                        return await sock.sendMessage(
-                            from,
-                            {
-                                text:
-                                    "🛡️ *AntiLink System:* Deactivated! ❌"
-                            },
-                            {
-                                quoted: m
-                            }
-                        );
-
-                    } else {
-
-                        return await sock.sendMessage(
-                            from,
-                            {
-                                text:
-                                    `❌ *Usage:* \`${prefix}antilink on/off\``
-                            },
-                            {
-                                quoted: m
-                            }
-                        );
-                    }
+                    );
                 }
 
                 // ======================================
-                // SET PREFIX
+                // EXECUTE COMMAND
                 // ======================================
 
-                if (
-                    commandName === "setprefix"
-                ) {
+                try {
 
-                    if (!isOwner) {
+                    await commands[
+                        commandName
+                    ](
+                        sock,
+                        m,
+                        args
+                    );
 
-                        return await sock.sendMessage(
-                            from,
-                            {
-                                text:
-                                    "❌ *Access Denied:* Only the Bot Owner can use this command."
-                            },
-                            {
-                                quoted: m
-                            }
-                        );
-                    }
+                } catch (error) {
 
-                    if (!args[0]) {
+                    console.error(
+                        `❌ ${commandName} ERROR:`,
+                        error
+                    );
 
-                        return await sock.sendMessage(
-                            from,
-                            {
-                                text:
-                                    `❌ *Usage:* \`${prefix}setprefix [new_prefix]\`\n` +
-                                    `💡 *Example:* \`${prefix}setprefix !\``
-                            },
-                            {
-                                quoted: m
-                            }
-                        );
-                    }
-
-                    const newPrefix =
-                        args[0];
-
-                    try {
-
-                        const settingsPath =
-                            path.join(
-                                __dirname,
-                                "settings.js"
-                            );
-
-                        let settingsContent =
-                            fs.readFileSync(
-                                settingsPath,
-                                "utf8"
-                            );
-
-                        settingsContent =
-                            settingsContent.replace(
-                                /prefix:\s*["'`].*?["'`]/,
-                                `prefix: "${newPrefix}"`
-                            );
-
-                        fs.writeFileSync(
-                            settingsPath,
-                            settingsContent,
-                            "utf8"
-                        );
-
-                        settings.prefix =
-                            newPrefix;
-
-                        return await sock.sendMessage(
-                            from,
-                            {
-                                text:
-                                    `✅ *Prefix successfully changed to:* \`${newPrefix}\``
-                            },
-                            {
-                                quoted: m
-                            }
-                        );
-
-                    } catch (error) {
-
-                        console.error(
-                            "SetPrefix Error:",
-                            error.message
-                        );
-
-                        return await sock.sendMessage(
-                            from,
-                            {
-                                text:
-                                    "❌ *Error:* Failed to update settings.js"
-                            },
-                            {
-                                quoted: m
-                            }
-                        );
-                    }
-                }
-
-                // ======================================
-                // COMMAND EXECUTION
-                // ======================================
-
-                if (
-                    commands[commandName]
-                ) {
-
-                    try {
-
-                        await commands[
-                            commandName
-                        ](
-                            sock,
-                            m,
-                            args
-                        );
-
-                    } catch (error) {
-
-                        console.error(
-                            `❌ Error executing ${commandName}:`,
-                            error
-                        );
-
-                        await sock.sendMessage(
-                            from,
-                            {
-                                text:
-                                    `❌ *Command Error:* ${commandName}\n\n` +
-                                    `⚠️ ${error.message}`
-                            },
-                            {
-                                quoted: m
-                            }
-                        );
-                    }
-
-                    return;
+                    await sock.sendMessage(
+                        from,
+                        {
+                            text:
+                                `❌ *${commandName} Error*\n\n` +
+                                `⚠️ ${error.message || "Unknown error"}`
+                        },
+                        {
+                            quoted: m
+                        }
+                    );
                 }
 
             } catch (error) {
 
                 console.error(
-                    "Message Handler Error:",
+                    "❌ Message Handler Error:",
                     error
                 );
             }
@@ -888,12 +486,14 @@ async function startBot() {
 }
 
 // ======================================================
-// START
+// RUN BOT
 // ======================================================
 
 startBot().catch(error => {
+
     console.error(
-        "❌ FATAL BOT ERROR:",
-        error
+        "\n❌ FATAL ERROR:"
     );
+
+    console.error(error);
 });
