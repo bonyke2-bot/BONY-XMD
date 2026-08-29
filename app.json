@@ -1,0 +1,24 @@
+{
+  "name": "BONY XMD",
+  "description": "Best WhatsApp Bot by Bony - Like WOLF XMD",
+  "logo": "https://i.ibb.co/6c6kqQk/bony.jpg",
+  "keywords": ["whatsapp", "bot", "xmd", "bony"],
+  "stack": "heroku-22",
+  "env": {
+    "SESSION_ID": {
+      "description": "Your BONY-BOT~ Session ID from pair site",
+      "required": true,
+      "value": ""
+    },
+    "PREFIX": {
+      "description": "Bot Prefix",
+      "required": false,
+      "value": "."
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ]
+}
