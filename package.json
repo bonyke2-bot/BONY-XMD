@@ -10,9 +10,9 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@whiskeysockets/baileys": "latest",
-    "dotenv": "latest",
-    "pino": "latest"
+    "@whiskeysockets/baileys": "6.7.22",
+    "dotenv": "16.6.1",
+    "pino": "9.7.0"
   },
   "license": "MIT"
 }
