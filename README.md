@@ -78,5 +78,14 @@
 
 
 
-# ---
-A modern tool designed to help you manage and organize your projects faster, cleaner, and more efficiently. 🚀✨𝐑𝐈𝐅𝐓-𝐌𝐃 𝐁𝐀𝐒𝐄 𝐁𝐎𝐓 𝐅𝐑𝐄𝐄 𝐃𝐄𝐏𝐋𝐎𝐘 𝐏𝐀𝐍𝐄𝐋
+## License 📜
+
+The WhatsApp Bot Zokou is released under the [MIT License](https://opensource.org/licenses/MIT).
+
+Enjoy the diverse features of RIFT-MD to enhance your WhatsApp experience! 💬🎉
+
+## Developers:
+
+- [WEED TECH𝟑𝟑𝟑𓆪]
+- ()
+-
