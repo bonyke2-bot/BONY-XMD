@@ -1,11 +1,4 @@
-const {
-    default: makeWASocket,
-    useMultiFileAuthState,
-    fetchLatestBaileysVersion,
-    DisconnectReason
-} = require("@whiskeysockets/baileys");
-
-const pino = require("pino");
+const { Telegraf } = require("telegraf");
 const fs = require("fs");
 const http = require("http");
 const path = require("path");
@@ -18,7 +11,7 @@ const settings = require("./settings");
 const startServer = (port) => {
     const server = http.createServer((req, res) => {
         res.writeHead(200, { "Content-Type": "text/plain" });
-        res.end("RIFT-MD IS ONLINE");
+        res.end("RIFT-MD TELEGRAM IS ONLINE");
     });
     server.listen(port, () => console.log(`🌐 Server on port ${port}`));
     server.on("error", (e) => {
@@ -83,212 +76,87 @@ function loadCommands() {
 loadCommands();
 
 // ======================================================
-// START BOT
+// START TELEGRAM BOT
 // ======================================================
 
 async function startBot() {
+    // Sèvi ak Token Telegram ki nan settings ou oswa nan varyab anviwònman
+    const token = settings.telegramToken || process.env.TELEGRAM_BOT_TOKEN;
+    if (!token) {
+        console.error("❌ FATAL: Telegram Bot Token manke nan settings.js oswa process.env!");
+        process.exit(1);
+    }
 
-    const { state, saveCreds } = await useMultiFileAuthState("session");
-    const { version } = await fetchLatestBaileysVersion();
+    const bot = new Telegraf(token);
 
-    const sock = makeWASocket({
-        version,
-        logger: pino({ level: "silent" }),
-        auth: state,
-        browser: ["Ubuntu", "Chrome", "20.0.04"],
-        printQRInTerminal: false
+    // Enfòmasyon sou demaraj bot la
+    bot.catch((err, ctx) => {
+        console.error(`❌ Telegraf Error for ${ctx.updateType}:`, err);
     });
 
-    sock.ev.on("creds.update", saveCreds);
+    // Lè bot la limen
+    bot.telegram.getMe().async ? await bot.telegram.getMe() : null;
+    console.log("\n🎊 RIFT-MD TELEGRAM CONNECTED!");
 
-    // ==================================================
-    // PAIRING CODE
-    // ==================================================
-
-    if (!sock.authState.creds.registered) {
-        const ownerPhone = settings.ownerNumber.replace(/[^0-9]/g, "");
-        setTimeout(async () => {
-            try {
-                let code = await sock.requestPairingCode(ownerPhone);
-                code = code?.match(/.{1,4}/g)?.join("-") || code;
-                console.log(`\n✅ YOUR PAIRING CODE: ${code}\n`);
-            } catch (err) {
-                console.log("❌ Pairing Error:", err.message);
-            }
-        }, 5000);
+    // Voye mesaj bay mèt la si sa nesesè oswa jere kòmand yo
+    try {
+        const ownerId = settings.ownerId || settings.ownerNumber;
+        if (ownerId) {
+            await bot.telegram.sendMessage(ownerId, 
+                `╭━━━〔 🤖 *RIFT-MD STATUS* 〕━━━⬣\n` +
+                `┃ ✨ *Bot:* Online & Ready (Telegram)!\n` +
+                `┃ 🚀 *Status:* Fully Connected\n` +
+                `┃ ⚡ *Mode:* Active\n` +
+                `┃ 📦 *Commands:* ${Object.keys(commands).length}\n` +
+                `╰━━━━━━━━━━━━━━━━━━━━⬣`,
+                { parse_mode: "Markdown" }
+            );
+        }
+    } catch (e) {
+        console.error("Owner notification error:", e.message);
     }
 
     // ==================================================
-    // CONNECTION UPDATE
+    // MESSAGES / TEXT HANDLER
     // ==================================================
-
-    sock.ev.on("connection.update", async (update) => {
-        const { connection, lastDisconnect } = update;
-
-        if (connection === "close") {
-            const statusCode = lastDisconnect?.error?.output?.statusCode;
-            if (statusCode !== DisconnectReason.loggedOut) {
-                console.log("🔄 Reconnecting...");
-                setTimeout(() => startBot(), 3000);
-            } else {
-                console.log("❌ Logged out.");
-            }
-        } else if (connection === "open") {
-            const ownerJid = settings.ownerNumber.replace(/[^0-9]/g, "") + "@s.whatsapp.net";
-            console.log("\n🎊 RIFT-MD CONNECTED!");
-            try {
-                await sock.sendMessage(ownerJid, {
-                    image: { url: "https://files.catbox.moe/vv674d.jpg" },
-                    caption:
-                        `╭━━━〔 🤖 *RIFT-MD STATUS* 〕━━━⬣\n` +
-                        `┃ ✨ *Bot:* Online & Ready!\n` +
-                        `┃ 🚀 *Status:* Fully Connected\n` +
-                        `┃ ⚡ *Mode:* Active\n` +
-                        `┃ 📦 *Commands:* ${Object.keys(commands).length}\n` +
-                        `╰━━━━━━━━━━━━━━━━━━━━⬣`,
-                    contextInfo: {
-                        forwardingScore: 999, isForwarded: true,
-                        forwardedNewsletterMessageInfo: {
-                            newsletterJid: "120363407561123100@newsletter",
-                            newsletterName: "RIFT-MD", serverMessageId: -1
-                        }
-                    }
-                });
-            } catch (e) {
-                console.error("Owner notification error:", e.message);
-            }
-        }
-    });
-
-    // ==================================================
-    // GOODBYE via group-participants.update
-    // ==================================================
-
-    sock.ev.on("group-participants.update", async ({ id, participants, action }) => {
-        console.log(`\n📢 EVENT: ${action} | GROUP: ${id} | USERS: ${participants}`);
+    bot.on("text", async (ctx) => {
         try {
-            const db = getDb();
-            const gs = db.groups?.[id] || {};
-
-            if (action !== "remove" || gs.goodbye !== true) return;
-
-            let groupName = "Group";
-            try {
-                const meta = await sock.groupMetadata(id);
-                groupName = meta.subject;
-            } catch {}
-
-            for (const p of participants) {
-                const participant = typeof p === "string" ? p : (p.id || p.jid || String(p));
-                const number = participant.split("@")[0];
-                const profilePic = "https://files.catbox.moe/vv674d.jpg";
-
-                console.log(`✅ Sending GOODBYE to @${number}`);
-                await sock.sendMessage(id, {
-                    image: { url: profilePic },
-                    caption:
-                        `╭━━━〔 👋 *GOODBYE* 〕━━━⬣\n` +
-                        `┃ 👤 *Member Left:* @${number}\n` +
-                        `┃ 🏠 *Group:* ${groupName}\n` +
-                        `┃ 💔 We will miss you!\n` +
-                        `┃ 🙏 Best of luck in your life.\n` +
-                        `╰━━━━━━━━━━━━━━━━━━━━⬣`,
-                    mentions: [participant]
-                });
-            }
-        } catch (err) {
-            console.error("Goodbye Error:", err.message);
-        }
-    });
-
-    // ==================================================
-    // MESSAGES UPSERT (status + messages)
-    // ==================================================
-
-    sock.ev.on("messages.upsert", async (chatUpdate) => {
-
-        // --- AUTO STATUS ---
-        try {
-            const ms = chatUpdate.messages?.[0];
-            if (ms?.message && ms.key.remoteJid === "status@broadcast") {
-                const emojis = ["💚","🔥","✨","🙌","💯","👑","🚀","😍","⚡","💎"];
-                const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-                const participant = ms.key.participant || ms.participant;
-                if (participant) {
-                    await sock.readMessages([ms.key]);
-                    await sock.sendMessage("status@broadcast", {
-                        react: { text: randomEmoji, key: ms.key }
-                    }, { statusJidList: [participant] });
-                }
-            }
-        } catch {}
-
-        // --- MESSAGE HANDLER ---
-        try {
-            const { messages, type } = chatUpdate;
-            if (type !== "notify") return;
-
-            const m = messages?.[0];
-            if (!m || !m.message) return;
-
-            const from = m.key.remoteJid;
-            if (!from || from === "status@broadcast") return;
-
             const globalDb = getDb();
+            const body = ctx.message.text || "";
+            const sender = String(ctx.from.id);
+            const from = String(ctx.chat.id);
+            const isGroup = ctx.chat.type === "group" || ctx.chat.type === "supergroup";
 
-            if (globalDb.autoread) {
-                try { await sock.readMessages([m.key]); } catch {}
-            }
-            if (globalDb.autoreact) {
-                try {
-                    const emojis = ["💚","🔥","✨","🙌","💯","👑","🚀","😍","⚡","💎"];
-                    await sock.sendMessage(from, {
-                        react: { text: emojis[Math.floor(Math.random() * emojis.length)], key: m.key }
-                    });
-                } catch {}
-            }
-
-            const isGroup = from.endsWith("@g.us");
-            const sender = m.key.participant || m.key.remoteJid;
-
-            const body =
-                m.message.conversation ||
-                m.message.extendedTextMessage?.text ||
-                m.message.imageMessage?.caption ||
-                m.message.videoMessage?.caption ||
-                m.message.documentMessage?.caption || "";
-
-            if (!body) return;
-
-            const prefix = settings.prefix || ".";
-            const ownerNumber = settings.ownerNumber.replace(/[^0-9]/g, "");
-            const isOwner = sender.includes(ownerNumber) || m.key.fromMe;
+            // Mode Check (Public / Private)
+            const ownerId = String(settings.ownerId || settings.ownerNumber || "");
+            const isOwner = sender === ownerId;
 
             if ((globalDb.mode || "public") === "private" && !isOwner) return;
 
-            // ANTILINK
+            // ANTILINK sou Telegram
             if (isGroup) {
                 const db = getDb();
                 if (Array.isArray(db.antilink) && db.antilink.includes(from)) {
-                    const linkRegex = /chat\.whatsapp\.com\/|https?:\/\//i;
+                    const linkRegex = /t\.me\/|https?:\/\//i;
                     if (linkRegex.test(body)) {
                         try {
-                            const meta = await sock.groupMetadata(from);
-                            const admins = meta.participants.filter(p => p.admin).map(p => p.id);
-                            const botId = sock.user.id.split(":")[0] + "@s.whatsapp.net";
-                            if (!admins.includes(sender) && !isOwner && admins.includes(botId)) {
-                                await sock.sendMessage(from, { delete: m.key });
-                                await sock.sendMessage(from, {
-                                    text: `🚫 *Link Detected!*\n\n@${sender.split("@")[0]}, links are not allowed!`,
-                                    mentions: [sender]
-                                });
+                            const member = await ctx.telegram.getChatMember(from, ctx.from.id);
+                            const isAdmin = member.status === "creator" || member.status === "administrator";
+                            if (!isAdmin && !isOwner) {
+                                await ctx.deleteMessage();
+                                await ctx.reply(`🚫 *Link Detected!*\n\n@${ctx.from.username || ctx.from.first_name}, links are not allowed!`, { parse_mode: "Markdown" });
+                                return;
                             }
-                        } catch {}
+                        } catch (e) {
+                            console.error("Antilink Error:", e.message);
+                        }
                     }
                 }
             }
 
+            const prefix = settings.prefix || ".";
             if (!body.startsWith(prefix)) return;
+
             const input = body.slice(prefix.length).trim();
             if (!input) return;
 
@@ -296,36 +164,67 @@ async function startBot() {
             const commandName = parts.shift().toLowerCase();
             const args = parts;
 
+            // FAKE `m` ak `sock` objè pou adapte kòmand ki te fèt pou Baileys yo
+            // Sa ap pèmèt kòmand ki te ekri pou WhatsApp yo fonksyone pi fasil sou Telegram
+            const sock = {
+                sendMessage: async (jid, content, options) => {
+                    let targetChat = jid === "status@broadcast" ? from : jid;
+                    if (content.text) {
+                        return await bot.telegram.sendMessage(targetChat, content.text, { parse_mode: "Markdown" });
+                    } else if (content.image) {
+                        const imgUrl = typeof content.image.url === "string" ? content.image.url : "";
+                        return await bot.telegram.sendPhoto(targetChat, imgUrl, { caption: content.caption || "", parse_mode: "Markdown" });
+                    } else if (content.video) {
+                        const vidUrl = typeof content.video.url === "string" ? content.video.url : "";
+                        return await bot.telegram.sendVideo(targetChat, vidUrl, { caption: content.caption || "", parse_mode: "Markdown" });
+                    }
+                },
+                groupMetadata: async (jid) => {
+                    const chat = await bot.telegram.getChat(jid);
+                    return { subject: chat.title || "Group" };
+                }
+            };
+
+            const m = {
+                key: {
+                    remoteJid: from,
+                    fromMe: isOwner,
+                    id: ctx.message.message_id,
+                    participant: sender
+                },
+                message: { conversation: body }
+            };
+
             // ANTILINK COMMAND
             if (commandName === "antilink") {
-                if (!isOwner) return await sock.sendMessage(from, { text: "❌ Owner only!" }, { quoted: m });
+                if (!isOwner) return await ctx.reply("❌ Owner only!");
                 const db = getDb();
                 if (!Array.isArray(db.antilink)) db.antilink = [];
                 if (args[0] === "on") {
                     if (!db.antilink.includes(from)) db.antilink.push(from);
                     saveDb(db);
-                    return await sock.sendMessage(from, { text: "🛡️ *AntiLink:* Activated! ✅" }, { quoted: m });
+                    return await ctx.reply("🛡️ *AntiLink:* Activated! ✅", { parse_mode: "Markdown" });
                 } else if (args[0] === "off") {
                     db.antilink = db.antilink.filter(i => i !== from);
                     saveDb(db);
-                    return await sock.sendMessage(from, { text: "🛡️ *AntiLink:* Deactivated! ❌" }, { quoted: m });
+                    return await ctx.reply("🛡️ *AntiLink:* Deactivated! ❌", { parse_mode: "Markdown" });
                 }
-                return await sock.sendMessage(from, { text: `❌ Usage: \`${prefix}antilink on/off\`` }, { quoted: m });
+                return await ctx.reply(`❌ Usage: \`${prefix}antilink on/off\``, { parse_mode: "Markdown" });
             }
 
             // SETPREFIX COMMAND
             if (commandName === "setprefix") {
-                if (!isOwner) return await sock.sendMessage(from, { text: "❌ Owner only!" }, { quoted: m });
-                if (!args[0]) return await sock.sendMessage(from, { text: `❌ Usage: \`${prefix}setprefix !\`` }, { quoted: m });
+                if (!isOwner) return await ctx.reply("❌ Owner only!");
+                if (!args[0]) return await ctx.reply(`❌ Usage: \`${prefix}setprefix !\``, { parse_mode: "Markdown" });
                 try {
                     const sp = path.join(__dirname, "settings.js");
                     let sc = fs.readFileSync(sp, "utf8");
                     sc = sc.replace(/prefix:\s*["'`].*?["'`]/, `prefix: "${args[0]}"`);
                     fs.writeFileSync(sp, sc, "utf8");
                     settings.prefix = args[0];
-                    return await sock.sendMessage(from, { text: `✅ Prefix: \`${args[0]}\`` }, { quoted: m });
+                    return await ctx.reply(`✅ Prefix: \`${args[0]}\``, { parse_mode: "Markdown" });
                 } catch {
-                    return await sock.sendMessage(from, { text: "❌ Failed to update prefix." }, { quoted: m });
+                    return await ctx.reply("❌ Failed to update prefix.");
                 }
             }
 
@@ -340,12 +239,10 @@ async function startBot() {
 
             if (commands[resolvedCommand]) {
                 try {
-                    await commands[resolvedCommand](sock, m, args);
+                    await commands[resolvedCommand](sock, m, args, ctx);
                 } catch (error) {
                     console.error(`❌ Error in ${commandName}:`, error);
-                    await sock.sendMessage(from, {
-                        text: `❌ *Command Error:* ${commandName}\n\n⚠️ ${error.message}`
-                    }, { quoted: m });
+                    await ctx.reply(`❌ *Command Error:* ${commandName}\n\n⚠️ ${error.message}`, { parse_mode: "Markdown" });
                 }
             }
 
@@ -353,6 +250,11 @@ async function startBot() {
             console.error("Message Handler Error:", error);
         }
     });
+
+    // Lanse Bot la
+    bot.launch();
+    process.once("SIGINT", () => bot.stop("SIGINT"));
+    process.once("SIGTERM", () => bot.stop("SIGTERM"));
 }
 
 // ======================================================
