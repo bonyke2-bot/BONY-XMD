@@ -6,7 +6,10 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// Ensure files
 if(!fs.existsSync("./auth")) fs.mkdirSync("./auth",{recursive:true});
+if(!fs.existsSync("./settings.json")) fs.writeFileSync("./settings.json", JSON.stringify({antilink:{}, welcome:{}, autostatus:false}));
+
 if(process.env.SESSION_ID){
   try{
     let b64 = process.env.SESSION_ID.trim();
@@ -14,7 +17,7 @@ if(process.env.SESSION_ID){
     else if(b64.includes("WOLF-BOT~")) b64 = b64.split("WOLF-BOT~")[1];
     else if(b64.includes("~")) b64 = b64.split("~").pop();
     fs.writeFileSync("./auth/creds.json", Buffer.from(b64,'base64'));
-    console.log("✅ BONY-BOT Session OK");
+    console.log("✅ Session OK");
   }catch(e){ console.log("Session fail:", e.message); }
 }
 
@@ -28,13 +31,9 @@ const sock = makeWASocket({
 sock.ev.on("creds.update", saveCreds);
 sock.ev.on("connection.update", async (u)=>{
   const {connection, lastDisconnect} = u;
-  if(connection==="open"){
-    console.log("🤖 BONY XMD ONLINE");
-    try{ await sock.sendMessage(config.ownerNumber[0]+"@s.whatsapp.net", {text: `*🤖 ${config.botName} CONNECTED!*\n\nType.menu`}); }catch{}
-  }
+  if(connection==="open") console.log("🤖 BONY XMD ONLINE");
   if(connection==="close"){
-    const c = lastDisconnect?.error?.output?.statusCode;
-    if(c!== DisconnectReason.loggedOut) process.exit(0);
+    if(lastDisconnect?.error?.output?.statusCode!== DisconnectReason.loggedOut) process.exit(0);
   }
 });
 
@@ -43,6 +42,19 @@ sock.ev.on("messages.upsert", async ({messages})=>{
   if(!m.message || m.key.fromMe) return;
   const from = m.key.remoteJid;
   const body = m.message.conversation || m.message.extendedTextMessage?.text || m.message.imageMessage?.caption || m.message.videoMessage?.caption || "";
+
+  // === ANTILINK SYSTEM ===
+  try{
+    let db = JSON.parse(fs.readFileSync("./settings.json"));
+    if(db.antilink[from] && from.endsWith("@g.us")){
+      if(body.includes("https://") || body.includes("http://") || body.includes("wa.me") || body.includes("chat.whatsapp.com")){
+        await sock.sendMessage(from, {delete: m.key});
+        await sock.sendMessage(from, {text: `*🚫 @${m.key.participant?.split("@")[0]} Link deleted! Antilink ON*`, mentions: [m.key.participant]}, {quoted: m});
+        return;
+      }
+    }
+  }catch{}
+
   if(!body.startsWith(config.botPrefix)) return;
   const args = body.slice(1).trim().split(/ +/);
   const cmd = args.shift().toLowerCase();
