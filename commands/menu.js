@@ -3,8 +3,7 @@ const fs = require("fs");
 const path = require("path");
 
 module.exports = async (sock, m, args) => {
-    const sender = m.sender || m.key.participant || m.key.remoteJid || "";
-    const pushName = sender.split('@')[0] || "User";
+    const pushName = m.pushName || m.senderPn || (m.sender ? m.sender.split('@')[0] : "User");
     const chatId = m.key.remoteJid;
     const prefix = settings.prefix || ".";
 
@@ -19,14 +18,13 @@ module.exports = async (sock, m, args) => {
 
     const uptime = runtime(process.uptime());
 
-    // Li tout dosye ki nan katab commands yo otomatikman
     let commandList = [];
     try {
         const commandsDir = path.join(__dirname, "../commands");
         if (fs.existsSync(commandsDir)) {
             commandList = fs.readdirSync(commandsDir)
                 .filter(file => file.endsWith(".js"))
-                .map(file => file.replace(".js", ""));
+                .map(file => file.replace(".js", "").toLowerCase());
         }
     } catch (e) {
         console.error("Error reading commands folder:", e);
@@ -34,32 +32,29 @@ module.exports = async (sock, m, args) => {
 
     const totalCommands = commandList.length;
 
-    // Kategori predefined pou kòmand ou yo
     const categories = {
-        "BOT INFO": ["alive", "ping", "menu", "owner", "runtime", "info", "jid", "gstatut", "jidnewsletter", "fb"],
-        "TOOLS": ["play", "search", "ytmp3", "igdl", "twitter", "translate", "clear", "date"],
+        "BOT INFO": ["alive", "ping", "menu", "owner", "runtime", "gstatut", "jidnewsletter", "fb", "repo"],
+        "TOOLS": ["play", "igdl", "twitter", "clear", "tourl", "video", "vv", "image"],
         "GROUP": ["kick", "kickall", "add", "promote", "demote", "delete", "tagall", "open", "close", "link", "hidetag"],
-        "SETTINGS": ["antilink", "setprefix", "setpp", "help", "welcome", "goodbye"]
+        "SETTINGS": ["antilink", "setprefix", "help", "mode", "autoreact", "autoread", "autotyping"]
     };
 
-    // Verifye si gen lòt kòmand ki pa nan lis kategori yo pou n mete yo nan "OTHER"
     const categorizedCommands = new Set(Object.values(categories).flat());
     const otherCommands = commandList.filter(cmd => !categorizedCommands.has(cmd));
     if (otherCommands.length > 0) {
         categories["OTHER"] = otherCommands;
     }
 
-    // Jenere tèks bwat pou chak kategori
     let menuCategoriesText = "";
     for (const [catName, cmds] of Object.entries(categories)) {
-        if (cmds.length === 0) continue;
+        const activeCmdsInCat = cmds.filter(cmd => commandList.includes(cmd));
+        if (activeCmdsInCat.length === 0) continue;
         
-        const formattedCmds = cmds.map(cmd => `*┋ ⬡ ${cmd}*`).join("\n");
+        const formattedCmds = activeCmdsInCat.map(cmd => `*┋ ⬡ ${cmd}*`).join("\n");
         menuCategoriesText += `\n\`『 ${catName} 』\`\n╭───────────────────⊷\n${formattedCmds}\n╰───────────────────⊷\n`;
     }
 
     try {
-        // Voye mesaj "Loading..." an premye
         await sock.sendMessage(chatId, { text: "⚡ Loading menu..." }, { quoted: m });
 
         const menu = `
@@ -78,7 +73,7 @@ ${menuCategoriesText}
 
         const channelInfo = {
             contextInfo: {
-                mentionedJid: [sender],
+                mentionedJid: [m.sender || m.key.participant],
                 forwardingScore: 999,
                 isForwarded: true,
                 forwardedNewsletterMessageInfo: {
@@ -89,7 +84,6 @@ ${menuCategoriesText}
             }
         };
 
-        // Voye imaj orijinal la ak tout kategori yo separe net
         await sock.sendMessage(chatId, {
             image: { url: "https://files.catbox.moe/vv674d.jpg" },
             caption: menu,
