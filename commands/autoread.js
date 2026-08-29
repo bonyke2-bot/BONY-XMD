@@ -8,7 +8,7 @@ const autoreadCommand = async (sock, m, args) => {
 
     if (!args[0] || !['on', 'off'].includes(args[0].toLowerCase())) {
         return await sock.sendMessage(chatId, { 
-            text: "❌ *Usage:* `.autoread on` oswa `.autoread off`" 
+            text: "❌ *Usage:* `.autoread on` or `.autoread off`" 
         }, { quoted: m });
     }
 
