@@ -14,7 +14,7 @@ module.exports = async (sock, m, args) => {
     const from = m.key.remoteJid;
     const sender = m.key.participant || m.key.remoteJid;
     
-    // Tcheke si se Owner la k ap fè kòmand lan
+    // Check if the user executing the command is the Owner
     const isOwner = sender.includes(settings.ownerNumber.replace(/[^0-9]/g, '')) || m.key.fromMe;
     if (!isOwner) return sock.sendMessage(from, { text: "❌ This command is for the bot owner only." }, { quoted: m });
 
