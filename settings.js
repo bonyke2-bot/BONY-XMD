@@ -4,7 +4,7 @@ module.exports = {
   ownerName: "WeedTech",
   ownerNumber: "50948247470",
   ownerId: "50948247470", // Mete ID Telegram ou tou si w bezwen l
-  telegramToken: "METE_TOKEN_BOTFATHER_OU_LA", // Token Telegram ou resevwa nan men BotFather
+  telegramToken: "8873708737:AAERLHr9NwXj9v1mS8jY94QQ1fl1PIasq7k", // Token Telegram ou resevwa nan men BotFather
   sudoNumbers: ["50948247470"],
   prefix: ".",
   version: "2.0.0",
