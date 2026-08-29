@@ -87,5 +87,4 @@ Enjoy the diverse features of RIFT-MD to enhance your WhatsApp experience! 💬�
 ## Developers:
 
 - [WEED TECH𝟑𝟑𝟑𓆪]
-- ()
--
+- (https://github.com/WeedTech)
