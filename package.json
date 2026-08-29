@@ -1,0 +1,13 @@
+{
+  "name": "bony-xmd",
+  "version": "1.0.0",
+  "description": "BONY-XMD WhatsApp Bot",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}
