@@ -1,9 +1,27 @@
-require("dotenv").config();
+export default {
+  // 🤖 BONY XMD CONFIG
+  ownerNumber: ["254748339103"], // Your number
+  ownerName: "BONY KE",
+  botName: "BONY XMD",
+  botPrefix: ".",
+  sessionPrefix: "BONY-BOT~",
 
-const config = {
-  botName: process.env.BOT_NAME || "BONY-XMD",
-  ownerNumber: process.env.OWNER_NUMBER || "",
-  prefix: process.env.PREFIX || "."
-};
+  // 🎨 Branding
+  packName: "BONY XMD",
+  author: "BONY KE",
+  menuImage: "https://i.imgur.com/8Km9tLL.gif",
 
-module.exports = config;
+  // ⚡ Pair Sites
+  pairSites: [
+    "https://bony-xmd-pair.onrender.com",
+    "https://bony-xmd-pair.onrender.com"
+  ],
+
+  // Messages
+  mess: {
+    owner: "*👑 Owner only!*",
+    group: "*👥 Group only!*",
+    wait: "*🤖 BONY XMD Loading...*",
+    done: "✅ Done"
+  }
+}
