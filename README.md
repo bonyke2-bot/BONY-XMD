@@ -16,6 +16,10 @@
 
 <div style="background-color: #0d1117; padding: 25px; border-radius: 12px; border: 1px solid #30363d; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
 
+
+🛡•••RIFT-MD is a WhatsApp MD bot built on top of the Baileys library. It is designed to be fast, lightweight, and easy to customize without touching the core code. This project is fully open source — you are free to modify it, rebrand it, and create your own bot from this codebase for free, without needing any permission from anyone. All commands such as menu, alive, antilink, play, sticker, and the overall structure are written in a way that makes customization as easy as possible😎.
+
+
 ⭕  DEPLOY ON [ PANEL KATABUMP ]
 
 [![Find On Whatsapp ](https://img.shields.io/badge/➤Click-Here-blue.svg)](https://dashboard.katabump.com/dashboard)
