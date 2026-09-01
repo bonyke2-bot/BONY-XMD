@@ -10,6 +10,7 @@ const fs = require("fs");
 const http = require("http");
 const path = require("path");
 const settings = require("./settings");
+const startTelegramBot = require('./telegram');
 
 // ======================================================
 // UPTIME SERVER
@@ -83,7 +84,7 @@ function loadCommands() {
 loadCommands();
 
 // ======================================================
-// START BOT
+// START BOT (WHATSAPP)
 // ======================================================
 
 async function startBot() {
@@ -356,7 +357,8 @@ async function startBot() {
 }
 
 // ======================================================
-// START
+// START BOTH BOTS (WHATSAPP & TELEGRAM)
 // ======================================================
 
-startBot().catch(err => console.error("❌ FATAL:", err));
+startBot().catch(err => console.error("❌ FATAL WhatsApp:", err));
+startTelegramBot();
