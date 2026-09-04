@@ -1,7 +1,7 @@
 {
-  "name": "BONY-XMD",
+  "name": "bony-xmd",
   "version": "1.1.0",
-  "description": "bony-ke-whatsapp-bot",
+  "description": "BONY-XMD WhatsApp Bot - Most Powerful WhatsApp Bot by Bonyke",
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
@@ -16,16 +16,16 @@
     }
   },
   "keywords": [
-    "termux",
+    "bony-xmd",
+    "bony-tech",
+    "bonyke",
     "whatsapp-bot",
     "whatsapp-baileys",
-    "bony-xmd",
-    "bony-ke",
-    "bony-xmd-bot",
-    "bony-ke-whatsapp-bot"
+    "whatsapp-ai",
+    "termux-bot"
   ],
-  "author": "BONY-KE",
-  "license": "ISC",
+  "author": "Bonyke",
+  "license": "MIT",
   "dependencies": {
     "@whiskeysockets/baileys": "npm:bmbtech-baileys@latest",
     "@hapi/boom": "^10.0.1",
