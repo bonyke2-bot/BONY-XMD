@@ -1,89 +1,39 @@
 {
   "name": "BONY-XMD",
-  "description": "BONY-XMD WhatsApp Bot by Bonyke - Fast, Modern, Reliable Automation",
-  "logo": "https://i.imgur.com/8Km9tLL.png",
-  "keywords": ["whatsapp", "bot", "bony-xmd", "bonyke", "baileys", "automation", "xmd"],
-  "success_url": "/",
-  "stack": "heroku-22",
-  "env": {
-    "PREFIXE": {
-      "description": "Bot command prefix",
-      "value": ".",
-      "required": true
-    },
-    "OWNER_NUMBER": {
-      "description": "Your WhatsApp number with country code (e.g 2547...)",
-      "value": "254...",
-      "required": true
-    },
-    "OWNER_NAME": {
-      "description": "Owner name",
-      "value": "Bonyke",
-      "required": true
-    },
-    "BOT": {
-      "description": "Bot name",
-      "value": "BONY-XMD",
-      "required": true
-    },
-    "NUMERO": {
-      "description": "Bot number",
-      "value": "BONY-XMD",
-      "required": false
-    },
-    "MODE": {
-      "description": "Bot mode: public or private",
-      "value": "public",
-      "required": true
-    },
-    "SESSION_ID": {
-      "description": "Session ID (paste your SESSION_ID here if using pairing code)",
-      "value": "",
-      "required": false
-    },
-    "WELCOME": {
-      "description": "Enable welcome/goodbye messages (true/false)",
-      "value": "true",
-      "required": false
-    },
-    "AUTO_READ": {
-      "description": "Auto read messages (true/false)",
-      "value": "false",
-      "required": false
-    },
-    "AUTO_TYPING": {
-      "description": "Auto typing (true/false)",
-      "value": "false",
-      "required": false
-    },
-    "AUTO_REACT": {
-      "description": "Auto react to messages (true/false)",
-      "value": "false",
-      "required": false
-    },
-    "WARN_COUNT": {
-      "description": "Warn count before action",
-      "value": "3",
-      "required": false
-    },
-    "MUTE_SECONDS": {
-      "description": "Auto mute seconds after warnings",
-      "value": "10",
-      "required": false
-    }
-  },
+  "description": "BONY XMD WhatsApp Bot",
+  "logo": "https://files.catbox.moe/8gwzln.jpg",
+  "keywords": ["whatsapp", "bot", "bony", "xmd", "baileys"],
+  "stack": "heroku-24",
   "buildpacks": [
     {
       "url": "heroku/nodejs"
-    },
-    {
-      "url": "https://github.com/heroku/heroku-buildpack-ffmpeg-latest"
     }
   ],
-  "formation": {
-    "web": {
-      "quantity": 1,
-      "size": "basic"
+  "env": {
+    "SESSION_ID": {
+      "description": "Your WhatsApp Session ID",
+      "required": true,
+      "value": ""
+    },
+    "PREFIX": {
+      "description": "Bot Prefix",
+      "required": false,
+      "value": "."
+    },
+    "MODE": {
+      "description": "public or private",
+      "required": false,
+      "value": "public"
+    },
+    "OWNER_NUMBER": {
+      "description": "Owner number with country code",
+      "required": false,
+      "value": ""
+    },
+    "OWNER_NAME": {
+      "description": "Owner Name",
+      "required": false,
+      "value": "Bony"
     }
   }
 }
