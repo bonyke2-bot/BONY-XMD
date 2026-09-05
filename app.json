@@ -1,9 +1,10 @@
 {
   "name": "BONY-XMD",
-  "description": "BONY XMD WhatsApp Bot",
+  "description": "The Best WhatsApp Bot by Bony Tech",
+  "keywords": ["bot", "whatsapp", "bony-xmd", "blaze"],
   "logo": "https://files.catbox.moe/8gwzln.jpg",
-  "keywords": ["whatsapp", "bot", "bony", "xmd", "baileys"],
-  "stack": "heroku-24",
+  "repository": "https://github.com/YOUR_USERNAME/BONY-XMD",
+  "stack": "heroku-22",
   "buildpacks": [
     {
       "url": "heroku/nodejs"
@@ -11,29 +12,24 @@
   ],
   "env": {
     "SESSION_ID": {
-      "description": "Your WhatsApp Session ID",
+      "description": "Paste your SESSION_ID here. Get from https://blaze-tech-pair-site.onrender.com/",
       "required": true,
       "value": ""
     },
     "PREFIX": {
-      "description": "Bot Prefix",
+      "description": "Bot prefix",
       "required": false,
       "value": "."
     },
-    "MODE": {
-      "description": "public or private",
-      "required": false,
-      "value": "public"
-    },
     "OWNER_NUMBER": {
-      "description": "Owner number with country code",
+      "description": "Your WhatsApp number with country code",
       "required": false,
       "value": ""
     },
-    "OWNER_NAME": {
-      "description": "Owner Name",
+    "MODE": {
+      "description": "Bot mode public/private",
       "required": false,
-      "value": "Bony"
+      "value": "public"
     }
   }
 }
