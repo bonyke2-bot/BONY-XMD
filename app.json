@@ -1,32 +1,30 @@
 {
   "name": "BONY-XMD",
-  "description": "BONY XMD WhatsApp bot",
-  "keywords": ["bot", "node", "baileys", "whatsapp"],
+  "description": "BONY XMD WhatsApp bot by Bonyke - 254748339103",
+  "keywords": ["bony-xmd", "whatsapp", "bot"],
   "logo": "https://files.catbox.moe/hflcbc.jpg",
   "repository": "https://github.com/bonyke2-bot/BONY-XMD",
   "success_url": "/",
   "stack": "heroku-22",
   "env": {
     "SESSION_ID": {
-      "description": "Your session ID — the code you receive after scanning the QR code / pairing.",
+      "description": "Your session ID",
       "value": "",
       "required": true
     },
     "PREFIX": {
-      "description": "Command prefix (can also be changed later with .setprefix).",
+      "description": "Bot prefix",
       "value": ".",
+      "required": false
+    },
+    "OWNER_NUMBER": {
+      "description": "Owner number",
+      "value": "254748339103",
       "required": false
     }
   },
   "formation": {
-    "worker": {
-      "quantity": 1,
-      "size": "basic"
-    }
+    "worker": { "quantity": 1, "size": "basic" }
   },
-  "buildpacks": [
-    {
-      "url": "heroku/nodejs"
-    }
-  ]
+  "buildpacks": [{ "url": "heroku/nodejs" }]
 }
