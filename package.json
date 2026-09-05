@@ -1,0 +1,23 @@
+{
+  "name": "bony-xmd",
+  "version": "2.0.0",
+  "description": "BONY-XMD WhatsApp Bot by Bonyke | Owner 254748339103 | bonyxmd.co.ke",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": "20.x"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.18",
+    "pino": "^8.18.0",
+    "axios": "^1.7.2",
+    "fs-extra": "^11.2.0",
+    "moment-timezone": "^0.5.45",
+    "qrcode-terminal": "^0.12.0",
+    "yt-search": "^2.11.1",
+    "api-dylux": "^1.8.0"
+  }
+}
