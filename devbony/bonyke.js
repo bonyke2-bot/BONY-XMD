@@ -1,6 +1,4 @@
-// BONY XMD - Powered by bonyxmd.co.ke
-// Official BONY KE Command Handler - Deobfuscated & Clean
-
+// BONY-XMD | Bonyke 254748339103 | bonyxmd.co.ke
 var tabCmds = [];
 let cm = [];
 
@@ -13,15 +11,16 @@ function bonyke(options, func) {
   return cmd;
 }
 
-const __integrityToken = "BONYKE_BONYXMD_INTEGRITY_v1_bonyxmd.co.ke";
+const __integrityToken = "BONYKE_BONYXMD_INTEGRITY_v1";
 
 module.exports = {
   bonyke: bonyke,
   bonyxmd: bonyke,
-  blazetz: bonyke, // backward compatibility - plugins za zamani zitaendelea kuwaka
+  blazetz: bonyke, // backward compat
   Module: bonyke,
+  bonytz: bonyke, // keep legacy name so old plugins still work
   cm: cm,
   tabCmds: tabCmds,
   __integrityToken: __integrityToken
 };
-// Powered by BONY KE | https://bonyxmd.co.ke
+// Powered by BONY KE | https://bonyxmd.co.ke | 254748339103
