@@ -2,8 +2,8 @@ module.exports = {
   // 🤖 BASIC INFO
   botName: "RIFT-MD 👑",
   ownerName: "WeedTech",
-  ownerNumber: "50948247470",
-  sudoNumbers: ["50948247470"],
+  ownerNumber: "18295802916",
+  sudoNumbers: ["18295802916"],
   prefix: ".",
   version: "2.0.0",
   
