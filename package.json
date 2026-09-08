@@ -11,5 +11,8 @@
     "@whiskeysockets/baileys": "^6.7.18",
     "express": "^5.2.1",
     "pino": "latest"
+  },
+  "engines": {
+    "node": "20.x"
   }
 }
