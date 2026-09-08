@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>BONY XMD | WhatsApp Pairing</title>
+
+  <meta
+    name="description"
+    content="BONY XMD WhatsApp pairing portal"
+  >
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #05090d;
+      --card: rgba(13, 21, 28, 0.88);
+      --border: rgba(255,255,255,0.09);
+      --text: #ffffff;
+      --muted: #9aa8b1;
+      --green: #20c997;
+      --green2: #38d9a9;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 0%, #123d30 0%, transparent 30%),
+        radial-gradient(circle at 90% 100%, #0b3044 0%, transparent 32%),
+        var(--bg);
+      padding: 25px 15px 40px;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    /* HEADER */
+
+    .hero {
+      text-align: center;
+      padding: 25px 10px 28px;
+    }
+
+    .logo {
+      width: 92px;
+      height: 92px;
+      margin: 0 auto 17px;
+      border-radius: 27px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 38px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #20c997, #087f5b);
+      box-shadow: 0 18px 55px rgba(32,201,151,0.28);
+    }
+
+    .hero h1 {
+      font-size: 38px;
+      letter-spacing: 3px;
+    }
+
+    .hero p {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .online {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 15px;
+      padding: 7px 13px;
+      border: 1px solid rgba(32,201,151,.25);
+      border-radius: 30px;
+      background: rgba(32,201,151,.07);
+      color: #65e6bd;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 10px var(--green);
+    }
+
+    /* MAIN */
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 23px;
+      padding: 25px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 22px 70px rgba(0,0,0,.34);
+    }
+
+    .pair-card {
+      grid-column: 1 / -1;
+    }
+
+    .card h2 {
+      font-size: 21px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+      margin-bottom: 21px;
+    }
+
+    label {
+      display: block;
+      color: #d5dfe4;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .input {
+      width: 100%;
+      padding: 15px;
+      border-radius: 13px;
+      border: 1px solid #293b46;
+      outline: none;
+      background: #071016;
+      color: white;
+      font-size: 16px;
+    }
+
+    .input:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(32,201,151,.1);
+    }
+
+    .hint {
+      margin-top: 7px;
+      color: #71808a;
+      font-size: 12px;
+    }
+
+    .button {
+      width: 100%;
+      border: 0;
+      border-radius: 13px;
+      padding: 15px;
+      margin-top: 20px;
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 15px;
+      color: #04110c;
+      background: linear-gradient(135deg, var(--green), var(--green2));
+      transition: .2s;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+    }
+
+    .button:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* CODE */
+
+    .status {
+      display: none;
+      text-align: center;
+      margin-top: 20px;
+      padding: 20px;
+      border-radius: 17px;
+      background: #071016;
+      border: 1px solid #263a45;
+    }
+
+    .status.show {
+      display: block;
+    }
+
+    .status-title {
+      color: #8e9ca5;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      letter-spacing: 1px;
+    }
+
+    .code {
+      color: var(--green2);
+      font-size: 31px;
+      font-weight: 900;
+      letter-spacing: 6px;
+      word-break: break-word;
+    }
+
+    .copy {
+      margin-top: 14px;
+      padding: 10px 18px;
+      border-radius: 10px;
+      border: 1px solid #314650;
+      background: transparent;
+      color: white;
+      cursor: pointer;
+    }
+
+    .message {
+      color: #aab7be;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-top: 13px;
+    }
+
+    /* STEPS */
+
+    .steps {
+      margin-top: 22px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,.07);
+    }
+
+    .steps h3 {
+      font-size: 14px;
+      margin-bottom: 13px;
+    }
+
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 11px;
+      margin: 12px 0;
+      color: #aab7be;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .number {
+      min-width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #10382e;
+      color: var(--green2);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    /* INFO CARDS */
+
+    .info-card {
+      min-height: 190px;
+    }
+
+    .icon {
+      width: 45px;
+      height: 45px;
+      border-radius: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(32,201,151,.1);
+      font-size: 21px;
+      margin-bottom: 15px;
+    }
+
+    .info-card h3 {
+      font-size: 17px;
+      margin-bottom: 7px;
+    }
+
+    .info-card p {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .link-button {
+      display: inline-block;
+      margin-top: 15px;
+      padding: 9px 13px;
+      border-radius: 10px;
+      border: 1px solid #2c414c;
+      background: #081117;
+      color: #c9d4da;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .link-button:hover {
+      border-color: var(--green);
+      color: var(--green2);
+    }
+
+    /* ABOUT */
+
+    .about {
+      margin-top: 18px;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .feature {
+      padding: 13px;
+      text-align: center;
+      border-radius: 13px;
+      background: #081117;
+      border: 1px solid rgba(255,255,255,.06);
+      color: #aebbc3;
+      font-size: 12px;
+    }
+
+    .feature strong {
+      display: block;
+      color: white;
+      margin-bottom: 5px;
+    }
+
+    /* FOOTER */
+
+    footer {
+      text-align: center;
+      margin-top: 25px;
+      color: #687780;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    footer strong {
+      color: #a6b3ba;
+    }
+
+    @media (max-width: 680px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .pair-card {
+        grid-column: auto;
+      }
+
+      .features {
+        grid-template-columns: 1fr;
+      }
+
+      .hero h1 {
+        font-size: 30px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+
+  <header class="hero">
+
+    <div class="logo">B</div>
+
+    <h1>BONY XMD</h1>
+
+    <p>WhatsApp Pairing Portal</p>
+
+    <div class="online">
+      <span class="dot"></span>
+      Pairing System Online
+    </div>
+
+  </header>
+
+
+  <div class="grid">
+
+    <!-- PAIRING -->
+
+    <section class="card pair-card">
+
+      <h2>Connect Your WhatsApp</h2>
+
+      <p class="subtitle">
+        Enter your WhatsApp number below to generate your BONY XMD
+        pairing code.
+      </p>
+
+      <label for="phone">
+        WhatsApp Number
+      </label>
+
+      <input
+        id="phone"
+        class="input"
+        type="tel"
+        inputmode="numeric"
+        autocomplete="tel"
+        placeholder="2547XXXXXXXX"
+      >
+
+      <div class="hint">
+        Use your country code. Example: 2547XXXXXXXX
+      </div>
+
+      <button
+        id="pairButton"
+        class="button"
+        onclick="generateCode()"
+      >
+        Generate Pairing Code
+      </button>
+
+
+      <div id="status" class="status">
+
+        <div class="status-title">
+          YOUR PAIRING CODE
+        </div>
+
+        <div id="code" class="code">
+          ----
+        </div>
+
+        <button
+          class="copy"
+          onclick="copyCode()"
+        >
+          Copy Code
+        </button>
+
+        <div id="message" class="message">
+          Connecting to WhatsApp...
+        </div>
+
+      </div>
+
+
+      <div class="steps">
+
+        <h3>How to pair</h3>
+
+        <div class="step">
+          <div class="number">1</div>
+          <div>Enter your WhatsApp number with country code.</div>
+        </div>
+
+        <div class="step">
+          <div class="number">2</div>
+          <div>Tap <strong>Generate Pairing Code</strong>.</div>
+        </div>
+
+        <div class="step">
+          <div class="number">3</div>
+          <div>
+            Open WhatsApp → Linked Devices →
+            Link a Device → Link with phone number.
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="number">4</div>
+          <div>Enter the pairing code displayed above.</div>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- DEVELOPER -->
+
+    <section class="card info-card">
+
+      <div class="icon">👨‍💻</div>
+
+      <h3>Developer</h3>
+
+      <p>
+        BONY XMD is developed and maintained by
+        <strong>BONY KE</strong>.
+      </p>
+
+      <a
+        class="link-button"
+        href="https://github.com/bonyke2-bot/BONY-XMD"
+        target="_blank"
+      >
+        GitHub Profile
+      </a>
+
+    </section>
+
+
+    <!-- OWNER -->
+
+    <section class="card info-card">
+
+      <div class="icon">👑</div>
+
+      <h3>Owner</h3>
+
+      <p>
+        BONY KE<br>
+        WhatsApp: <strong>254748339103</strong>
+      </p>
+
+      <a
+        class="link-button"
+        href="https://wa.me/254748339103"
+        target="_blank"
+      >
+        Contact Owner
+      </a>
+
+    </section>
+
+
+    <!-- REPOSITORY -->
+
+    <section class="card info-card">
+
+      <div class="icon">💻</div>
+
+      <h3>Repository</h3>
+
+      <p>
+        View the BONY XMD source code, project files,
+        updates and development work.
+      </p>
+
+      <a
+        class="link-button"
+        href="https://github.com/bonyke2-bot/BONY-XMD"
+        target="_blank"
+      >
+        Open Repository
+      </a>
+
+    </section>
+
+
+    <!-- SUPPORT GROUP -->
+
+    <section class="card info-card">
+
+      <div class="icon">🆘</div>
+
+      <h3>Support Group</h3>
+
+      <p>
+        Join the official BONY XMD WhatsApp support group
+        for help, updates and community discussions.
+      </p>
+
+      <a
+        class="link-button"
+        href="https://chat.whatsapp.com/BEr0VScxfRDB82TSdo3EWT?s=cl&p=a&mlu=4&ilr=4"
+        target="_blank"
+      >
+        Join Support Group
+      </a>
+
+    </section>
+
+
+    <!-- CHANNEL -->
+
+    <section class="card info-card">
+
+      <div class="icon">📢</div>
+
+      <h3>WhatsApp Channel</h3>
+
+      <p>
+        Follow the BONY XMD WhatsApp Channel for announcements,
+        news, releases and updates.
+      </p>
+
+      <a
+        class="link-button"
+        href="https://whatsapp.com/channel/0029Vb8coEnKAwEcRBDDnq0Z"
+        target="_blank"
+      >
+        Follow Channel
+      </a>
+
+    </section>
+
+
+    <!-- ABOUT -->
+
+    <section class="card about pair-card">
+
+      <h2>About BONY XMD</h2>
+
+      <p class="subtitle">
+        BONY XMD is a WhatsApp automation project designed to provide
+        useful commands, automation tools and an easy pairing system.
+      </p>
+
+      <div class="features">
+
+        <div class="feature">
+          <strong>⚡ Fast</strong>
+          Quick pairing system
+        </div>
+
+        <div class="feature">
+          <strong>🔐 Secure</strong>
+          WhatsApp authentication
+        </div>
+
+        <div class="feature">
+          <strong>📱 Mobile</strong>
+          Designed for phones
+        </div>
+
+      </div>
+
+    </section>
+
+  </div>
+
+
+  <footer>
+    © 2026 <strong>BONY XMD</strong> · Developed by
+    <strong>BONY KE</strong><br>
+    WhatsApp automation project
+  </footer>
+
+</div>
+
+
+<script>
+
+  let currentCode = "";
+
+
+  async function generateCode() {
+
+    const phoneInput = document.getElementById("phone");
+
+    const button = document.getElementById("pairButton");
+
+    const status = document.getElementById("status");
+
+    const codeElement = document.getElementById("code");
+
+    const message = document.getElementById("message");
+
+
+    const phone = phoneInput.value.replace(/\D/g, "");
+
+
+    if (!phone) {
+
+      alert("Please enter your WhatsApp number.");
+
+      return;
+
+    }
+
+
+    if (phone.length < 10) {
+
+      alert("Please enter a valid WhatsApp number.");
+
+      return;
+
+    }
+
+
+    button.disabled = true;
+
+    button.textContent = "Generating Pairing Code...";
+
+    status.classList.add("show");
+
+    codeElement.textContent = "....";
+
+    message.textContent = "Connecting to WhatsApp...";
+
+
+    try {
+
+      const response = await fetch("/api/pair", {
+
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+          phoneNumber: phone
+        })
+
+      });
+
+
+      const data = await response.json();
+
+
+      if (!response.ok || !data.success) {
+
+        throw new Error(
+          data.message || "Unable to generate pairing code."
+        );
+
+      }
+
+
+      currentCode = data.pairingCode;
+
+      codeElement.textContent = currentCode;
+
+      message.textContent =
+        "Open WhatsApp → Linked Devices → Link with phone number → enter this code.";
+
+
+    } catch (error) {
+
+      currentCode = "";
+
+      codeElement.textContent = "ERROR";
+
+      message.textContent =
+        error.message || "Something went wrong. Please try again.";
+
+    }
+
+
+    button.disabled = false;
+
+    button.textContent = "Generate Pairing Code";
+
+  }
+
+
+  async function copyCode() {
+
+    if (!currentCode) {
+
+      return;
+
+    }
+
+
+    try {
+
+      await navigator.clipboard.writeText(currentCode);
+
+      alert("Pairing code copied!");
+
+    } catch {
+
+      alert(
+        "Copy failed. Please copy the code manually."
+      );
+
+    }
+
+  }
+
+
+  document
+    .getElementById("phone")
+    .addEventListener("keydown", function(event) {
+
+      if (event.key === "Enter") {
+
+        generateCode();
+
+      }
+
+    });
+
+</script>
+
+</body>
+</html>

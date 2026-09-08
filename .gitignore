@@ -3,3 +3,4 @@ session/
 sessions/
 .env
 *.log
+npm-debug.log*
