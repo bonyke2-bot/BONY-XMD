@@ -7,7 +7,7 @@ module.exports = async (sock, m) => {
 
         // 1. Send a status message before clearing
         await sock.sendMessage(chatId, { 
-            text: "╭━━━〔 *RIFT-MD CLEAR CHAT* 〕━━━⡱\n┃ 🧹 *Status:* Cleaning up this chat...\n┃ 🤖 *Bot:* RIFT-MD\n╰━━━━━━━━━━━━━━━━━━━━⬣" 
+            text: "╭━━━〔 *BONY-XMD CLEAR CHAT* 〕━━━⡱\n┃ 🧹 *Status:* Cleaning up this chat...\n┃ 🤖 *Bot:* BONY-XMD\n╰━━━━━━━━━━━━━━━━━━━━⬣" 
         }, { quoted: m });
 
         // 2. Modify the chat to delete history on the bot's end

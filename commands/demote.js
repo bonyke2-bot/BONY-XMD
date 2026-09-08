@@ -50,11 +50,11 @@ module.exports = async (sock, m, args) => {
         // 5. Execute demote action
         await sock.groupParticipantsUpdate(chatJid, [user], "demote");
 
-        // 6. Clean Modern Response (Updated with RIFT-MD)
-        const response = `╭━━━〔 *RIFT-MD ADMIN ACTION* 〕━━━⬣
+        // 6. Clean Modern Response (Updated with BONY-XMD)
+        const response = `╭━━━〔 *BONY-XMD ADMIN ACTION* 〕━━━⬣
 ┃ 👤 *User:* @${user.split('@')[0]}
 ┃ 📉 *Status:* Demoted to Member
-┃ 🤖 *Bot:* RIFT-MD
+┃ 🤖 *Bot:* BONY-XMD
 ┃ 👮 *Authorized by:* @${sender.split('@')[0]}
 ╰━━━━━━━━━━━━━━━━━━━━⬣`.trim();
 

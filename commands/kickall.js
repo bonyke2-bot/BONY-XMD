@@ -1,3 +1,4 @@
+const settings = require("../settings.js");
 module.exports = async (sock, m, args) => {
     const from = m.key.remoteJid;
     const sender = m.key.participant || m.key.remoteJid;
@@ -8,8 +9,8 @@ module.exports = async (sock, m, args) => {
             forwardingScore: 999,
             isForwarded: true,
             forwardedNewsletterMessageInfo: {
-                newsletterJid: '120363407561123100@newsletter',
-                newsletterName: 'RIFT-MD',
+                newsletterJid: '0029Vb8coEnKAwEcRBDDnq0Z@newsletter',
+                newsletterName: 'BONY XMD',
                 serverMessageId: -1
             }
         }
@@ -27,7 +28,7 @@ module.exports = async (sock, m, args) => {
         // Get admin list
         const admins = participants.filter(p => p.admin !== null).map(p => p.id);
         const isSenderAdmin = admins.includes(sender);
-        const isOwner = m.key.fromMe || sender.includes("50947469937"); // Your number or if sent by you
+        const isOwner = m.key.fromMe || sender.includes(settings.ownerNumber.replace(/[^0-9]/g, "")); // Your number or if sent by you
 
         // If not admin and not owner
         if (!isSenderAdmin && !isOwner) {

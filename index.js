@@ -12,7 +12,7 @@ const path = require("path");
 const settings = require("./settings");
 
 // ======================================================
-// RIFT-MD UPTIME SERVER
+// BONY-XMD UPTIME SERVER
 // ======================================================
 
 const startServer = (port) => {
@@ -21,11 +21,11 @@ const startServer = (port) => {
             "Content-Type": "text/plain"
         });
 
-        res.end("RIFT-MD IS ONLINE");
+        res.end("BONY-XMD IS ONLINE");
     });
 
     server.listen(port, () => {
-        console.log(`🌐 RIFT-MD server running on port ${port}`);
+        console.log(`🌐 BONY-XMD server running on port ${port}`);
     });
 
     server.on("error", (e) => {
@@ -331,7 +331,7 @@ async function startBot() {
                     "@s.whatsapp.net";
 
                 console.log(
-                    "\n🎊 RIFT-MD IS CONNECTED!"
+                    "\n🎊 BONY-XMD IS CONNECTED!"
                 );
 
                 const channelInfo = {
@@ -340,9 +340,9 @@ async function startBot() {
                         isForwarded: true,
                         forwardedNewsletterMessageInfo: {
                             newsletterJid:
-                                "120363407561123100@newsletter",
+                                "0029Vb8coEnKAwEcRBDDnq0Z@newsletter",
                             newsletterName:
-                                "RIFT-MD",
+                                "BONY-XMD",
                             serverMessageId: -1
                         }
                     }
@@ -359,7 +359,7 @@ async function startBot() {
                             },
 
                             caption:
-                                `╭━━━〔 🤖 *RIFT-MD STATUS* 〕━━━⬣\n` +
+                                `╭━━━〔 🤖 *BONY-XMD STATUS* 〕━━━⬣\n` +
                                 `┃ ✨ *Bot:* Online & Ready!\n` +
                                 `┃ 🚀 *Status:* Fully Connected\n` +
                                 `┃ ⚡ *Mode:* Active\n` +
@@ -459,12 +459,38 @@ async function startBot() {
                 // MESSAGE BODY
                 // ======================================
 
+                // ======================================
+                // MESSAGE BODY
+                // ======================================
+
+                let msg = m.message;
+
+                // Unwrap common WhatsApp message containers
+                if (msg.ephemeralMessage?.message) {
+                    msg = msg.ephemeralMessage.message;
+                }
+
+                if (msg.viewOnceMessage?.message) {
+                    msg = msg.viewOnceMessage.message;
+                }
+
+                if (msg.viewOnceMessageV2?.message) {
+                    msg = msg.viewOnceMessageV2.message;
+                }
+
+                if (msg.viewOnceMessageV2Extension?.message) {
+                    msg = msg.viewOnceMessageV2Extension.message;
+                }
+
                 const body =
-                    m.message.conversation ||
-                    m.message.extendedTextMessage?.text ||
-                    m.message.imageMessage?.caption ||
-                    m.message.videoMessage?.caption ||
-                    m.message.documentMessage?.caption ||
+                    msg.conversation ||
+                    msg.extendedTextMessage?.text ||
+                    msg.imageMessage?.caption ||
+                    msg.videoMessage?.caption ||
+                    msg.documentMessage?.caption ||
+                    msg.buttonsResponseMessage?.selectedButtonId ||
+                    msg.listResponseMessage?.singleSelectReply?.selectedRowId ||
+                    msg.templateButtonReplyMessage?.selectedId ||
                     "";
 
                 if (!body) return;

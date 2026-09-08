@@ -1,8 +1,8 @@
 module.exports = async (sock, m, args) => {
-    const repoText = `╭━━━〔 🤖 *RIFT-MD REPOSITORY* 〕━━━⬣
-┃ 🤖 *Bot Name:* RIFT-MD
-┃ 👑 *Owner:* WeedDev
-┃ 📦 *GitHub:* https://github.com/WeedTech/RIFT-MD
+    const repoText = `╭━━━〔 🤖 *BONY-XMD REPOSITORY* 〕━━━⬣
+┃ 🤖 *Bot Name:* BONY-XMD
+┃ 👑 *Owner:* BONY KE
+┃ 📦 *GitHub:* https://github.com/bonyke2-bot/BONY-XMD
 ╰━━━━━━━━━━━━━━━━━━━━⬣`;
 
     const channelInfo = {
@@ -10,8 +10,8 @@ module.exports = async (sock, m, args) => {
             forwardingScore: 999,
             isForwarded: true,
             forwardedNewsletterMessageInfo: {
-                newsletterJid: '120363407561123100@newsletter',
-                newsletterName: 'RIFT-MD',
+                newsletterJid: '0029Vb8coEnKAwEcRBDDnq0Z@newsletter',
+                newsletterName: 'BONY-XMD',
                 serverMessageId: -1
             }
         }

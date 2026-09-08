@@ -7,8 +7,8 @@ const channelInfo = {
         forwardingScore: 999,
         isForwarded: true,
         forwardedNewsletterMessageInfo: {
-            newsletterJid: "120363407561123100@newsletter",
-            newsletterName: "RIFT-MD",
+            newsletterJid: "0029Vb8coEnKAwEcRBDDnq0Z@newsletter",
+            newsletterName: "BONY-XMD",
             serverMessageId: -1
         }
     }
@@ -171,7 +171,7 @@ module.exports = async (sock, m, args) => {
             throw new Error("All audio download servers failed");
         }
 
-        const title = audioData.title || searchTitle || "RIFT-MD Audio";
+        const title = audioData.title || searchTitle || "BONY-XMD Audio";
         const thumb = audioData.thumbnail || thumbnail || "";
 
         const cleanTitle =
@@ -179,7 +179,7 @@ module.exports = async (sock, m, args) => {
                 .replace(/[<>:"/\\|?*\x00-\x1F]/g, "")
                 .replace(/\s+/g, " ")
                 .trim()
-                .slice(0, 100) || "RIFT-MD-Audio";
+                .slice(0, 100) || "BONY-XMD-Audio";
 
         await sock.sendMessage(
             chatId,
@@ -191,7 +191,7 @@ module.exports = async (sock, m, args) => {
                     ...channelInfo.contextInfo,
                     externalAdReply: {
                         title: title,
-                        body: "RIFT-MD MUSIC",
+                        body: "BONY-XMD MUSIC",
                         thumbnailUrl: thumb,
                         sourceUrl: youtubeUrl,
                         mediaType: 1,

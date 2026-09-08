@@ -28,7 +28,7 @@ module.exports = async (sock, m, args) => {
 
         if (!mediaMessage) {
             return await sock.sendMessage(chatId, { 
-                text: `❌ *[ RIFT-MD ] Please reply (quote) to an image, video, or audio to get the URL!*` 
+                text: `❌ *[ BONY-XMD ] Please reply (quote) to an image, video, or audio to get the URL!*` 
             }, { quoted: m });
         }
 
@@ -56,7 +56,7 @@ module.exports = async (sock, m, args) => {
             throw new Error('Upload failed to generate link');
         }
 
-        const resultText = `╭━━━〔 *RIFT-MD UPLOADER* 〕━━━⬣
+        const resultText = `╭━━━〔 *BONY-XMD UPLOADER* 〕━━━⬣
 ┃ ✅ *Success!*
 ┃ 🔗 *URL:* ${fileUrl}
 ╰━━━━━━━━━━━━━━━━━━━━⬣`;
@@ -67,6 +67,6 @@ module.exports = async (sock, m, args) => {
     } catch (err) {
         console.error("ToUrl Detailed Error:", err.message);
         await sock.sendMessage(chatId, { react: { text: "❌", key: m.key } });
-        await sock.sendMessage(chatId, { text: `⚠️ *[ RIFT-MD ] Error: Failed during upload process.*` }, { quoted: m });
+        await sock.sendMessage(chatId, { text: `⚠️ *[ BONY-XMD ] Error: Failed during upload process.*` }, { quoted: m });
     }
 };

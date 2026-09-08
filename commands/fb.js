@@ -41,7 +41,7 @@ module.exports = async (sock, m, args) => {
   // Check for URL
   if (!url) {
     return await sock.sendMessage(chatId, {
-      text: `*亗 RIFT-MD 亗*\n\n❌ *Error:* Please provide a Facebook link.\n💡 *Usage:* .fb [link]`,
+      text: `*亗 BONY-XMD 亗*\n\n❌ *Error:* Please provide a Facebook link.\n💡 *Usage:* .fb [link]`,
     }, { quoted: m });
   }
 
@@ -77,7 +77,7 @@ module.exports = async (sock, m, args) => {
       `┃   🎬  *FB DOWNLOADER* \n` +
       `┠━━━━━━━━━━━━━━━━━━┫\n` +
       `┃ ✅ *Status:* Success\n` +
-      `┃ 👑 *Bot:* RIFT-MD\n` +
+      `┃ 👑 *Bot:* BONY-XMD\n` +
       `┃ 👤 *Requested by:* @${m.key.participant ? m.key.participant.split('@')[0] : m.key.remoteJid.split('@')[0]}\n` +
       `┗━━━━━━━━━━━━━━━━━━┛`;
 

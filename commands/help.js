@@ -9,7 +9,7 @@ module.exports = async (sock, m) => {
 ┃ Please check the available features below:
 ┃
 ┃ 📜 *Command:* \`.menu\`
-┃ 🤖 *Bot:* \`RIFT-MD\`
+┃ 🤖 *Bot:* \`BONY-XMD\`
 ╰━━━━━━━━━━━━━━━━━━━━⬣
 
 > _Reply with *\.menu* to explore all my features._ 💜`.trim();
@@ -22,10 +22,10 @@ module.exports = async (sock, m) => {
             forwardingScore: 999, // Gives it an "Official / Forwarded" look
             isForwarded: true,
             externalAdReply: {
-                title: "👑 RIFT-MD HELP CENTER 👑",
+                title: "👑 BONY-XMD HELP CENTER 👑",
                 body: "Tap here to explore the command list",
                 thumbnailUrl: "https://files.catbox.moe/vv674d.jpg",
-                sourceUrl: "https://whatsapp.com/channel/0029Vb2J9C91dAw7vxA75y2V",
+                sourceUrl: "https://whatsapp.com/channel/0029Vb8coEnKAwEcRBDDnq0Z",
                 mediaType: 1,
                 renderLargerThumbnail: true // Makes the image appear large
             }

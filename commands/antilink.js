@@ -19,7 +19,7 @@ module.exports = async (sock, m, args) => {
 
     if (!args[0]) {
         return await sock.sendMessage(from, { 
-            text: "👑 *RIFT-MD - ANTILINK SETUP*\n\n📌 *Usage:*\n• `.antilink on` (Default Warn 3x)\n• `.antilink kick` (Instant Kick)\n• `.antilink off` (Deactivate)" 
+            text: "👑 *BONY-XMD - ANTILINK SETUP*\n\n📌 *Usage:*\n• `.antilink on` (Default Warn 3x)\n• `.antilink kick` (Instant Kick)\n• `.antilink off` (Deactivate)" 
         }, { quoted: m });
     }
 
@@ -43,7 +43,7 @@ module.exports = async (sock, m, args) => {
         fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
 
         await sock.sendMessage(from, { 
-            text: "╭━━━〔 *ANTILINK SYSTEM* 〕━━━⡱\n┃ 🛡️ *Status:* Activated ✅\n┃ ⚡ *Mode:* Warn (3 Warnings = Kick)\n┃ 🤖 *Bot:* RIFT-MD\n╰━━━━━━━━━━━━━━━━━━━━⬣" 
+            text: "╭━━━〔 *ANTILINK SYSTEM* 〕━━━⡱\n┃ 🛡️ *Status:* Activated ✅\n┃ ⚡ *Mode:* Warn (3 Warnings = Kick)\n┃ 🤖 *Bot:* BONY-XMD\n╰━━━━━━━━━━━━━━━━━━━━⬣" 
         }, { quoted: m });
     } 
     else if (action === "kick") {
@@ -52,7 +52,7 @@ module.exports = async (sock, m, args) => {
         fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
 
         await sock.sendMessage(from, { 
-            text: "╭━━━〔 *ANTILINK SYSTEM* 〕━━━⡱\n┃ 🛡️ *Status:* Activated ✅\n┃ ⚡ *Mode:* Instant Kick ❌\n┃ 🤖 *Bot:* RIFT-MD\n╰━━━━━━━━━━━━━━━━━━━━⬣" 
+            text: "╭━━━〔 *ANTILINK SYSTEM* 〕━━━⡱\n┃ 🛡️ *Status:* Activated ✅\n┃ ⚡ *Mode:* Instant Kick ❌\n┃ 🤖 *Bot:* BONY-XMD\n╰━━━━━━━━━━━━━━━━━━━━⬣" 
         }, { quoted: m });
     }
     else if (action === "off") {
@@ -61,7 +61,7 @@ module.exports = async (sock, m, args) => {
         fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
 
         await sock.sendMessage(from, { 
-            text: "╭━━━〔 *ANTILINK SYSTEM* 〕━━━⡱\n┃ 🛡️ *Status:* Deactivated ❌\n┃ 🤖 *Bot:* RIFT-MD\n╰━━━━━━━━━━━━━━━━━━━━⬣" 
+            text: "╭━━━〔 *ANTILINK SYSTEM* 〕━━━⡱\n┃ 🛡️ *Status:* Deactivated ❌\n┃ 🤖 *Bot:* BONY-XMD\n╰━━━━━━━━━━━━━━━━━━━━⬣" 
         }, { quoted: m });
     } 
     else {

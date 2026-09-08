@@ -17,10 +17,10 @@ module.exports = async (sock, m, args) => {
         chatId,
         {
             text:
-`╭━━━〔 *RIFT-MD PING* 〕━━━⬣
+`╭━━━〔 *BONY-XMD PING* 〕━━━⬣
 ┃ 🏓 *Pong!*
 ┃ ⚡ *Speed:* ${latency} ms
-┃ 🤖 *Bot:* RIFT-MD
+┃ 🤖 *Bot:* BONY-XMD
 ╰━━━━━━━━━━━━━━━━━━━━⬣`
         },
         { quoted: m }

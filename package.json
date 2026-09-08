@@ -1,13 +1,13 @@
 {
-  "name": "rift-md",
+  "name": "bony-xmd",
   "version": "2.0.0",
-  "description": "WhatsApp MD Bot Stable - RIFT-MD",
+  "description": "WhatsApp XMD Bot Stable - BONY-XMD",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "@whiskeysockets/baileys": "latest",
+    "@whiskeysockets/baileys": "6.7.18",
     "axios": "^1.6.8",
     "chalk": "^4.1.2",
     "cheerio": "^1.0.0-rc.12",

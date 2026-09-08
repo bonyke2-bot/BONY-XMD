@@ -25,7 +25,7 @@ module.exports = async (sock, m, args) => {
         const responseText = `╭━━━〔 *NEWSLETTER JID* 〕━━━⬣
 ┃ 📢 *Channel JID:* 
 ┃ ${targetNewsletter}
-┃ 🤖 *Bot:* RIFT-MD 
+┃ 🤖 *Bot:* BONY-XMD 
 ╰━━━━━━━━━━━━━━━━━━━━⬣`.trim();
 
         await sock.sendMessage(chatJid, { 

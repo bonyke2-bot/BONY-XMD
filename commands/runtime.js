@@ -29,7 +29,7 @@ module.exports = async (sock, m) => {
 ┃ ⚙️ *System:* \`Stable\`
 ╰━━━━━━━━━━━━━━━━━━━━⬣
 
-> *Rift-Md is running smoothly.* 💜`.trim();
+> *BONY-XMD is running smoothly.* 💜`.trim();
 
     // 2. Send message with rich card preview (AdReply enabled for a modern look)
     await sock.sendMessage(remoteJid, { 
@@ -38,10 +38,10 @@ module.exports = async (sock, m) => {
             forwardingScore: 999,
             isForwarded: true,
             externalAdReply: {
-                title: "RIFT-MD UPTIME ⏱️",
+                title: "BONY-XMD UPTIME ⏱️",
                 body: `Active for: ${uptime}`,
                 thumbnailUrl: "https://files.catbox.moe/yg3xc1.png", 
-                sourceUrl: "https://whatsapp.com/channel/0029Vb2J9C91dAw7vxA75y2V",
+                sourceUrl: "https://whatsapp.com/channel/0029Vb8coEnKAwEcRBDDnq0Z",
                 mediaType: 1,
                 renderLargerThumbnail: true
             }

@@ -16,7 +16,7 @@ module.exports = async (sock, m, args) => {
 ┃ 📢 *Status:* Everyone can send messages now!
 ┃ 🔓 *Access:* Unlocked for all members ✨
 ┃ 👮 *Action by:* @${sender.split('@')[0]}
-┃ 🤖 *Bot:* RIFT-MD 
+┃ 🤖 *Bot:* BONY-XMD 
 ╰━━━━━━━━━━━━━━━━━━━━⬣`.trim();
 
         await sock.sendMessage(chatJid, { 

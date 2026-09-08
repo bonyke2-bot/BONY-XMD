@@ -2,13 +2,13 @@ module.exports = async (sock, m) => {
     try {
         const { remoteJid } = m.key;
 
-        const aliveTemplate = `╭━━━〔 *RIFT-MD* 〕━━━⬣
+        const aliveTemplate = `╭━━━〔 *BONY-XMD* 〕━━━⬣
 ┃ 🛰️ *Status:* \`Online & Stable\`
 ┃ ⚙️ *Version:* \`2.0.0\`
 ┃ 💎 *Platform:* \`Pterodactyl / Cloud\`
 ╰━━━━━━━━━━━━━━━━━━━━⬣
 
-> *Rift Md is fully operational and ready to serve.* 💜`.trim();
+> *BONY-XMD is fully operational and ready to serve.* 💜`.trim();
 
         // Send the image along with the text as caption and channel info
         await sock.sendMessage(remoteJid, { 
@@ -18,8 +18,8 @@ module.exports = async (sock, m) => {
                 forwardingScore: 999,
                 isForwarded: true,
                 forwardedNewsletterMessageInfo: {
-                    newsletterJid: "120363407561123100@newsletter",
-                    newsletterName: "RIFT-MD OFFICIAL",
+                    newsletterJid: "0029Vb8coEnKAwEcRBDDnq0Z@newsletter",
+                    newsletterName: "BONY-XMD OFFICIAL",
                     serverMessageId: 100
                 }
             }

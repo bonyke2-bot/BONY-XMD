@@ -6,8 +6,8 @@ const channelInfo = {
         forwardingScore: 999,
         isForwarded: true,
         forwardedNewsletterMessageInfo: {
-            newsletterJid: "120363407561123100@newsletter",
-            newsletterName: "RIFT-MD",
+            newsletterJid: "0029Vb8coEnKAwEcRBDDnq0Z@newsletter",
+            newsletterName: "BONY XMD",
             serverMessageId: -1
         }
     }
@@ -71,8 +71,8 @@ module.exports = async (sock, m, args) => {
                     url.includes("/tv/");
 
                 const caption =
-                    `╭━━━〔 *RIFT-MD INSTAGRAM* 〕━━━⬣\n` +
-                    `┃ 🎬 *Downloaded by RIFT-MD*\n` +
+                    `╭━━━〔 *BONY-XMD INSTAGRAM* 〕━━━⬣\n` +
+                    `┃ 🎬 *Downloaded by BONY-XMD*\n` +
                     `╰━━━━━━━━━━━━━━━━━━━━⬣`;
 
                 if (isVideo) {

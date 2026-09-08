@@ -6,8 +6,8 @@ module.exports = async (sock, m, args) => {
             forwardingScore: 999,
             isForwarded: true,
             forwardedNewsletterMessageInfo: {
-                newsletterJid: '120363407561123100@newsletter',
-                newsletterName: 'RIFT-MD',
+                newsletterJid: '0029Vb8coEnKAwEcRBDDnq0Z@newsletter',
+                newsletterName: 'BONY XMD',
                 serverMessageId: -1
             }
         }

@@ -1,20 +1,20 @@
 module.exports = {
   // 🤖 BASIC INFO
-  botName: "RIFT-MD 👑",
-  ownerName: "WeedTech",
-  ownerNumber: "18295802916",
-  sudoNumbers: ["18295802916"],
-  prefix: ".",
+  botName: "BONY-XMD 👑",
+  ownerName: "BONY KE",
+  ownerNumber: "254748339103",
+  sudoNumbers: ["254748339103"],
+  prefix: "!",
   version: "2.0.0",
   
   // ⚙️ SYSTEM & ENVIRONMENT
-  sessionName: "riftmd-session",
-  timezone: "America",
+  sessionName: "bony-xmd-session",
+  timezone: "Africa/Nairobi",
   language: "en",
 
   // 🎨 STICKER UI CUSTOMIZATION
   packname: "Created by",
-  author: "RIFT-MD 💜",
+  author: "BONY-XMD 💜",
 
   // 🛡️ SECURITY & CONTROL OPTIONS
   antiLink: false,

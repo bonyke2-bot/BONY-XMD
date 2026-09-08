@@ -15,7 +15,7 @@ module.exports = async (sock, m, args) => {
 
     if (!targetUser) {
         return await sock.sendMessage(remoteJid, { 
-            text: "👑 *RIFT-MD - ADD COMMAND*\n\n❌ *Please tag (@) a user, reply to their message, or provide a valid phone number!*" 
+            text: "👑 *BONY-XMD - ADD COMMAND*\n\n❌ *Please tag (@) a user, reply to their message, or provide a valid phone number!*" 
         }, { quoted: m });
     }
 
@@ -31,10 +31,10 @@ module.exports = async (sock, m, args) => {
         // 4. Update group participants (Add)
         await sock.groupParticipantsUpdate(remoteJid, [validJid], "add");
 
-        const responseText = `╭━━━〔 *RIFT-MD ADMIN* 〕━━━⡱
+        const responseText = `╭━━━〔 *BONY-XMD ADMIN* 〕━━━⡱
 ┃ 👤 *User:* @${validJid.split('@')[0]}
 ┃ 📈 *Action:* Added to group successfully ✅
-┃ 🤖 *Bot:* RIFT-MD
+┃ 🤖 *Bot:* BONY-XMD
 ╰━━━━━━━━━━━━━━━━━━━━⬣`;
 
         await sock.sendMessage(remoteJid, { 

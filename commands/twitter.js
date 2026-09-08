@@ -11,7 +11,7 @@ module.exports = async (sock, m, args) => {
 
     if (!url || !url.includes('twitter.com') && !url.includes('x.com')) {
         return await sock.sendMessage(chatId, { 
-            text: `👑 *RIFT-MD - TWITTER DOWNLOADER*\n\n❌ *Please provide a valid Twitter (X) link!*\n💡 *Example:* \`${prefix}${command} https://x.com/...\`` 
+            text: `👑 *BONY-XMD - TWITTER DOWNLOADER*\n\n❌ *Please provide a valid Twitter (X) link!*\n💡 *Example:* \`${prefix}${command} https://x.com/...\`` 
         }, { quoted: m });
     }
 
@@ -30,10 +30,10 @@ module.exports = async (sock, m, args) => {
             return await sock.sendMessage(chatId, { text: "❌ *Error:* No video found from this link or the post is private." }, { quoted: m });
         }
 
-        const caption = `╭━━━〔 *RIFT-MD X DOWNLOADER* 〕━━━⡱
+        const caption = `╭━━━〔 *BONY-XMD X DOWNLOADER* 〕━━━⡱
 ┃ 📥 *Status:* Downloaded Successfully ✅
 ┃ 📝 *Description:* ${data.description || "No description available"}
-┃ 🤖 *Bot:* RIFT-MD
+┃ 🤖 *Bot:* BONY-XMD
 ╰━━━━━━━━━━━━━━━━━━━━⬣`.trim();
 
         await sock.sendMessage(chatId, { 

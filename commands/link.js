@@ -21,9 +21,9 @@ module.exports = async (sock, m) => {
             groupProfilePic = "https://files.catbox.moe/3dwe96.jpg"; // Default fallback image
         }
 
-        const response = `╭━━━〔 *RIFT-MD GROUP LINK* 〕━━━⡱
+        const response = `╭━━━〔 *BONY-XMD GROUP LINK* 〕━━━⡱
 ┃ 🔗 *Invite Link:* ${groupLink}
-┃ 🤖 *Bot:* RIFT-MD
+┃ 🤖 *Bot:* BONY-XMD
 ╰━━━━━━━━━━━━━━━━━━━━⬣`;
 
         // 3. Send the link with the real group profile picture

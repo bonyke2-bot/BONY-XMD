@@ -42,7 +42,7 @@ module.exports = async (sock, m) => {
 │
 │ 👤 *User:* @${user.split('@')[0]}
 │ 📈 *Status:* Promoted to Admin
-│ 🤖 *Bot:* RIFT-MD 
+│ 🤖 *Bot:* BONY-XMD 
 │
 *╰──────────────⭐*
         `.trim();

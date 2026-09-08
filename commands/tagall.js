@@ -26,7 +26,7 @@ module.exports = async (sock, m) => {
             mentions.push(mem.id); // Crucial for triggering notifications on their phones
         }
 
-        teks += `\n> _©️ Powered by RIFT-MD MULTI-DEVICE_`;
+        teks += `\n> _©️ Powered by BONY-XMD MULTI-DEVICE_`;
 
         // 4. Send the message with all mentions
         await sock.sendMessage(

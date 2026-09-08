@@ -7,8 +7,8 @@ const channelInfo = {
         forwardingScore: 999,
         isForwarded: true,
         forwardedNewsletterMessageInfo: {
-            newsletterJid: "120363407561123100@newsletter",
-            newsletterName: "RIFT-MD",
+            newsletterJid: "0029Vb8coEnKAwEcRBDDnq0Z@newsletter",
+            newsletterName: "BONY-XMD",
             serverMessageId: -1
         }
     }
@@ -169,14 +169,14 @@ module.exports = async (sock, m, args) => {
             throw new Error("All video download servers failed");
         }
 
-        const title = videoData.title || searchTitle || "RIFT-MD Video";
+        const title = videoData.title || searchTitle || "BONY-XMD Video";
 
         const cleanTitle =
             title
                 .replace(/[<>:"/\\|?*\x00-\x1F]/g, "")
                 .replace(/\s+/g, " ")
                 .trim()
-                .slice(0, 100) || "RIFT-MD-Video";
+                .slice(0, 100) || "BONY-XMD-Video";
 
         await sock.sendMessage(
             chatId,
@@ -185,9 +185,9 @@ module.exports = async (sock, m, args) => {
                 mimetype: "video/mp4",
                 fileName: `${cleanTitle}.mp4`,
                 caption:
-                    `╭━━━〔 *RIFT-MD VIDEO* 〕━━━⬣\n` +
+                    `╭━━━〔 *BONY-XMD VIDEO* 〕━━━⬣\n` +
                     `┃ 🎬 *Title:* ${title}\n` +
-                    `┃ 🤖 *Bot:* RIFT-MD\n` +
+                    `┃ 🤖 *Bot:* BONY-XMD\n` +
                     `╰━━━━━━━━━━━━━━━━━━━━⬣`,
                 ...channelInfo
             },
