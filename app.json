@@ -1,0 +1,22 @@
+{
+  "name": "BONY XMD",
+  "description": "BONY XMD WhatsApp Bot",
+  "repository": "https://github.com/bonyke2-bot/BONY-XMD",
+  "keywords": [
+    "whatsapp",
+    "bot",
+    "baileys",
+    "bony-xmd"
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "env": {
+    "BONY_SESSION": {
+      "description": "BONY XMD WhatsApp session string",
+      "required": true
+    }
+  }
+}
