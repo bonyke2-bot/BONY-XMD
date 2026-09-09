@@ -54,3 +54,21 @@ Your BONY XMD PRO WhatsApp bot will then connect to WhatsApp and be ready to use
   <!-- Contact Owner -->  <a href="https://wa.me/254748339103" target="_blank">
     <img src="https://img.shields.io/badge/📞_CONTACT_OWNER-25d366?style=for-the-badge&logo=whatsapp" width="300" height="50"/>
   </a></p>---
+📊 Stats
+
+<p align="center">
+  <img src="https://komarev.com/ghpvc/?username=bonyke2-bot&label=Profile+Views&color=FF0000&style=for-the-badge" alt="Views"/>
+  <img src="https://img.shields.io/github/followers/bonyke2-bot?label=GitHub+Followers&style=for-the-badge&color=00FF00" alt="Followers"/>
+</p>---
+
+🟢 Status
+
+<p align="center">
+  <span style="font-size:1.2em; color:#00FF00;">Status: <b>🟢 ONLINE</b></span>
+</p>---
+
+<!-- Footer --><p align="center">
+  <img src="https://i.imgur.com/dBaSKWF.gif" height="40" width="100%">
+</p><p align="center">
+  <strong>BONY XMD PRO © 2026 | POWERED BY BONY KE</strong>
+</p>
