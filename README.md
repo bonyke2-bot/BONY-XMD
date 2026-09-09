@@ -10,3 +10,8 @@
 <p align="center">
   <img src="https://img.shields.io/badge/🚀_RAILWAY-COMING_SOON-000000?style=for-the-badge&color=purple" width="240" height="45"/>
 </p>
+<p align="center">
+  <img src="https://img.shields.io/badge/🚀_RAILWAY-000000?style=for-the-badge&color=purple" width="200" height="45"/>
+</<p align="center">
+  <img src="https://img.shields.io/badge/🚀_RENDER-000000?style=for-the-badge&color=61DAFB" width="200" height="45"/>
+</p>
