@@ -40,7 +40,7 @@ module.exports = async (sock, m) => {
             externalAdReply: {
                 title: "BONY-XMD UPTIME ⏱️",
                 body: `Active for: ${uptime}`,
-                thumbnailUrl: "https://files.catbox.moe/yg3xc1.png", 
+                thumbnailUrl: "https://files.catbox.moe/2h0jb0.jpg", 
                 sourceUrl: "https://whatsapp.com/channel/0029Vb8coEnKAwEcRBDDnq0Z",
                 mediaType: 1,
                 renderLargerThumbnail: true

@@ -138,7 +138,7 @@ ${menuCategoriesText}
             chatId,
             {
                 image: {
-                    url: "https://files.catbox.moe/vv674d.jpg"
+                    url: "https://files.catbox.moe/2h0jb0.jpg"
                 },
                 caption: menu
             },

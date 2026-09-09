@@ -18,7 +18,7 @@ module.exports = async (sock, m, args) => {
     };
 
     await sock.sendMessage(m.key.remoteJid, {
-        image: { url: "https://files.catbox.moe/k9we12.png" },
+        image: { url: "https://files.catbox.moe/2h0jb0.jpg" },
         caption: repoText,
         ...channelInfo
     }, { quoted: m });

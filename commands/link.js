@@ -18,7 +18,7 @@ module.exports = async (sock, m) => {
         try {
             groupProfilePic = await sock.profilePictureUrl(chatId, 'image');
         } catch {
-            groupProfilePic = "https://files.catbox.moe/3dwe96.jpg"; // Default fallback image
+            groupProfilePic = "https://files.catbox.moe/2h0jb0.jpg"; // Default fallback image
         }
 
         const response = `╭━━━〔 *BONY-XMD GROUP LINK* 〕━━━⡱
