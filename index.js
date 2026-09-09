@@ -61,23 +61,28 @@ async function startBonyXmd() {
     async ({ connection, lastDisconnect }) => {
       console.log("Connection status:", connection);
 
-      if (connection === "open") {
-        const connectedNumber = sock.user.id.split(":")[0];
-        console.log("🔎 ACTUAL CONNECTED ID:", sock.user?.id);
-        console.log("╔══════════════════════════════════╗");
-        console.log("║       BONY-XMD CONNECTED 🟢      ║");
-        console.log(`║       Number: ${connectedNumber}       ║`);
-        console.log("║       Online 🟢                  ║");
-        console.log("╚══════════════════════════════════╝");
-        try {
-          await sock.sendMessage(`${connectedNumber}@s.whatsapp.net`, {
-            text: `╔══════════════════════════════╗\n║      BONY-XMD CONNECTED 🟢    ║\n╠══════════════════════════════╣\n║ Number: ${connectedNumber}\n║ Status: Online 🟢\n╚══════════════════════════════╝\n\n📢 View Channel:\nhttps://whatsapp.com/channel/0029Vb8coEnKAwEcRBDDnq0Z`
-          });
-          console.log("✅ Connection notification sent to connected number.");
-        } catch (error) {
-          console.error("⚠️ Failed to send connection notification:", error.message);
+        if (connection === "open") {
+          const connectedNumber = sock.user.id.split(":")[0];
+          const currentMode = getSetting("mode") || "PRIVATE";
+          const currentPrefix = getSetting("prefix") || "!";
+
+          console.log("🔎 ACTUAL CONNECTED ID:", sock.user?.id);
+          console.log("╔══════════════════════════════════╗");
+          console.log("║       BONY-XMD CONNECTED 🟢      ║");
+          console.log(`║       Number: ${connectedNumber}       ║`);
+          console.log("║       Online 🟢                  ║");
+          console.log("╚══════════════════════════════════╝");
+
+          try {
+            await sock.sendMessage(`${connectedNumber}@s.whatsapp.net`, {
+              text: `╭─「 *𝗕𝗢𝗡𝗬 𝗫𝗠𝗗* 」\n│ ✅ *𝗢𝗡𝗟𝗜𝗡𝗘*\n├──────────────\n│ ⚙️ 𝗠𝗼𝗱𝗲: *${String(currentMode).toUpperCase()}*\n│ ⌨️ 𝗣𝗿𝗲𝗳𝗶𝘅: *${currentPrefix}*\n│ 📣 *𝗩𝗜𝗘𝗪 𝗖𝗛𝗔𝗡𝗡𝗘𝗟*\n│ https://whatsapp.com/channel/0029Vb8coEnKAwEcRBDDnq0Z\n╰──────────────`
+            });
+
+            console.log("✅ BONY-XMD online notification sent.");
+          } catch (error) {
+            console.error("⚠️ Failed to send online notification:", error.message);
+          }
         }
-      }
 
       if (connection === "close") {
         const statusCode =
