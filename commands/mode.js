@@ -1,34 +1,62 @@
-const fs = require('fs');
-const path = require('path');
-
-const dbPath = path.join(__dirname, '../database.json');
+const {
+    getSetting,
+    saveSettings
+} = require("../lib/settings.cjs");
 
 const modeCommand = async (sock, m, args) => {
     const chatId = m.key.remoteJid;
 
-    if (!args[0] || !['public', 'private'].includes(args[0].toLowerCase())) {
-        return await sock.sendMessage(chatId, { 
-            text: "❌ *Usage:* `.mode public` or `.mode private`" 
-        }, { quoted: m });
+    const settings = require("../settings.cjs");
+
+    const senderId = m.key.participant
+        ? m.key.participant.split(":")[0]
+        : chatId.split(":")[0];
+
+    const ownerNumber = settings.ownerNumber.replace(/[^0-9]/g, "");
+
+    const isOwner =
+        m.key.fromMe ||
+        senderId.replace(/[^0-9]/g, "") === ownerNumber;
+
+    if (!isOwner) {
+        return await sock.sendMessage(
+            chatId,
+            {
+                text: "❌ Only the bot owner can change the bot mode."
+            },
+            { quoted: m }
+        );
     }
 
-    const newMode = args[0].toLowerCase();
-    
-    let db = { antilink: [], autoreact: false, autoread: false, autotyping: false, mode: "public" };
-    if (fs.existsSync(dbPath)) {
-        try {
-            db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
-        } catch (e) {
-            // Fallback to default values if error occurs
-        }
+    const mode = args[0]?.toLowerCase();
+
+    if (!["public", "private"].includes(mode)) {
+        const currentMode = getSetting("mode");
+
+        return await sock.sendMessage(
+            chatId,
+            {
+                text:
+                    `⚙️ *Current Mode:* ${currentMode}\n\n` +
+                    `Usage:\n` +
+                    `!mode public\n` +
+                    `!mode private`
+            },
+            { quoted: m }
+        );
     }
 
-    db.mode = newMode;
-    fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+    saveSettings({
+        mode
+    });
 
-    await sock.sendMessage(chatId, { 
-        text: `⚙️ *Mode System:* The bot is now in **${newMode}** mode! ✅` 
-    }, { quoted: m });
+    await sock.sendMessage(
+        chatId,
+        {
+            text: `✅ *BONY-XMD Mode*\n\nBot mode changed to: *${mode.toUpperCase()}*`
+        },
+        { quoted: m }
+    );
 };
 
 module.exports = modeCommand;

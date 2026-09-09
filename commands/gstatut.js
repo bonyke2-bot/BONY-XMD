@@ -1,7 +1,13 @@
-const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
-const settings = require("../settings");
+let downloadContentFromMessage;
+async function loadBaileys() {
+  if (!downloadContentFromMessage) {
+    ({ downloadContentFromMessage } = await import("@whiskeysockets/baileys"));
+  }
+}
+const settings = require("../settings.cjs");
 
 async function downloadMedia(message, type) {
+  await loadBaileys();
     let stream = await downloadContentFromMessage(message, type);
     let buffer = Buffer.from([]);
     for await (const chunk of stream) {

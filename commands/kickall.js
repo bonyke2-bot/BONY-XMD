@@ -1,4 +1,4 @@
-const settings = require("../settings.js");
+const settings = require("../settings.cjs");
 module.exports = async (sock, m, args) => {
     const from = m.key.remoteJid;
     const sender = m.key.participant || m.key.remoteJid;

@@ -1,6 +1,12 @@
-const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
+let downloadContentFromMessage;
+async function loadBaileys() {
+  if (!downloadContentFromMessage) {
+    ({ downloadContentFromMessage } = await import("@whiskeysockets/baileys"));
+  }
+}
 
 async function viewonceCommand(sock, m) {
+  await loadBaileys();
     const chatId = m.key.remoteJid;
 
     try {

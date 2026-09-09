@@ -4,7 +4,7 @@ const path = require("path");
 module.exports = async (sock, m, args) => {
     const from = m.key.remoteJid;
     const sender = m.key.participant || m.key.remoteJid;
-    const settings = require("../settings");
+    const settings = require("../settings.cjs");
     
     // 1. Verify if the sender is the owner
     const isOwner = sender.includes(settings.ownerNumber.replace(/[^0-9]/g, '')) || m.key.fromMe;

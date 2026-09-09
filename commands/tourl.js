@@ -1,5 +1,10 @@
 const axios = require('axios');
-const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
+let downloadContentFromMessage;
+async function loadBaileys() {
+  if (!downloadContentFromMessage) {
+    ({ downloadContentFromMessage } = await import("@whiskeysockets/baileys"));
+  }
+}
 const FormData = require('form-data');
 
 async function getStreamBuffer(stream) {
@@ -11,6 +16,7 @@ async function getStreamBuffer(stream) {
 }
 
 module.exports = async (sock, m, args) => {
+  await loadBaileys();
     const chatId = m.key.remoteJid;
 
     try {

@@ -1,72 +1,127 @@
 const fs = require("fs");
 const path = require("path");
 
+const dbPath = path.join(__dirname, "../database.json");
+
+function loadDatabase() {
+  try {
+    if (!fs.existsSync(dbPath)) {
+      return {};
+    }
+
+    return JSON.parse(fs.readFileSync(dbPath, "utf8"));
+  } catch {
+    return {};
+  }
+}
+
+function saveDatabase(db) {
+  fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+}
+
 module.exports = async (sock, m, args) => {
-    const from = m.key.remoteJid;
-    const isGroup = from.endsWith('@g.us');
-    const sender = m.key.participant || m.key.remoteJid;
-    const settings = require("../settings");
-    
-    const isOwner = sender.includes(settings.ownerNumber.replace(/[^0-9]/g, '')) || m.key.fromMe;
+  const from = m.key.remoteJid;
+  const isGroup = from.endsWith("@g.us");
 
-    if (!isGroup) {
-        return await sock.sendMessage(from, { text: "❌ *Access Denied:* This command can only be executed inside groups." }, { quoted: m });
-    }
-    
-    if (!isOwner) {
-        return await sock.sendMessage(from, { text: "❌ *Access Denied:* Restricted command for Bot Owner only." }, { quoted: m });
-    }
+  if (!isGroup) {
+    return await sock.sendMessage(
+      from,
+      {
+        text: "❌ *Antilink can only be configured inside a group.*"
+      },
+      { quoted: m }
+    );
+  }
 
-    if (!args[0]) {
-        return await sock.sendMessage(from, { 
-            text: "👑 *BONY-XMD - ANTILINK SETUP*\n\n📌 *Usage:*\n• `.antilink on` (Default Warn 3x)\n• `.antilink kick` (Instant Kick)\n• `.antilink off` (Deactivate)" 
-        }, { quoted: m });
-    }
+  const settings = require("../settings.cjs");
 
-    const dbPath = path.join(__dirname, "../database.json");
-    let db = { antilink: [], antilinkMode: {} };
-    if (fs.existsSync(dbPath)) {
-        try {
-            db = JSON.parse(fs.readFileSync(dbPath, "utf-8"));
-            if (!Array.isArray(db.antilink)) db.antilink = [];
-            if (!db.antilinkMode) db.antilinkMode = {};
-        } catch (e) {
-            db = { antilink: [], antilinkMode: {} };
-        }
-    }
+  const sender = m.key.participant || from;
+  const senderNumber = sender.replace(/[^0-9]/g, "");
+  const ownerNumber = settings.ownerNumber.replace(/[^0-9]/g, "");
 
-    const action = args[0].toLowerCase();
+  const isOwner =
+    m.key.fromMe || senderNumber === ownerNumber;
 
-    if (action === "on" || action === "warn") {
-        if (!db.antilink.includes(from)) db.antilink.push(from);
-        db.antilinkMode[from] = "warn"; // 3 warns then kick
-        fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+  if (!isOwner) {
+    return await sock.sendMessage(
+      from,
+      {
+        text: "❌ *Only the BONY-XMD owner can change antilink settings.*"
+      },
+      { quoted: m }
+    );
+  }
 
-        await sock.sendMessage(from, { 
-            text: "╭━━━〔 *ANTILINK SYSTEM* 〕━━━⡱\n┃ 🛡️ *Status:* Activated ✅\n┃ ⚡ *Mode:* Warn (3 Warnings = Kick)\n┃ 🤖 *Bot:* BONY-XMD\n╰━━━━━━━━━━━━━━━━━━━━⬣" 
-        }, { quoted: m });
-    } 
-    else if (action === "kick") {
-        if (!db.antilink.includes(from)) db.antilink.push(from);
-        db.antilinkMode[from] = "kick"; // Instant kick
-        fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+  const action = args[0]?.toLowerCase();
 
-        await sock.sendMessage(from, { 
-            text: "╭━━━〔 *ANTILINK SYSTEM* 〕━━━⡱\n┃ 🛡️ *Status:* Activated ✅\n┃ ⚡ *Mode:* Instant Kick ❌\n┃ 🤖 *Bot:* BONY-XMD\n╰━━━━━━━━━━━━━━━━━━━━⬣" 
-        }, { quoted: m });
-    }
-    else if (action === "off") {
-        db.antilink = db.antilink.filter(id => id !== from);
-        delete db.antilinkMode[from];
-        fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+  if (!["on", "off", "kick"].includes(action)) {
+    return await sock.sendMessage(
+      from,
+      {
+        text:
+          "🛡️ *BONY-XMD ANTILINK*\n\n" +
+          "Usage:\n" +
+          "!antilink on\n" +
+          "!antilink kick\n" +
+          "!antilink off"
+      },
+      { quoted: m }
+    );
+  }
 
-        await sock.sendMessage(from, { 
-            text: "╭━━━〔 *ANTILINK SYSTEM* 〕━━━⡱\n┃ 🛡️ *Status:* Deactivated ❌\n┃ 🤖 *Bot:* BONY-XMD\n╰━━━━━━━━━━━━━━━━━━━━⬣" 
-        }, { quoted: m });
-    } 
-    else {
-        await sock.sendMessage(from, { 
-            text: "❌ *Invalid Option!*\n💡 *Please use:* `.antilink on`, `.antilink kick`, or `.antilink off`" 
-        }, { quoted: m });
-    }
+  const db = loadDatabase();
+
+  if (!Array.isArray(db.antilink)) {
+    db.antilink = [];
+  }
+
+  if (!db.antilinkMode) {
+    db.antilinkMode = {};
+  }
+
+  if (action === "off") {
+    db.antilink = db.antilink.filter(id => id !== from);
+    delete db.antilinkMode[from];
+
+    saveDatabase(db);
+
+    return await sock.sendMessage(
+      from,
+      {
+        text:
+          "╭━━━〔 *ANTILINK* 〕━━━╮\n" +
+          "┃ 🛡️ Status: *OFF* ❌\n" +
+          "┃ 🤖 BONY-XMD\n" +
+          "╰━━━━━━━━━━━━━━━━━━╯"
+      },
+      { quoted: m }
+    );
+  }
+
+  if (!db.antilink.includes(from)) {
+    db.antilink.push(from);
+  }
+
+  db.antilinkMode[from] =
+    action === "kick" ? "kick" : "warn";
+
+  saveDatabase(db);
+
+  const mode =
+    action === "kick"
+      ? "Instant Kick"
+      : "Warn (3 Warnings = Kick)";
+
+  await sock.sendMessage(
+    from,
+    {
+      text:
+        "╭━━━〔 *ANTILINK* 〕━━━╮\n" +
+        "┃ 🛡️ Status: *ON* ✅\n" +
+        `┃ ⚡ Mode: *${mode}*\n` +
+        "┃ 🤖 BONY-XMD\n" +
+        "╰━━━━━━━━━━━━━━━━━━╯"
+    },
+    { quoted: m }
+  );
 };

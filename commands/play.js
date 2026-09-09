@@ -1,6 +1,6 @@
 const axios = require("axios");
 const yts = require("yt-search");
-const settings = require("../settings");
+const settings = require("../settings.cjs");
 
 const channelInfo = {
     contextInfo: {

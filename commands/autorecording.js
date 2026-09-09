@@ -3,7 +3,7 @@ const {
   saveSettings
 } = require("../lib/settings.cjs");
 
-const autoreactCommand = async (sock, m, args) => {
+const autorecordingCommand = async (sock, m, args) => {
   const chatId = m.key.remoteJid;
   const status = args[0]?.toLowerCase();
 
@@ -12,11 +12,11 @@ const autoreactCommand = async (sock, m, args) => {
       chatId,
       {
         text:
-          `❤️ *Auto-React*\n\n` +
-          `Current: *${getSetting("autoreact") ? "ON" : "OFF"}*\n\n` +
+          `🎙️ *Auto-Recording*\n\n` +
+          `Current: *${getSetting("autorecording") ? "ON" : "OFF"}*\n\n` +
           `Usage:\n` +
-          `!autoreact on\n` +
-          `!autoreact off`
+          `!autorecording on\n` +
+          `!autorecording off`
       },
       { quoted: m }
     );
@@ -25,16 +25,16 @@ const autoreactCommand = async (sock, m, args) => {
   const value = status === "on";
 
   saveSettings({
-    autoreact: value
+    autorecording: value
   });
 
   await sock.sendMessage(
     chatId,
     {
-      text: `❤️ *Auto-React System:* ${value ? "Activated! ✅" : "Deactivated! ❌"}`
+      text: `🎙️ *Auto-Recording System:* ${value ? "Activated! ✅" : "Deactivated! ❌"}`
     },
     { quoted: m }
   );
 };
 
-module.exports = autoreactCommand;
+module.exports = autorecordingCommand;

@@ -1,12 +1,16 @@
-const {
-    downloadContentFromMessage
-} = require('@whiskeysockets/baileys');
+let downloadContentFromMessage;
+async function loadBaileys() {
+  if (!downloadContentFromMessage) {
+    ({ downloadContentFromMessage } = await import("@whiskeysockets/baileys"));
+  }
+}
 
 const fs = require('fs');
 const path = require('path');
 const { exec } = require('child_process');
 
 module.exports = async (sock, m, args) => {
+  await loadBaileys();
     const chatId = m.key.remoteJid;
 
     try {

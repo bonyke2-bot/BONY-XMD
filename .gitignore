@@ -4,3 +4,14 @@ sessions/
 .env
 *.log
 npm-debug.log*
+
+# WhatsApp sessions / credentials
+bony-session.txt
+fresh-session.txt
+sessions/
+auth_info/
+creds.json
+
+# Backup files
+*.backup
+*.before-settings

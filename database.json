@@ -1,7 +1,13 @@
 {
-  "antilink": [],
-  "autoreact": false,
+  "mode": "private",
+  "prefix": "!",
+  "antilink": false,
+  "autoreact": true,
   "autoread": false,
-  "autotyping": false,
-  "mode": "public"
+  "autotyping": true,
+  "autorecording": false,
+  "alwaysonline": false,
+  "welcome": true,
+  "goodbye": true,
+  "reaction": "❤️"
 }

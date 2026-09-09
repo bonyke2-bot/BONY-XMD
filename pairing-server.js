@@ -105,7 +105,7 @@ app.post("/api/pair", async (req, res) => {
     sock = makeWASocket({
       auth: state,
       logger: P({ level: "silent" }),
-      browser: Browsers.macOS("Chrome"),
+      browser: Browsers.ubuntu("Chrome"),
       printQRInTerminal: false
     });
 

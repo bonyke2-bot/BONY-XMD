@@ -1,78 +1,234 @@
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+
+const commands = require("./command-loader.cjs");
+const {
+  getAllSettings,
+  getSetting
+} = require("./lib/settings.cjs");
+
 import { importSession } from "./session-importer.js";
 import {
   useMultiFileAuthState,
   DisconnectReason
 } from "@whiskeysockets/baileys";
-
-import { createRequire } from "module";
-
-const require = createRequire(import.meta.url);
-const makeWASocket =
-  require("@whiskeysockets/baileys").default;
-
+import makeWASocket from "@whiskeysockets/baileys";
 import P from "pino";
 
 console.log("🚀 Starting BONY XMD...");
 
-async function startBonyXmd() {
-  await importSession();
-  console.log("📁 Loading BONY XMD session...");
+let authState;
+let saveCreds;
 
-  const { state, saveCreds } =
-    await useMultiFileAuthState("./session");
+async function startBonyXmd() {
+  if (!authState) {
+    await importSession();
+
+    console.log("📁 Loading BONY XMD session...");
+
+    const result = await useMultiFileAuthState("./session");
+
+    authState = result.state;
+    saveCreds = result.saveCreds;
+
+    console.log("🔌 Authentication state loaded...");
+  }
 
   console.log("🔌 Creating WhatsApp connection...");
 
   const sock = makeWASocket({
-    auth: state,
-    logger: P({ level: "info" }),
-    printQRInTerminal: true
+    auth: authState,
+    logger: P({ level: "info" })
   });
 
   sock.ev.on("creds.update", saveCreds);
 
-  sock.ev.on("connection.update", ({ connection, lastDisconnect }) => {
-    console.log("Connection status:", connection);
-
-    if (connection === "open") {
-      console.log("╔════════════════════════════╗");
-      console.log("║      BONY XMD CONNECTED    ║");
-      console.log("║      Owner: BONY KE        ║");
-      console.log("╚════════════════════════════╝");
+  if (getSetting("alwaysonline")) {
+    try {
+      await sock.sendPresenceUpdate("available");
+      console.log("🟢 Always Online enabled.");
+    } catch (error) {
+      console.error("⚠️ Always Online error:", error.message);
     }
+  }
 
-    if (connection === "close") {
-      const shouldReconnect =
-        lastDisconnect?.error?.output?.statusCode !==
-        DisconnectReason.loggedOut;
+  sock.ev.on(
+    "connection.update",
+    ({ connection, lastDisconnect }) => {
+      console.log("Connection status:", connection);
 
-      console.log("❌ BONY XMD connection closed.");
+      if (connection === "open") {
+        console.log("📱 BONY XMD NUMBER:", sock.user?.id);
+        console.log("╔════════════════════════════╗");
+        console.log("║      BONY XMD CONNECTED    ║");
+        console.log("║      Owner: BONY KE        ║");
+        console.log("╚════════════════════════════╝");
+      }
 
-      if (shouldReconnect) {
-        console.log("🔄 Reconnecting...");
-        startBonyXmd();
-      } else {
-        console.log("⚠️ Session logged out. Pair again.");
+      if (connection === "close") {
+        const statusCode =
+          lastDisconnect?.error?.output?.statusCode;
+
+        const shouldReconnect =
+          statusCode !== DisconnectReason.loggedOut;
+
+        console.log("❌ BONY XMD connection closed.");
+
+        if (shouldReconnect) {
+          console.log("🔄 Reconnecting...");
+
+          setTimeout(() => {
+            startBonyXmd().catch((error) => {
+              console.error("❌ Reconnect error:");
+              console.error(error);
+            });
+          }, 3000);
+        } else {
+          console.log("⚠️ Session logged out. Pair again.");
+        }
       }
     }
-  });
+  );
 
-  sock.ev.on("messages.upsert", async ({ messages }) => {
-    const msg = messages[0];
+  sock.ev.on(
+    "messages.upsert",
+    async ({ messages }) => {
+      const currentSettings = getAllSettings();
 
-    if (!msg.message || msg.key.fromMe) return;
+      for (const msg of messages) {
+        if (!msg.message) continue;
 
-    const text =
-      msg.message.conversation ||
-      msg.message.extendedTextMessage?.text ||
-      "";
+        const text =
+          msg.message.conversation ||
+          msg.message.extendedTextMessage?.text ||
+          "";
 
-    if (text.toLowerCase() === ".ping") {
-      await sock.sendMessage(msg.key.remoteJid, {
-        text: "🏓 BONY XMD is online!"
-      });
+        if (!text) continue;
+
+        if (currentSettings.autoread) {
+          try {
+            await sock.readMessages([msg.key]);
+          } catch (error) {
+            console.error("⚠️ Autoread error:", error.message);
+          }
+        }
+
+        if (currentSettings.autoreact && !msg.key.fromMe) {
+          try {
+            await sock.sendMessage(
+              msg.key.remoteJid,
+              {
+                react: {
+                  text: currentSettings.reaction || "❤️",
+                  key: msg.key
+                }
+              }
+            );
+          } catch (error) {
+            console.error("⚠️ Autoreact error:", error.message);
+          }
+        }
+
+        if (currentSettings.autotyping) {
+          try {
+            await sock.sendPresenceUpdate(
+              "composing",
+              msg.key.remoteJid
+            );
+          } catch (error) {
+            console.error("⚠️ Autotyping error:", error.message);
+          }
+        }
+
+        if (currentSettings.autorecording) {
+          try {
+            await sock.sendPresenceUpdate(
+              "recording",
+              msg.key.remoteJid
+            );
+          } catch (error) {
+            console.error("⚠️ Autorecording error:", error.message);
+          }
+        }
+
+        console.log(
+          "📨 RECEIVED TEXT:",
+          JSON.stringify(text)
+        );
+
+        console.log(
+          "👤 SENDER:",
+          msg.key.remoteJid,
+          "FROM ME:",
+          msg.key.fromMe
+        );
+
+        // PRIVATE MODE: only owner/fromMe can use bot commands
+        if (
+          currentSettings.mode === "private" &&
+          !msg.key.fromMe
+        ) {
+          continue;
+        }
+
+        const trimmed = text.trim();
+
+        const currentPrefix = getSetting("prefix") || "!";
+
+        if (!trimmed.startsWith(currentPrefix)) continue;
+
+        const prefix = currentPrefix;
+
+        const body = trimmed.slice(prefix.length).trim();
+
+        if (!body) continue;
+
+        const parts = body.split(/\s+/);
+        const commandName = parts.shift().toLowerCase();
+        const args = parts;
+
+        const command = commands.get(commandName);
+
+        if (!command) {
+          console.log(`⚠️ Unknown command: ${commandName}`);
+          continue;
+        }
+
+        try {
+          console.log(
+            `⚡ Running command: ${prefix}${commandName}`
+          );
+
+          await command(sock, msg, args);
+
+          console.log(
+            `✅ Command completed: ${prefix}${commandName}`
+          );
+        } catch (error) {
+          console.error(
+            `❌ Command error: ${commandName}`
+          );
+          console.error(error);
+
+          try {
+            await sock.sendMessage(
+              msg.key.remoteJid,
+              {
+                text:
+                  "❌ An error occurred while running that command."
+              },
+              { quoted: msg }
+            );
+          } catch (sendError) {
+            console.error(
+              "❌ Could not send error message:",
+              sendError
+            );
+          }
+        }
+      }
     }
-  });
+  );
 }
 
 startBonyXmd().catch((error) => {

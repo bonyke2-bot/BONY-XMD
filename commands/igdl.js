@@ -1,5 +1,5 @@
 const { igdl } = require("ruhend-scraper");
-const settings = require("../settings");
+const settings = require("../settings.cjs");
 
 const channelInfo = {
     contextInfo: {

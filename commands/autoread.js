@@ -1,35 +1,40 @@
-const fs = require('fs');
-const path = require('path');
-
-const dbPath = path.join(__dirname, '../database.json');
+const {
+  getSetting,
+  saveSettings
+} = require("../lib/settings.cjs");
 
 const autoreadCommand = async (sock, m, args) => {
-    const chatId = m.key.remoteJid;
+  const chatId = m.key.remoteJid;
+  const status = args[0]?.toLowerCase();
 
-    if (!args[0] || !['on', 'off'].includes(args[0].toLowerCase())) {
-        return await sock.sendMessage(chatId, { 
-            text: "❌ *Usage:* `.autoread on` or `.autoread off`" 
-        }, { quoted: m });
-    }
+  if (!["on", "off"].includes(status)) {
+    return await sock.sendMessage(
+      chatId,
+      {
+        text:
+          `📖 *Auto-Read*\n\n` +
+          `Current: *${getSetting("autoread") ? "ON" : "OFF"}*\n\n` +
+          `Usage:\n` +
+          `!autoread on\n` +
+          `!autoread off`
+      },
+      { quoted: m }
+    );
+  }
 
-    const status = args[0].toLowerCase();
-    
-    let db = { antilink: [], autoreact: false, autoread: false };
-    if (fs.existsSync(dbPath)) {
-        try {
-            db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
-        } catch (e) {
-            db = { antilink: [], autoreact: false, autoread: false };
-        }
-    }
+  const value = status === "on";
 
-    db.autoread = (status === 'on');
+  saveSettings({
+    autoread: value
+  });
 
-    fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
-
-    await sock.sendMessage(chatId, { 
-        text: `📖 *Auto-Read System:* ${status === 'on' ? 'Activated! ✅' : 'Deactivated! ❌'}` 
-    }, { quoted: m });
+  await sock.sendMessage(
+    chatId,
+    {
+      text: `📖 *Auto-Read System:* ${value ? "Activated! ✅" : "Deactivated! ❌"}`
+    },
+    { quoted: m }
+  );
 };
 
 module.exports = autoreadCommand;
