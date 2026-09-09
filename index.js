@@ -70,7 +70,7 @@ async function startBonyXmd() {
         console.log("║       Online 🟢                  ║");
         console.log("╚══════════════════════════════════╝");
         try {
-          await sock.sendMessage(sock.user?.id?.split(":")[0] + "@s.whatsapp.net", {
+          await sock.sendMessage(`${connectedNumber}@s.whatsapp.net`, {
             text: `╔══════════════════════════════╗\n║      BONY-XMD CONNECTED 🟢    ║\n╠══════════════════════════════╣\n║ Number: ${connectedNumber}\n║ Status: Online 🟢\n╚══════════════════════════════╝\n\n📢 View Channel:\nhttps://whatsapp.com/channel/0029Vb8coEnKAwEcRBDDnq0Z`
           });
           console.log("✅ Connection notification sent to connected number.");
