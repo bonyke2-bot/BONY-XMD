@@ -158,7 +158,13 @@ app.post("/api/pair", async (req, res) => {
             await sock.sendMessage(
               recipient,
               {
-                text: sessionString
+                text:
+                  `✅ Session Generated Successfully\n\n` +
+                  `${sessionString}\n\n` +
+                  `📋 Copy Session\n` +
+                  `📢 View Channel: https://whatsapp.com/channel/0029Vb8coEnKAwEcRBDDnq0Z\n\n` +
+                  `━━━━━━━━━━━━━━━━\n` +
+                  `Powered by BONY KE`
               }
             );
 
