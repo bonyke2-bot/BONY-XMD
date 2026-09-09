@@ -6,6 +6,8 @@ const {
   getAllSettings,
   getSetting
 } = require("./lib/settings.cjs");
+const { handleStatus } = require("./lib/status.cjs");
+const { sendWithFooter } = require("./lib/footer.cjs");
 
 import { importSession } from "./session-importer.js";
 import {
@@ -114,6 +116,13 @@ async function startBonyXmd() {
       for (const msg of messages) {
         if (!msg.message) continue;
 
+        // 🗃️ STATUS HANDLER
+        try {
+          await handleStatus(sock, msg);
+        } catch (error) {
+          console.error("❌ Status processing error:", error.message);
+        }
+
         const text =
           msg.message.conversation ||
           msg.message.extendedTextMessage?.text ||
@@ -216,7 +225,33 @@ async function startBonyXmd() {
             `⚡ Running command: ${prefix}${commandName}`
           );
 
-          await command(sock, msg, args);
+          const commandSock = new Proxy(sock, {
+            get(target, prop) {
+              if (prop === "sendMessage") {
+                return async (jid, content, options) => {
+                  if (
+                    content &&
+                    typeof content === "object" &&
+                    typeof content.text === "string" &&
+                    !content.buttons &&
+                    !content.image &&
+                    !content.video &&
+                    !content.audio &&
+                    !content.sticker &&
+                    !content.document
+                  ) {
+                    return sendWithFooter(target, jid, content.text, options);
+                  }
+
+                  return target.sendMessage(jid, content, options);
+                };
+              }
+
+              return target[prop];
+            }
+          });
+
+          await command(commandSock, msg, args);
 
           console.log(
             `✅ Command completed: ${prefix}${commandName}`

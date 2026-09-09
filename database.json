@@ -9,5 +9,10 @@
   "alwaysonline": false,
   "welcome": true,
   "goodbye": true,
-  "reaction": "❤️"
+  "reaction": "\u2764\ufe0f",
+  "statusEnabled": true,
+  "statusAutoView": true,
+  "statusAutoReact": false,
+  "statusAutoReply": false,
+  "statusDownload": false
 }
