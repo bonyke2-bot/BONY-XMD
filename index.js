@@ -42,7 +42,8 @@ async function startBonyXmd() {
 
   sock = makeWASocket({
     auth: authState,
-    logger: P({ level: "info" })
+    logger: P({ level: "info" }),
+    syncFullHistory: false
   });
 
   console.log("🧪 EVENT EMITTER TEST: socket created");
