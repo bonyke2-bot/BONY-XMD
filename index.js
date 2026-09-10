@@ -122,6 +122,114 @@ async function startBonyXmd() {
     }
   );
 
+  // 🗃️ MESSAGE CACHE FOR DELETE RECOVERY
+  const deletedMessageCache = new Map();
+  const MAX_CACHED_MESSAGES = 1500;
+
+  function cacheMessage(msg) {
+    if (!msg?.message || !msg?.key?.id || !msg?.key?.remoteJid) return;
+
+    const cacheKey = `${msg.key.remoteJid}:${msg.key.id}`;
+
+    deletedMessageCache.set(cacheKey, {
+      message: msg.message,
+      key: msg.key,
+      timestamp: Date.now()
+    });
+
+    if (deletedMessageCache.size > MAX_CACHED_MESSAGES) {
+      const oldestKey = deletedMessageCache.keys().next().value;
+      if (oldestKey) deletedMessageCache.delete(oldestKey);
+    }
+  }
+
+  function getCachedMessage(key) {
+    if (!key?.id || !key?.remoteJid) return null;
+
+    const cacheKey = `${key.remoteJid}:${key.id}`;
+    return deletedMessageCache.get(cacheKey) || null;
+  }
+
+  // 🗑️ DELETED MESSAGE DETECTOR
+  sock.ev.on("messages.update", async (updates) => {
+    const deleteSettings = getAllSettings();
+
+    if (!deleteSettings.antiDelete) return;
+
+    for (const item of updates) {
+      const update = item.update;
+      const protocolType =
+        update?.message?.protocolMessage?.type;
+
+      if (protocolType !== 0) continue;
+
+      const deletedKey =
+        update?.message?.protocolMessage?.key ||
+        update?.key;
+
+      if (!deletedKey?.id || !deletedKey?.remoteJid) continue;
+
+      const cached = getCachedMessage(deletedKey);
+      const inbox = sock.user?.id;
+
+      if (!inbox) continue;
+
+      const isGroup = deletedKey.remoteJid.endsWith("@g.us");
+
+      let chatName = deletedKey.remoteJid;
+
+      if (isGroup) {
+        try {
+          const metadata = await sock.groupMetadata(deletedKey.remoteJid);
+          chatName = metadata?.subject || "Unknown Group";
+        } catch {
+          chatName = "Unknown Group";
+        }
+      }
+
+      const sender =
+        deletedKey.participant ||
+        deletedKey.remoteJid ||
+        "Unknown";
+
+      let originalText = "⚠️ Original content was not cached.";
+
+      if (cached?.message) {
+        originalText =
+          cached.message.conversation ||
+          cached.message.extendedTextMessage?.text ||
+          cached.message.imageMessage?.caption ||
+          cached.message.videoMessage?.caption ||
+          cached.message.documentMessage?.caption ||
+          "[Media / unsupported message type]";
+      }
+
+      const notification = `╭─「 🗑️ *MESSAGE DELETED* 」
+│ ${isGroup ? "👥 GROUP" : "👤 PRIVATE"}
+│ 📍 ${chatName}
+│ 👤 Sender: ${sender}
+│ 🆔 ID: ${deletedKey.id}
+├──────────────
+│ 📝 Original:
+│ ${originalText}
+╰──────────────`;
+
+      try {
+        await sock.sendMessage(inbox, {
+          text: notification
+        });
+
+        console.log("🗑️ Deleted message forwarded to BONY inbox.");
+      } catch (error) {
+        console.error("❌ Delete notification error:", error.message);
+      }
+
+      deletedMessageCache.delete(
+        `${deletedKey.remoteJid}:${deletedKey.id}`
+      );
+    }
+  });
+
   sock.ev.on(
     "messages.upsert",
     async ({ messages }) => {
@@ -129,6 +237,9 @@ async function startBonyXmd() {
 
       for (const msg of messages) {
         if (!msg.message) continue;
+
+        // 🗃️ Save message so deleted content can be recovered
+        cacheMessage(msg);
 
         // 🗃️ STATUS HANDLER
         try {
