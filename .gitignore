@@ -15,3 +15,6 @@ creds.json
 # Backup files
 *.backup
 *.before-settings
+
+session-backup-*/
+session-invalid-*/
