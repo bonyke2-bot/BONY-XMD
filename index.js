@@ -45,6 +45,12 @@ async function startBonyXmd() {
     logger: P({ level: "info" })
   });
 
+  console.log("🧪 EVENT EMITTER TEST: socket created");
+
+  sock.ev.on("connection.update", (data) => {
+    console.log("🧪 RAW CONNECTION EVENT:", JSON.stringify(data));
+  });
+
   sock.ev.on("creds.update", saveCreds);
 
   if (getSetting("alwaysonline")) {
