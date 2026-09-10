@@ -15,8 +15,8 @@ const autorecordingCommand = async (sock, m, args) => {
           `🎙️ *Auto-Recording*\n\n` +
           `Current: *${getSetting("autorecording") ? "ON" : "OFF"}*\n\n` +
           `Usage:\n` +
-          `!autorecording on\n` +
-          `!autorecording off`
+          `.autorecording on\n` +
+          `.autorecording off`
       },
       { quoted: m }
     );

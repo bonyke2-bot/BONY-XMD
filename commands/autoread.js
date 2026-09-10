@@ -15,8 +15,8 @@ const autoreadCommand = async (sock, m, args) => {
           `📖 *Auto-Read*\n\n` +
           `Current: *${getSetting("autoread") ? "ON" : "OFF"}*\n\n` +
           `Usage:\n` +
-          `!autoread on\n` +
-          `!autoread off`
+          `.autoread on\n` +
+          `.autoread off`
       },
       { quoted: m }
     );

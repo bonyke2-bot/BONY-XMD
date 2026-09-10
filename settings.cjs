@@ -3,8 +3,9 @@ module.exports = {
   botName: "BONY-XMD 👑",
   ownerName: "BONY KE",
   ownerNumber: "254748339103",
+  mode: "public",
   sudoNumbers: ["254748339103"],
-  prefix: "!",
+  prefix: ".",
   version: "2.0.0",
   
   // ⚙️ SYSTEM & ENVIRONMENT
@@ -20,7 +21,7 @@ module.exports = {
   antiLink: false,
   antiSpam: true,
   autoReadMessages: false,
-  autoReact: true,
+  autoreact: false,
 
   // 🔌 ADVANCED FEATURES & API CONNECTIONS
   geminiApiKey: "",

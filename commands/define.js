@@ -1,4 +1,4 @@
-module.exports = async (sock, msg) => {
+module.exports = async (sock, msg, args) => {
   const jid = msg.key.remoteJid;
 
   const text =
@@ -6,12 +6,21 @@ module.exports = async (sock, msg) => {
     msg.message?.extendedTextMessage?.text ||
     "";
 
-  const word = text.trim().split(/\s+/).slice(1).join(" ");
+  const word =
+    args?.join(" ").trim() ||
+    text.trim().split(/\s+/).slice(1).join(" ");
 
   if (!word) {
-    return sock.sendMessage(jid, {
-      text: "📖 *BONY XMD DICTIONARY*\n\nUsage: `!define <word>`\n\nExample:\n`!define beautiful`"
-    }, { quoted: msg });
+    return sock.sendMessage(
+      jid,
+      {
+        text:
+          "📖 *BONY XMD DICTIONARY*\n\n" +
+          "Usage: `!define <word>`\n\n" +
+          "Example:\n`!define beautiful`"
+      },
+      { quoted: msg }
+    );
   }
 
   try {
@@ -25,9 +34,11 @@ module.exports = async (sock, msg) => {
 
     const data = await response.json();
     const entry = data[0];
-
     const meanings = entry.meanings || [];
-    let result = `📖 *BONY XMD DICTIONARY*\n\n🔤 Word: *${entry.word}*\n`;
+
+    let result =
+      `📖 *BONY XMD DICTIONARY*\n\n` +
+      `🔤 Word: *${entry.word}*\n`;
 
     for (const meaning of meanings.slice(0, 2)) {
       result += `\n📚 *${meaning.partOfSpeech || "Meaning"}*\n`;
@@ -37,23 +48,21 @@ module.exports = async (sock, msg) => {
       }
     }
 
-   
-      result += `\n📚 *${meaning.partOfSpeech || "Meaning"}*\n`;
-
-      for (const definition of (meaning.definitions || []).slice(0, 2)) {
-        result += `• ${definition.definition}\n`;
-      }
-    }
-
-    await sock.sendMessage(jid, {
-      text: result
-    }, { quoted: msg });
+    await sock.sendMessage(
+      jid,
+      { text: result },
+      { quoted: msg }
+    );
 
   } catch (error) {
     console.error("Define error:", error.message);
 
-    await sock.sendMessage(jid, {
-      text: `❌ I couldn't find a definition for *${word}*.`
-    }, { quoted: msg });
+    await sock.sendMessage(
+      jid,
+      {
+        text: `❌ I couldn't find a definition for *${word}*.`
+      },
+      { quoted: msg }
+    );
   }
 };

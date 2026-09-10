@@ -15,8 +15,8 @@ const alwaysOnlineCommand = async (sock, m, args) => {
           `🟢 *Always Online*\n\n` +
           `Current: *${getSetting("alwaysonline") ? "ON" : "OFF"}*\n\n` +
           `Usage:\n` +
-          `!alwaysonline on\n` +
-          `!alwaysonline off`
+          `.alwaysonline on\n` +
+          `.alwaysonline off`
       },
       { quoted: m }
     );

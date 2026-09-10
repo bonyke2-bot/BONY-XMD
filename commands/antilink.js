@@ -61,9 +61,9 @@ module.exports = async (sock, m, args) => {
         text:
           "🛡️ *BONY-XMD ANTILINK*\n\n" +
           "Usage:\n" +
-          "!antilink on\n" +
-          "!antilink kick\n" +
-          "!antilink off"
+          ".antilink on\n" +
+          ".antilink kick\n" +
+          ".antilink off"
       },
       { quoted: m }
     );

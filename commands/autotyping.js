@@ -15,8 +15,8 @@ const autotypingCommand = async (sock, m, args) => {
           `⌨️ *Auto-Typing*\n\n` +
           `Current: *${getSetting("autotyping") ? "ON" : "OFF"}*\n\n` +
           `Usage:\n` +
-          `!autotyping on\n` +
-          `!autotyping off`
+          `.autotyping on\n` +
+          `.autotyping off`
       },
       { quoted: m }
     );

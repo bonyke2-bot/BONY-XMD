@@ -16,13 +16,33 @@ export async function importSession() {
     throw new Error("Invalid BONY_SESSION format.");
   }
 
-  const encoded = sessionString.slice(PREFIX.length);
+  const encoded = sessionString.slice(PREFIX.length).trim();
 
-  const compressed = Buffer.from(encoded, "base64url");
+  let compressed;
 
-  const json = zlib.gunzipSync(compressed).toString("utf8");
+  try {
+    compressed = Buffer.from(encoded, "base64url");
+  } catch {
+    throw new Error("Invalid BONY_SESSION base64url data.");
+  }
 
-  const payload = JSON.parse(json);
+  let json;
+
+  try {
+    json = zlib.gunzipSync(compressed).toString("utf8");
+  } catch {
+    throw new Error(
+      "Could not decompress BONY_SESSION. The session string may be incomplete or corrupted."
+    );
+  }
+
+  let payload;
+
+  try {
+    payload = JSON.parse(json);
+  } catch {
+    throw new Error("Invalid BONY XMD session JSON.");
+  }
 
   if (!payload || payload.version !== 1 || !payload.files) {
     throw new Error("Invalid BONY XMD session data.");
@@ -46,10 +66,9 @@ export async function importSession() {
       throw new Error("Unsafe session file path.");
     }
 
-    await fs.promises.mkdir(
-      path.dirname(filePath),
-      { recursive: true }
-    );
+    await fs.promises.mkdir(path.dirname(filePath), {
+      recursive: true
+    });
 
     await fs.promises.writeFile(
       filePath,

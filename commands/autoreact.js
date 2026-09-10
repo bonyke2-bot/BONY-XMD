@@ -15,8 +15,8 @@ const autoreactCommand = async (sock, m, args) => {
           `❤️ *Auto-React*\n\n` +
           `Current: *${getSetting("autoreact") ? "ON" : "OFF"}*\n\n` +
           `Usage:\n` +
-          `!autoreact on\n` +
-          `!autoreact off`
+          `.autoreact on\n` +
+          `.autoreact off`
       },
       { quoted: m }
     );

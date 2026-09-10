@@ -17,6 +17,16 @@
     "BONY_SESSION": {
       "description": "BONY XMD WhatsApp session string",
       "required": true
+    },
+    "PREFIX": {
+      "description": "Bot command prefix",
+      "value": ".",
+      "required": true
+    },
+    "OWNER_NUMBER": {
+      "description": "Bot owner WhatsApp number",
+      "value": "",
+      "required": true
     }
   }
 }
