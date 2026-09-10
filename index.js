@@ -70,8 +70,22 @@ async function startBonyXmd() {
         console.log("║       Online 🟢                  ║");
         console.log("╚══════════════════════════════════╝");
         try {
-          await sock.sendMessage(sock.user?.id?.split(":")[0] + "@s.whatsapp.net", {
-            text: `╔══════════════════════════════╗\n║      BONY-XMD CONNECTED 🟢    ║\n╠══════════════════════════════╣\n║ Number: ${connectedNumber}\n║ Status: Online 🟢\n╚══════════════════════════════╝\n\n📢 View Channel:\nhttps://whatsapp.com/channel/0029Vb8coEnKAwEcRBDDnq0Z`
+          await sock.sendMessage(sock.user.id, {
+            text: `╭─「 *𝗕𝗢𝗡𝗬 𝗫𝗠𝗗* 」
+│ ✅ *𝗢𝗡𝗟𝗜𝗡𝗘*
+├──────────────
+│ ⚙️ 𝗠𝗼𝗱𝗲: *PUBLIC*
+│ ⌨️ 𝗣𝗿𝗲𝗳𝗶𝘅: *.*
+│ 📣 *𝗢𝗳𝗳𝗶𝗰𝗶𝗮𝗹 𝗖𝗵𝗮𝗻𝗻𝗲𝗹*
+╰──────────────`,
+            contextInfo: {
+              externalAdReply: {
+                title: "𝗢𝗳𝗳𝗶𝗰𝗶𝗮𝗹 𝗖𝗵𝗮𝗻𝗻𝗲𝗹",
+                body: "Tap to view BONY XMD Channel",
+                mediaType: 1,
+                sourceUrl: "https://whatsapp.com/channel/0029Vb8coEnKAwEcRBDDnq0Z"
+              }
+            }
           });
           console.log("✅ Connection notification sent to connected number.");
         } catch (error) {
