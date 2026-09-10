@@ -336,6 +336,7 @@ async function startBonyXmd() {
 
         const parts = body.split(/\s+/);
         const commandName = parts.shift().toLowerCase();
+        console.log(`🧪 COMMAND DETECTED: ${commandName} from ${msg.key.remoteJid}`);
         const args = parts;
 
         const command = commands.get(commandName);
