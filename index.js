@@ -159,6 +159,7 @@ async function startBonyXmd() {
 
   // 🗑️ DELETED MESSAGE DETECTOR
   sock.ev.on("messages.update", async (updates) => {
+    console.log("🗑️ MESSAGE UPDATE RECEIVED:", JSON.stringify(updates));
     const deleteSettings = getAllSettings();
 
     if (!deleteSettings.antiDelete) return;
