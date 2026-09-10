@@ -233,6 +233,8 @@ async function startBonyXmd() {
   sock.ev.on(
     "messages.upsert",
     async ({ messages }) => {
+      console.log("🔥 MESSAGE EVENT RECEIVED:", messages.length);
+
       const currentSettings = getAllSettings();
 
       for (const msg of messages) {
