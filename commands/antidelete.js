@@ -1,12 +1,10 @@
-const { getAllSettings, saveSettings } = require("../lib/settings.cjs");
+const { getSetting, saveSettings } = require("../lib/settings.cjs");
 
 module.exports = async (sock, m, args) => {
   const from = m.key.remoteJid;
-  const settings = getAllSettings();
-
   const sender = m.key.participant || from;
   const senderNumber = sender.replace(/[^0-9]/g, "");
-  const ownerNumber = settings.ownerNumber.replace(/[^0-9]/g, "");
+  const ownerNumber = String(getSetting("ownerNumber") || "").replace(/[^0-9]/g, "");
 
   const isOwner =
     m.key.fromMe ||
@@ -25,7 +23,7 @@ module.exports = async (sock, m, args) => {
   const action = args[0]?.toLowerCase();
 
   if (!["on", "off"].includes(action)) {
-    const status = settings.antiDelete ? "ON ✅" : "OFF ❌";
+    const status = getSetting("antiDelete") ? "ON ✅" : "OFF ❌";
 
     return await sock.sendMessage(
       from,
@@ -34,8 +32,8 @@ module.exports = async (sock, m, args) => {
           "🗑️ *BONY-XMD ANTI-DELETE*\n\n" +
           `Current status: *${status}*\n\n` +
           "Usage:\n" +
-          ".antidelete on\n" +
-          ".antidelete off"
+          `${getSetting("prefix") || "."}antidelete on\n` +
+          `${getSetting("prefix") || "."}antidelete off`
       },
       { quoted: m }
     );

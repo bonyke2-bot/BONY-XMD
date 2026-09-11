@@ -1,6 +1,6 @@
 const axios = require("axios");
 const yts = require("yt-search");
-const settings = require("../settings.cjs");
+const { getSetting } = require("../lib/settings.cjs");
 
 const channelInfo = {
     contextInfo: {
@@ -101,7 +101,7 @@ module.exports = async (sock, m, args) => {
                 {
                     text:
                         `❌ *Please provide a song name or YouTube link!*\n\n` +
-                        `💡 Example: \`${settings.prefix}play Bob Marley Is This Love\``,
+                        `💡 Example: \`${getSetting("prefix") || "."}play Bob Marley Is This Love\``,
                     ...channelInfo
                 },
                 { quoted: m }

@@ -1,3 +1,5 @@
+const { getSetting } = require("../lib/settings.cjs");
+
 // Useful functions
 function isUrl(u) {
   return typeof u === "string" && /^https?:\/\/\S+/i.test(u.trim());
@@ -41,7 +43,7 @@ module.exports = async (sock, m, args) => {
   // Check for URL
   if (!url) {
     return await sock.sendMessage(chatId, {
-      text: `*亗 BONY-XMD 亗*\n\n❌ *Error:* Please provide a Facebook link.\n💡 *Usage:* .fb [link]`,
+      text: `*亗 BONY-XMD 亗*\n\n❌ *Error:* Please provide a Facebook link.\n💡 *Usage:* ${getSetting("prefix") || "."}fb [link]`,
     }, { quoted: m });
   }
 

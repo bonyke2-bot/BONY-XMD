@@ -1,3 +1,5 @@
+const { getSetting } = require("../lib/settings.cjs");
+
 module.exports = async (sock, msg, args) => {
   const jid = msg.key.remoteJid;
 
@@ -16,8 +18,8 @@ module.exports = async (sock, msg, args) => {
       {
         text:
           "📖 *BONY XMD DICTIONARY*\n\n" +
-          "Usage: `!define <word>`\n\n" +
-          "Example:\n`!define beautiful`"
+          "Usage: `" + (getSetting("prefix") || ".") + "define <word>`\n\n" +
+          "Example:\n`" + (getSetting("prefix") || ".") + "define beautiful`"
       },
       { quoted: msg }
     );

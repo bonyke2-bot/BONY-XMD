@@ -1,3 +1,5 @@
+const { getSetting } = require("../lib/settings.cjs");
+
 module.exports = async (sock, msg) => {
   const jid = msg.key.remoteJid;
 
@@ -16,7 +18,7 @@ module.exports = async (sock, msg) => {
 
   if (!name) {
     return sock.sendMessage(jid, {
-      text: "✏️ *SET GROUP NAME*\n\nUsage: `!setname <new group name>`"
+      text: "✏️ *SET GROUP NAME*\n\nUsage: `" + (getSetting("prefix") || ".") + "setname <new group name>`"
     }, { quoted: msg });
   }
 

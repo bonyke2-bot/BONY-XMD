@@ -1,3 +1,5 @@
+const { getSetting } = require("../lib/settings.cjs");
+
 module.exports = async (sock, msg) => {
   const jid = msg.key.remoteJid;
 
@@ -10,7 +12,7 @@ module.exports = async (sock, msg) => {
 
   if (!username) {
     return sock.sendMessage(jid, {
-      text: "🐙 *BONY XMD GITHUB*\n\nUsage: `!github <username>`\n\nExample:\n`!github octocat`"
+      text: "🐙 *BONY XMD GITHUB*\n\nUsage: `" + (getSetting("prefix") || ".") + "github <username>`\n\nExample:\n`" + (getSetting("prefix") || ".") + "github octocat`"
     }, { quoted: msg });
   }
 

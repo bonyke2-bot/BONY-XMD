@@ -1,59 +1,81 @@
-const fs = require("fs");
-const path = require("path");
+const {
+  getSetting,
+  saveSettings
+} = require("../lib/settings.cjs");
 
 module.exports = async (sock, m, args) => {
-    const from = m.key.remoteJid;
-    const sender = m.key.participant || m.key.remoteJid;
-    const settings = require("../settings.cjs");
-    
-    // 1. Verify if the sender is the owner
-    const isOwner = sender.includes(settings.ownerNumber.replace(/[^0-9]/g, '')) || m.key.fromMe;
+  const from = m.key.remoteJid;
+  const sender = m.key.participant || m.key.remoteJid;
 
-    if (!isOwner) {
-        return await sock.sendMessage(from, { 
-            text: "❌ *Access Denied:* Only the Bot Owner can use this command." 
-        }, { quoted: m });
-    }
+  // Verify owner
+  const ownerNumber = String(
+    getSetting("ownerNumber") || ""
+  ).replace(/[^0-9]/g, "");
 
-    // 2. Check if an argument (new prefix) was provided
-    if (!args[0]) {
-        const errorText = `╭━━━〔 *INVALID USAGE* 〕━━━⬣
-┃ ❌ *Missing new prefix!*
-┃ 
-┃ 📌 *Usage:* \`${settings.prefix}setprefix [new_prefix]\`
-┃ 💡 *Example:* \`${settings.prefix}setprefix !\`
-╰━━━━━━━━━━━━━━━━━━━━⬣`.trim();
+  const senderNumber = String(sender || "")
+    .replace(/[^0-9]/g, "");
 
-        return await sock.sendMessage(from, { text: errorText }, { quoted: m });
-    }
+  const isOwner =
+    m.key.fromMe ||
+    senderNumber === ownerNumber;
 
-    const newPrefix = args[0];
+  if (!isOwner) {
+    return await sock.sendMessage(
+      from,
+      {
+        text: "❌ *Access Denied:* Only the Bot Owner can use this command."
+      },
+      { quoted: m }
+    );
+  }
 
-    try {
-        const settingsPath = path.join(__dirname, "../settings.js");
-        let settingsContent = fs.readFileSync(settingsPath, "utf-8");
-        
-        // Update prefix value dynamically in settings.js
-        settingsContent = settingsContent.replace(/prefix:\s*["'`].*?["'`]/, `prefix: "${newPrefix}"`);
-        fs.writeFileSync(settingsPath, settingsContent, "utf-8");
+  // Check new prefix
+  if (!args[0]) {
+    const currentPrefix = getSetting("prefix") || ".";
 
-        // 3. Success message (Simple & Clean)
-        const successText = `╭━━━〔 *PREFIX UPDATED* 〕━━━⬣
-┃ ✅ *New Prefix:* \`${newPrefix}\`
-┃ 🔄 *Status:* \`Auto-restarting...\`
-╰━━━━━━━━━━━━━━━━━━━━⬣`.trim();
+    const errorText =
+      `╭━━━〔 *INVALID USAGE* 〕━━━⬣\n` +
+      `┃ ❌ *Missing new prefix!*\n` +
+      `┃\n` +
+      `┃ 📌 *Usage:* \`${currentPrefix}setprefix [new_prefix]\`\n` +
+      `┃ 💡 *Example:* \`${currentPrefix}setprefix !\`\n` +
+      `╰━━━━━━━━━━━━━━━━━━━━⬣`;
 
-        await sock.sendMessage(from, { text: successText }, { quoted: m });
+    return await sock.sendMessage(
+      from,
+      { text: errorText },
+      { quoted: m }
+    );
+  }
 
-        // 4. Force automatic restart on the panel after 1.5 seconds
-        setTimeout(() => {
-            process.exit(0);
-        }, 1500);
+  const newPrefix = args[0];
 
-    } catch (e) {
-        console.error("SetPrefix Error:", e);
-        await sock.sendMessage(from, { 
-            text: "❌ *Error:* Failed to update the prefix in settings.js." 
-        }, { quoted: m });
-    }
+  try {
+    saveSettings({
+      prefix: newPrefix
+    });
+
+    const successText =
+      `╭━━━〔 *PREFIX UPDATED* 〕━━━⬣\n` +
+      `┃ ✅ *New Prefix:* \`${newPrefix}\`\n` +
+      `┃ 💾 *Status:* \`Saved successfully\`\n` +
+      `╰━━━━━━━━━━━━━━━━━━━━⬣`;
+
+    await sock.sendMessage(
+      from,
+      { text: successText },
+      { quoted: m }
+    );
+
+  } catch (error) {
+    console.error("SetPrefix Error:", error);
+
+    await sock.sendMessage(
+      from,
+      {
+        text: "❌ *Error:* Failed to save the new prefix."
+      },
+      { quoted: m }
+    );
+  }
 };

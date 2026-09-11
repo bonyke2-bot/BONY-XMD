@@ -1,3 +1,4 @@
+const { getSetting } = require("../lib/settings.cjs");
 module.exports = async (sock, msg) => {
   const jid = msg.key.remoteJid;
 
@@ -10,7 +11,7 @@ module.exports = async (sock, msg) => {
 
   if (!url) {
     return sock.sendMessage(jid, {
-      text: "🔗 *BONY XMD URL SHORTENER*\n\nUsage: `!shorturl <link>`\n\nExample:\n`!shorturl https://example.com/very/long/link`"
+      text: "🔗 *BONY XMD URL SHORTENER*\n\nUsage: `" + (getSetting("prefix") || ".") + "shorturl <link>`\n\nExample:\n`" + (getSetting("prefix") || ".") + "shorturl https://example.com/very/long/link`"
     }, { quoted: msg });
   }
 

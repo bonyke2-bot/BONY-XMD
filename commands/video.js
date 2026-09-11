@@ -1,6 +1,6 @@
 const axios = require("axios");
 const yts = require("yt-search");
-const settings = require("../settings.cjs");
+const { getSetting } = require("../lib/settings.cjs");
 
 const channelInfo = {
     contextInfo: {
@@ -101,7 +101,7 @@ module.exports = async (sock, m, args) => {
                 {
                     text:
                         `❌ *Please provide a video name or YouTube link!*\n\n` +
-                        `💡 *Example:* \`${settings.prefix}video Wiz Khalifa See You Again\``,
+                        `💡 *Example:* \`${getSetting("prefix") || "."}video Wiz Khalifa See You Again\``,
                     ...channelInfo
                 },
                 { quoted: m }

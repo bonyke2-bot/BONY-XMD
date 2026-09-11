@@ -1,9 +1,11 @@
+const { getSetting } = require("../lib/settings.cjs");
+
 module.exports = async (sock, m) => {
     const chatId = m.key.remoteJid;
 
     // Developer configuration details
-    const ownerNumber = "254748339103";
-    const devName = "BONY KE";
+    const ownerNumber = String(getSetting("ownerNumber") || "").replace(/[^0-9]/g, "");
+    const devName = getSetting("ownerName") || "BONY KE";
     const ownerJid = ownerNumber + '@s.whatsapp.net';
 
     // 1. Create the VCard (Contact Card) format

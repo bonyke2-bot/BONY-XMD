@@ -1,4 +1,4 @@
-const settings = require("../settings.cjs");
+const { getSetting } = require("../lib/settings.cjs");
 
 module.exports = async (sock, m, args) => {
     const chatJid = m.key.remoteJid;
@@ -15,7 +15,7 @@ module.exports = async (sock, m, args) => {
         const participants = groupMetadata.participants;
         const admins = participants.filter(p => p.admin !== null).map(p => p.id);
         
-        const ownerNum = settings.ownerNumber.replace(/[^0-9]/g, '');
+        const ownerNum = String(getSetting("ownerNumber") || "").replace(/[^0-9]/g, "");
         const isOwner = sender.includes(ownerNum) || m.key.fromMe;
         const isAdmin = admins.includes(sender);
 

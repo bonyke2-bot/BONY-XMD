@@ -6,7 +6,7 @@ async function loadBaileys() {
   }
 }
 
-const settings = require("../settings.cjs");
+const { getSetting } = require("../lib/settings.cjs");
 
 async function downloadMedia(message, type) {
   await loadBaileys();
@@ -25,7 +25,7 @@ module.exports = async (sock, m, args) => {
   const from = m.key.remoteJid;
   const sender = m.key.participant || m.key.remoteJid;
 
-  const ownerNumber = settings.ownerNumber.replace(/[^0-9]/g, "");
+  const ownerNumber = String(getSetting("ownerNumber") || "").replace(/[^0-9]/g, "");
   const senderNumber = sender.replace(/[^0-9]/g, "");
 
   const isOwner =
@@ -86,7 +86,7 @@ module.exports = async (sock, m, args) => {
       {
         text:
           "❌ Please provide a message or reply to media.\n\n" +
-          "Example:\n.gstatut Hello everyone!"
+          "Example:\n" + `${getSetting("prefix") || "."}gstatut Hello everyone!`
       },
       { quoted: m }
     );

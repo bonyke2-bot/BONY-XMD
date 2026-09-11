@@ -1,3 +1,5 @@
+const { getSetting } = require("../lib/settings.cjs");
+
 module.exports = async (sock, msg) => {
   const jid = msg.key.remoteJid;
 
@@ -16,7 +18,7 @@ module.exports = async (sock, msg) => {
 
   if (!description) {
     return sock.sendMessage(jid, {
-      text: "📝 *SET GROUP STATUS*\n\nUsage: `!setdesc <new group status>`"
+      text: "📝 *SET GROUP STATUS*\n\nUsage: `" + (getSetting("prefix") || ".") + "setdesc <new group status>`"
     }, { quoted: msg });
   }
 

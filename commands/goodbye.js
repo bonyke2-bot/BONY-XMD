@@ -5,6 +5,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { getSetting } = require('../lib/settings.cjs');
 
 const dbPath = path.join(__dirname, '..', 'database.json');
 
@@ -25,18 +26,19 @@ module.exports = async (sock, m, args) => {
 
     if (!isGroup) {
         return await sock.sendMessage(chatId, {
-            text: `❌ This command is only for groups!`[span_1](start_span)[span_1](end_span)
+            text: `❌ This command is only for groups!`
         }, { quoted: m });
     }
 
     const option = args[0]?.toLowerCase();
+    const prefix = getSetting('prefix') || '.';
 
     if (!option || (option !== 'on' && option !== 'off')) {
         return await sock.sendMessage(chatId, {
-            text:
-                `❌ *Usage:* \`.goodbye on\` or \`.goodbye off\`\n\n` +[span_2](start_span)[span_2](end_span)
-                `💡 *Example:* \`.goodbye on\``[span_3](start_span)[span_3](end_span)
-        }, { quoted: m });
+      text:
+        `❌ *Usage:* \`${prefix}goodbye on\` or \`${prefix}goodbye off\`\n\n` +
+        `💡 *Example:* \`${prefix}goodbye on\``
+    }, { quoted: m });
     }
 
     const db = getDb();
@@ -48,7 +50,7 @@ module.exports = async (sock, m, args) => {
 
     await sock.sendMessage(chatId, {
         text: option === 'on'
-            ? `✅ *Goodbye enabled!* Members leaving the group will receive a goodbye message.`[span_4](start_span)[span_4](end_span)
-            : `❌ *Goodbye disabled!* No more goodbye messages.`[span_5](start_span)[span_5](end_span)
+            ? `✅ *Goodbye enabled!* Members leaving the group will receive a goodbye message.`
+            : `❌ *Goodbye disabled!* No more goodbye messages.`
     }, { quoted: m });
 };

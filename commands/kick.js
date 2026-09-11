@@ -1,4 +1,4 @@
-const settings = require("../settings.cjs");
+const { getSetting } = require("../lib/settings.cjs");
 
 module.exports = async (sock, m, args) => {
     const chatJid = m.key.remoteJid;
@@ -12,7 +12,7 @@ module.exports = async (sock, m, args) => {
         const groupMetadata = await sock.groupMetadata(chatJid);
         const admins = groupMetadata.participants.filter(p => p.admin !== null).map(p => p.id);
         
-        const ownerNum = settings.ownerNumber.replace(/[^0-9]/g, '');
+        const ownerNum = String(getSetting("ownerNumber") || "").replace(/[^0-9]/g, "");
         const isOwner = sender.includes(ownerNum) || m.key.fromMe;
         const isAdmin = admins.includes(sender);
 
@@ -30,7 +30,7 @@ module.exports = async (sock, m, args) => {
 
         if (!userToKick) {
             return await sock.sendMessage(chatJid, { 
-                text: `╭━━━〔 *INVALID USAGE* 〕━━━⬣\n┃ ❓ Please reply to a message,\n┃ tag a user, or provide a number.\n┃ 📌 *Example:* \`.k @user\`\n╰━━━━━━━━━━━━━━━━━━━━⬣` 
+          text: `╭━━━〔 *INVALID USAGE* 〕━━━⬣\n┃ ❓ Please reply to a message,\n┃ tag a user, or provide a number.\n┃ 📌 *Example:* ${getSetting("prefix") || "."}k @user\n╰━━━━━━━━━━━━━━━━━━━━⬣`
             }, { quoted: m });
         }
 
@@ -48,7 +48,7 @@ module.exports = async (sock, m, args) => {
             mentions: [userToKick, sender] 
         }, { quoted: m });
 
-        // 6. Auto-delete the command message (.k) to keep the chat clean
+        // 6. Auto-delete the command message to keep the chat clean
         await sock.sendMessage(chatJid, { delete: m.key }).catch(() => {});
 
     } catch (err) {

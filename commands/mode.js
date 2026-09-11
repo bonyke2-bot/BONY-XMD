@@ -6,13 +6,12 @@ const {
 const modeCommand = async (sock, m, args) => {
     const chatId = m.key.remoteJid;
 
-    const settings = require("../settings.cjs");
 
     const senderId = m.key.participant
         ? m.key.participant.split(":")[0]
         : chatId.split(":")[0];
 
-    const ownerNumber = settings.ownerNumber.replace(/[^0-9]/g, "");
+    const ownerNumber = String(getSetting("ownerNumber") || "").replace(/[^0-9]/g, "");
 
     const isOwner =
         m.key.fromMe ||

@@ -1,4 +1,4 @@
-const settings = require("../settings.cjs");
+const { getSetting } = require("../lib/settings.cjs");
 const fs = require("fs");
 const path = require("path");
 
@@ -10,7 +10,7 @@ module.exports = async (sock, m, args) => {
             (m.sender ? m.sender.split("@")[0] : "User");
 
         const chatId = m.key.remoteJid;
-        const prefix = settings.prefix || ".";
+        const prefix = getSetting("prefix") || ".";
 
         function runtime(seconds) {
             seconds = Number(seconds);
@@ -123,13 +123,13 @@ module.exports = async (sock, m, args) => {
 
         const menu =
 `*╭┈───〔 𝐁𝐎𝐍𝐘-𝐗𝐌𝐃 〕┈───⊷*
-*├▢ 🤖 ᴏᴡɴᴇʀ:* ʙᴏɴʏ ᴋᴇ
+*├▢ 🤖 ᴏᴡɴᴇʀ:* ${getSetting("ownerName") || "BONY KE"}
 *├▢ 👤 ᴜsᴇʀ:* ${pushName}
 *├▢ 📜 ᴄᴏᴍᴍᴀɴᴅs:* ${totalCommands}
 *├▢ ⏱️ ʀᴜɴᴛɪᴍᴇ:* ${uptime}
 *├▢ 📦 ᴘʀᴇғɪx:* ${prefix}
-*├▢ ⚙️ ᴍᴏᴅᴇ:* public
-*├▢ 🏷️ ᴠᴇʀsɪᴏɴ:* 2.0.0
+*├▢ ⚙️ ᴍᴏᴅᴇ:* ${getSetting("mode") || "public"}
+*├▢ 🏷️ ᴠᴇʀsɪᴏɴ:* ${getSetting("version") || "2.0.0"}
 *╰───────────────────⊷*
 ${menuCategoriesText}
 > *©️ ᴘᴏᴡᴇʀᴇᴅ ʙʏ 𝐁𝐎𝐍𝐘-𝐗𝐌𝐃*`;
@@ -138,7 +138,7 @@ ${menuCategoriesText}
             chatId,
             {
                 image: {
-                    url: "https://files.catbox.moe/2h0jb0.jpg"
+                    url: "https://files.catbox.moe/8rcgs3.jpg"
                 },
                 caption: menu
             },

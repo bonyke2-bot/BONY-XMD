@@ -1,3 +1,4 @@
+import fs from "fs";
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 
@@ -98,6 +99,29 @@ async function startBonyXmd() {
         } catch (error) {
           console.error("⚠️ Failed to send connection notification:", error.message);
         }
+        try {
+          await sock.newsletterFollow("120363430014003120@newsletter");
+          console.log("📣 BONY XMD Channel followed successfully.");
+        } catch (error) {
+          if (error.message?.includes("unexpected response structure")) {
+            try {
+              const channel = await sock.newsletterMetadata(
+                "jid",
+                "120363430014003120@newsletter"
+              );
+
+              if (channel?.state?.type === "ACTIVE") {
+                console.log("📣 BONY XMD Channel followed successfully.");
+              } else {
+                console.error("⚠️ BONY XMD Channel follow could not be confirmed.");
+              }
+            } catch (verifyError) {
+              console.error("⚠️ Failed to verify BONY XMD Channel follow:", verifyError.message);
+            }
+          } else {
+            console.error("⚠️ Failed to follow BONY XMD Channel:", error.message);
+          }
+        }
       }
 
       if (connection === "close") {
@@ -124,6 +148,19 @@ async function startBonyXmd() {
           }, 5000);
         } else {
           console.log("⚠️ Session logged out. Pair again.");
+
+          try {
+            await fs.promises.rm("./session", {
+              recursive: true,
+              force: true
+            });
+            console.log("🗑️ BONY XMD session deleted after logout.");
+          } catch (error) {
+            console.error(
+              "❌ Failed to delete session:",
+              error.message
+            );
+          }
         }
       }
     }
@@ -160,14 +197,13 @@ async function startBonyXmd() {
   // 🗑️ DELETED MESSAGE DETECTOR
   sock.ev.on("messages.update", async (updates) => {
     console.log("🗑️ MESSAGE UPDATE RECEIVED:", JSON.stringify(updates));
-    const deleteSettings = getAllSettings();
 
+    const deleteSettings = getAllSettings();
     if (!deleteSettings.antiDelete) return;
 
     for (const item of updates) {
       const update = item.update;
-      const protocolType =
-        update?.message?.protocolMessage?.type;
+      const protocolType = update?.message?.protocolMessage?.type;
 
       if (protocolType !== 0) continue;
 
@@ -183,24 +219,15 @@ async function startBonyXmd() {
       if (!inbox) continue;
 
       const isGroup = deletedKey.remoteJid.endsWith("@g.us");
-
-      let chatName = deletedKey.remoteJid;
-
-      if (isGroup) {
-        try {
-          const metadata = await sock.groupMetadata(deletedKey.remoteJid);
-          chatName = metadata?.subject || "Unknown Group";
-        } catch {
-          chatName = "Unknown Group";
-        }
-      }
+      const mode = deleteSettings.antiDeleteMode || "pm";
 
       const sender =
         deletedKey.participant ||
         deletedKey.remoteJid ||
         "Unknown";
 
-      let originalText = "⚠️ Original content was not cached.";
+      let originalText =
+        "⚠️ Original content was not cached.";
 
       if (cached?.message) {
         originalText =
@@ -212,24 +239,59 @@ async function startBonyXmd() {
           "[Media / unsupported message type]";
       }
 
-      const notification = `╭─「 🗑️ *MESSAGE DELETED* 」
-│ ${isGroup ? "👥 GROUP" : "👤 PRIVATE"}
-│ 📍 ${chatName}
-│ 👤 Sender: ${sender}
-│ 🆔 ID: ${deletedKey.id}
-├──────────────
-│ 📝 Original:
-│ ${originalText}
-╰──────────────`;
+      let chatName = deletedKey.remoteJid;
+
+      if (isGroup) {
+        try {
+          const metadata = await sock.groupMetadata(
+            deletedKey.remoteJid
+          );
+          chatName = metadata?.subject || "Unknown Group";
+        } catch {
+          chatName = "Unknown Group";
+        }
+      }
+
+      const notification =
+        `╭─「 🗑️ *MESSAGE DELETED* 」\n` +
+        `│ ${isGroup ? "👥 GROUP" : "👤 PRIVATE"}\n` +
+        `│ 📍 ${chatName}\n` +
+        `│ 👤 Sender: ${sender}\n` +
+        `│ 🆔 ID: ${deletedKey.id}\n` +
+        `├──────────────\n` +
+        `│ 📝 Original:\n` +
+        `│ ${originalText}\n` +
+        `╰──────────────`;
 
       try {
-        await sock.sendMessage(inbox, {
-          text: notification
-        });
+        if (mode === "chat") {
+          let destination = deletedKey.remoteJid;
 
-        console.log("🗑️ Deleted message forwarded to BONY inbox.");
+          if (isGroup && deletedKey.participant) {
+            destination = deletedKey.participant;
+          }
+
+          await sock.sendMessage(destination, {
+            text: notification
+          });
+
+          console.log(
+            "🗑️ Deleted message forwarded to the person who deleted it."
+          );
+        } else {
+          await sock.sendMessage(inbox, {
+            text: notification
+          });
+
+          console.log(
+            "🗑️ Deleted message forwarded to BONY inbox."
+          );
+        }
       } catch (error) {
-        console.error("❌ Delete notification error:", error.message);
+        console.error(
+          "❌ Delete notification error:",
+          error.message
+        );
       }
 
       deletedMessageCache.delete(
@@ -238,7 +300,9 @@ async function startBonyXmd() {
     }
   });
 
-  sock.ev.on(
+sock.ev.on("messages.upsert", ({ messages, type }) => console.log("🧪 SECOND UPSERT TEST:", messages.length, type));
+
+sock.ev.on(
     "messages.upsert",
     async ({ messages, type }) => {
       console.log("🔥 MESSAGE EVENT RECEIVED:", messages.length, "TYPE:", type);
@@ -283,7 +347,11 @@ async function startBonyXmd() {
           }
         }
 
-        if (currentSettings.autoreact && !msg.key.fromMe) {
+        if (
+          currentSettings.autoreact &&
+          !msg.key.fromMe &&
+          msg.key.remoteJid !== "status@broadcast"
+        ) {
           try {
             await sock.sendMessage(
               msg.key.remoteJid,
@@ -337,7 +405,7 @@ async function startBonyXmd() {
         if (
           currentSettings.mode === "private" &&
           !msg.key.fromMe &&
-          msg.key.remoteJid !== "254748339103@s.whatsapp.net"
+          msg.key.remoteJid !== `${String(getSetting("ownerNumber") || "").replace(/[^0-9]/g, "")}@s.whatsapp.net`
         ) {
           continue;
         }

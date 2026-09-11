@@ -1,10 +1,12 @@
+const { getSetting } = require("../lib/settings.cjs");
+
 module.exports = async (sock, msg, args) => {
   const jid = msg.key.remoteJid;
   let number = args.join("").replace(/\D/g, "");
 
   if (!number) {
     return sock.sendMessage(jid, {
-      text: "📱 Usage: !contact 2547XXXXXXXX"
+      text: "📱 Usage: " + (getSetting("prefix") || ".") + "contact 2547XXXXXXXX"
     });
   }
 

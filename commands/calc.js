@@ -1,10 +1,12 @@
+const { getSetting } = require("../lib/settings.cjs");
+
 module.exports = async (sock, msg, args) => {
   const jid = msg.key.remoteJid;
   const expression = args.join(" ").trim();
 
   if (!expression) {
     return sock.sendMessage(jid, {
-      text: "🧮 Usage: !calc 25 * 4 + 10"
+      text: "🧮 Usage: " + (getSetting("prefix") || ".") + "calc 25 * 4 + 10"
     });
   }
 

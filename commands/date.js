@@ -1,11 +1,14 @@
+const { getSetting } = require("../lib/settings.cjs");
+
 module.exports = async (sock, msg) => {
   const jid = msg.key.remoteJid;
 
   try {
     const now = new Date();
+    const timezone = getSetting("timezone") || "Africa/Nairobi";
 
     const date = now.toLocaleDateString("en-KE", {
-      timeZone: "Africa/Nairobi",
+      timeZone: timezone,
       weekday: "long",
       year: "numeric",
       month: "long",
@@ -16,7 +19,7 @@ module.exports = async (sock, msg) => {
       text:
 `╭━━━〔 📅 BONY DATE 〕━━━╮
 ┃ 📅 ${date}
-┃ 🌍 Africa/Nairobi
+┃ 🌍 ${timezone}
 ╰━━━━━━━━━━━━━━━━━━╯`
     });
   } catch (error) {

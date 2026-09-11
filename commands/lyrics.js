@@ -1,3 +1,5 @@
+const { getSetting } = require("../lib/settings.cjs");
+
 module.exports = async (sock, msg) => {
   const jid = msg.key.remoteJid;
 
@@ -10,7 +12,7 @@ module.exports = async (sock, msg) => {
 
   if (!query) {
     return sock.sendMessage(jid, {
-      text: "🎵 *BONY XMD LYRICS*\n\nUsage: `!lyrics <artist> - <song>`\n\nExample:\n`!lyrics Ed Sheeran - Perfect`"
+      text: "🎵 *BONY XMD LYRICS*\n\nUsage: `" + (getSetting("prefix") || ".") + "lyrics <artist> - <song>`\n\nExample:\n`" + (getSetting("prefix") || ".") + "lyrics Ed Sheeran - Perfect`"
     }, { quoted: msg });
   }
 
@@ -18,7 +20,7 @@ module.exports = async (sock, msg) => {
 
   if (parts.length < 2) {
     return sock.sendMessage(jid, {
-      text: "❌ Use this format:\n`!lyrics Artist - Song`\n\nExample:\n`!lyrics Ed Sheeran - Perfect`"
+      text: "❌ Use this format:\n`" + (getSetting("prefix") || ".") + "lyrics Artist - Song`\n\nExample:\n`" + (getSetting("prefix") || ".") + "lyrics Ed Sheeran - Perfect`"
     }, { quoted: msg });
   }
 

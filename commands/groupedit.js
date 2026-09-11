@@ -1,3 +1,5 @@
+const { getSetting } = require("../lib/settings.cjs");
+
 module.exports = async (sock, msg, args) => {
   const jid = msg.key.remoteJid;
 
@@ -11,7 +13,7 @@ module.exports = async (sock, msg, args) => {
 
   if (!["on", "off"].includes(action)) {
     return sock.sendMessage(jid, {
-      text: "⚙️ Usage:\n!groupedit on\n!groupedit off"
+      text: "⚙️ Usage:\n" + (getSetting("prefix") || ".") + "groupedit on\n" + (getSetting("prefix") || ".") + "groupedit off"
     });
   }
 

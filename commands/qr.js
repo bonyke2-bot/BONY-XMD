@@ -1,3 +1,4 @@
+const { getSetting } = require("../lib/settings.cjs");
 const QRCode = require("qrcode");
 
 module.exports = async (sock, msg) => {
@@ -12,7 +13,7 @@ module.exports = async (sock, msg) => {
 
   if (!data) {
     return sock.sendMessage(jid, {
-      text: "📱 *BONY XMD QR GENERATOR*\n\nUsage: `!qr <text or link>`\n\nExample:\n`!qr https://github.com`"
+      text: "📱 *BONY XMD QR GENERATOR*\n\nUsage: `" + (getSetting("prefix") || ".") + "qr <text or link>`\n\nExample:\n`" + (getSetting("prefix") || ".") + "qr https://github.com`"
     }, { quoted: msg });
   }
 

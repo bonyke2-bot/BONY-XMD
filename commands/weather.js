@@ -1,3 +1,5 @@
+const { getSetting } = require("../lib/settings.cjs");
+
 module.exports = async (sock, msg) => {
   const jid = msg.key.remoteJid;
   const text =
@@ -9,7 +11,7 @@ module.exports = async (sock, msg) => {
 
   if (!city) {
     return sock.sendMessage(jid, {
-      text: "🌤️ *BONY XMD WEATHER*\n\nUsage: `!weather <city>`\n\nExample: `!weather Kisii`"
+      text: "🌤️ *BONY XMD WEATHER*\n\nUsage: `" + (getSetting("prefix") || ".") + "weather <city>`\n\nExample: `" + (getSetting("prefix") || ".") + "weather Kisii`"
     }, { quoted: msg });
   }
 

@@ -1,5 +1,5 @@
 const { igdl } = require("ruhend-scraper");
-const settings = require("../settings.cjs");
+const { getSetting } = require("../lib/settings.cjs");
 
 const channelInfo = {
     contextInfo: {
@@ -25,7 +25,7 @@ module.exports = async (sock, m, args) => {
                 {
                     text:
                         `❌ *Please provide a valid Instagram link!*\n\n` +
-                        `💡 *Example:* \`${settings.prefix}igdl https://www.instagram.com/reel/...\``,
+                        `💡 *Example:* \`${getSetting("prefix") || "."}igdl https://www.instagram.com/reel/...\``,
                     ...channelInfo
                 },
                 { quoted: m }

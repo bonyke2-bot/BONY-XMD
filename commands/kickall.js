@@ -1,4 +1,4 @@
-const settings = require("../settings.cjs");
+const { getSetting } = require("../lib/settings.cjs");
 module.exports = async (sock, m, args) => {
     const from = m.key.remoteJid;
     const sender = m.key.participant || m.key.remoteJid;
@@ -28,7 +28,7 @@ module.exports = async (sock, m, args) => {
         // Get admin list
         const admins = participants.filter(p => p.admin !== null).map(p => p.id);
         const isSenderAdmin = admins.includes(sender);
-        const isOwner = m.key.fromMe || sender.includes(settings.ownerNumber.replace(/[^0-9]/g, "")); // Your number or if sent by you
+        const isOwner = m.key.fromMe || sender.includes(String(getSetting("ownerNumber") || "").replace(/[^0-9]/g, "")); // Your number or if sent by you
 
         // If not admin and not owner
         if (!isSenderAdmin && !isOwner) {

@@ -24,7 +24,7 @@ module.exports = async (sock, m) => {
             externalAdReply: {
                 title: "👑 BONY-XMD HELP CENTER 👑",
                 body: "Tap here to explore the command list",
-                thumbnailUrl: "https://files.catbox.moe/2h0jb0.jpg",
+                thumbnailUrl: "https://files.catbox.moe/8rcgs3.jpg",
                 sourceUrl: "https://whatsapp.com/channel/0029Vb8coEnKAwEcRBDDnq0Z",
                 mediaType: 1,
                 renderLargerThumbnail: true // Makes the image appear large

@@ -33,11 +33,12 @@ module.exports = async (sock, m, args) => {
     );
   }
 
-  const settings = require("../settings.cjs");
+  const { getSetting } = require("../lib/settings.cjs");
+  const prefix = getSetting("prefix") || ".";
 
   const sender = m.key.participant || from;
   const senderNumber = sender.replace(/[^0-9]/g, "");
-  const ownerNumber = settings.ownerNumber.replace(/[^0-9]/g, "");
+  const ownerNumber = String(getSetting("ownerNumber") || "").replace(/[^0-9]/g, "");
 
   const isOwner =
     m.key.fromMe || senderNumber === ownerNumber;
@@ -61,9 +62,9 @@ module.exports = async (sock, m, args) => {
         text:
           "🛡️ *BONY-XMD ANTILINK*\n\n" +
           "Usage:\n" +
-          ".antilink on\n" +
-          ".antilink kick\n" +
-          ".antilink off"
+          `${prefix}antilink on\n` +
+          `${prefix}antilink kick\n` +
+          `${prefix}antilink off`
       },
       { quoted: m }
     );

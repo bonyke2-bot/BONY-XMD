@@ -18,3 +18,9 @@ creds.json
 
 session-backup-*/
 session-invalid-*/
+
+# BONY XMD temporary backups
+*.before-channel-follow
+*.before-channel-follow-fix
+*.antidelete-backup
+session-loggedout-backup-*/
