@@ -1,44 +1,84 @@
-<div align="center"><h1>BONY-XMD</h1><p><strong>𝘽𝙊𝙉𝙔 𝙓𝙈𝘿</strong> <em>WhatsApp Bot</em></p><p>
-<img src="https://img.shields.io/badge/WHATSAPP%20AUTOMATION-07111f?style=for-the-badge&logo=whatsapp&logoColor=white&labelColor=ff6b35" alt="WhatsApp automation" />
-<img src="https://img.shields.io/badge/FAST%20%7C%20MODERN%20%7C%20RELIABLE-102a43?style=for-the-badge&labelColor=2dd4bf" alt="Fast modern reliable" />
-</p></div>𝘼𝙗𝙤𝙪𝙩 𝘽𝙊𝙉𝙔-𝙓𝙈𝘿
+<!-- Glowing Header --><p align="center">
+  <img src="https://i.imgur.com/dBaSKWF.gif" height="40" width="100%">
+</p><h1 align="center">
+  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=25&duration=3000&color=FF0000&background=000000&center=true&vCenter=true&width=600&lines=🚀+BONY-XMD;🔥+WhatsApp+Bot;💻+By+BONY+KE" alt="Typing Animation">
+</h1><!-- Banner Image --><p align="center">
+  <img src="https://files.catbox.moe/8rcgs3.jpg" width="85%" height="auto">
+</p>---
 
-BONY-XMD is a modular WhatsApp automation project with command plugins, group utilities, media tools, search features, and configurable bot behavior.
+📌 How to Connect BONY-XMD Bot
 
-«Project identity: BONY-XMD is the bot name. The source repository is BONY-XMD.»
+Step 1: Get Session ID
 
-<p align="center">
-  <a href="https://github.com/bonyke2-bot/BONY-XMD/fork">
-    <img src="https://img.shields.io/badge/Fork%20Repository-100000?style=for-the-badge&logo=github&logoColor=white&labelColor=darkblue&color=darkblue" alt="Fork Repository" />
-  </a>
-</p><p align="center">
-  <strong>1. FORK REPOSITORY</strong>
-</p><p align="center">
-  <a href="https://github.com/bonyke2-bot/BONY-XMD/fork">
-    <img alt="Fork Repo" src="https://img.shields.io/badge/Fork%20Repo-100000?style=for-the-badge&logo=github&logoColor=white&labelColor=darkblue&color=darkblue" />
-  </a>
-</p><p align="center">
-  <strong>2. GET SESSION ID</strong>
-</p><p align="center">
-  <a href="https://bony-pair-side-1-ui1t.onrender.com/pair" target="_blank">
-    <img alt="Get session ID" src="https://img.shields.io/badge/GET%20SESSION-100000?style=for-the-badge&logo=whatsapp&logoColor=white&labelColor=darkred&color=darkred" />
-  </a>
-</p><p align="center">
-  <strong>3. DEPLOY TO HEROKU</strong>
-</p><p align="center">
-  <a href="https://heroku.com/deploy?template=https://github.com/bonyke2-bot/BONY-XMD" target="_blank">
-    <img alt="Deploy to Heroku" src="https://img.shields.io/badge/DEPLOY%20TO%20HEROKU-100000?style=for-the-badge&logo=heroku&logoColor=white&labelColor=purple&color=purple" />
-  </a>
-</p><p align="center">
-  <strong>4. DOWNLOAD BOT ZIP</strong>
-</p><p align="center">
-  <a href="https://github.com/bonyke2-bot/BONY-XMD/archive/refs/heads/main.zip" target="_blank">
-    <img alt="Download BONY XMD ZIP" src="https://img.shields.io/badge/DOWNLOAD%20ZIP-100000?style=for-the-badge&logo=github&logoColor=white&labelColor=darkorange&color=darkorange" />
-  </a>
-</p>👑 Owner
-
-BONY KE
+Click the button below to quickly generate your WhatsApp session ID:
 
 <p align="center">
-  <strong>BONY XMD — WhatsApp Automation</strong>
+  <a href="https://bony-xmd-pair-site-5fi6.onrender.com/" target="_blank">
+    <img src="https://img.shields.io/badge/🔑_GET_SESSION-000000?style=for-the-badge&color=FF0000" width="260" height="50"/>
+  </a>
+</p>Step 2: Configure Settings
+
+Before deployment, configure your bot:
+
+- Option A: Edit your configuration/settings files
+- Option B: Use environment variables on your hosting platform
+
+Step 3: Choose Hosting Platform
+
+Deploy BONY-XMD on your preferred platform.
+
+<p align="center">
+  <a href="https://dashboard.heroku.com/new?template=https%3A%2F%2Fgithub.com%2Fbonyke2-bot%2FBONY-XMD" target="_blank">
+    <img src="https://img.shields.io/badge/🚀_HEROKU-000000?style=for-the-badge&color=FF00FF" width="200" height="45"/>
+  </a>
+  <img src="https://img.shields.io/badge/🚀_RENDER-COMING_SOON-000000?style=for-the-badge&color=61DAFB" width="200" height="45"/>
+  <img src="https://img.shields.io/badge/🚀_RAILWAY-COMING_SOON-000000?style=for-the-badge&color=purple" width="200" height="45"/>
+</p>Step 4: Start Using
+
+Once configured, your bot will be ready to use!
+
+---
+
+🖼️ Bot Screenshots
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center">
+        <img src="https://files.catbox.moe/tc72g8.jpg" width="300"><br>
+        <small><i>BONY-XMD Interface</i></small>
+      </td>
+      <td align="center">
+        <img src="https://files.catbox.moe/tx9oba.jpg" width="300"><br>
+        <small><i>BONY-XMD Features</i></small>
+      </td>
+    </tr>
+  </table>
+</div>---
+
+📢 Stay Updated
+
+<p align="center">
+  <a href="https://whatsapp.com/channel/0029Vb8coEnKAwEcRBDDnq0Z" target="_blank">
+    <img src="https://img.shields.io/badge/📢_WHATSAPP_CHANNEL-25d366?style=for-the-badge&logo=whatsapp" width="300" height="50"/>
+  </a>
+</p>---
+
+📊 Stats
+
+<p align="center">
+  <img src="https://komarev.com/ghpvc/?username=bonyke2-bot&label=Profile+Views&color=FF0000&style=for-the-badge" alt="Views"/>
+  <img src="https://img.shields.io/github/followers/bonyke2-bot?label=GitHub+Followers&style=for-the-badge&color=00FF00" alt="Followers"/>
+</p>---
+
+🟢 Status
+
+<p align="center">
+  <span style="font-size:1.2em; color:#00FF00;">Status: <b>🟢 ONLINE</b></span>
+</p>---
+
+<!-- Footer --><p align="center">
+  <img src="https://i.imgur.com/dBaSKWF.gif" height="40" width="100%">
+</p><p align="center">
+  <strong>BONY-XMD © 2026 | Developed by BONY KE</strong>
 </p>
