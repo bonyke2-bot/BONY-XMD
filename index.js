@@ -1,3 +1,4 @@
+import http from "http";
 import fs from "fs";
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
@@ -67,6 +68,14 @@ async function startCentralSettingsWatcher() {
   }, 10000);
 }
 
+
+const PORT = process.env.PORT || 10000;
+http.createServer((req, res) => {
+  res.writeHead(200, { "Content-Type": "application/json" });
+  res.end(JSON.stringify({ status: "ok", service: "BONY-XMD" }));
+}).listen(PORT, "0.0.0.0", () => {
+  console.log(`🌐 BONY-XMD health server listening on port ${PORT}`);
+});
 
 console.log("🚀 Starting BONY XMD...");
 
