@@ -8,6 +8,9 @@ const {
   getSetting
 } = require("./lib/settings.cjs");
 const { handleStatus } = require("./lib/status.cjs");
+const { reportBotStatus } = require("./lib/control-client.cjs");
+const { syncCentralSettings } = require("./lib/central-settings.cjs");
+
 const { sendWithFooter } = require("./lib/footer.cjs");
 
 import { importSession } from "./session-importer.js";
@@ -17,6 +20,53 @@ import {
 } from "@whiskeysockets/baileys";
 import makeWASocket from "@whiskeysockets/baileys";
 import P from "pino";
+
+let centralSettingsWatcherStarted = false;
+let centralReloading = false;
+
+async function startCentralSettingsWatcher() {
+  if (centralSettingsWatcherStarted) return;
+
+  centralSettingsWatcherStarted = true;
+  console.log("🌐 BONY-CONTROL settings watcher started.");
+
+  setInterval(async () => {
+    if (centralReloading) return;
+
+    try {
+      const result = await syncCentralSettings();
+
+      if (result && result.changed) {
+        centralReloading = true;
+
+        console.log(
+          "🔄 BONY-CONTROL detected settings change:",
+          Object.keys(result.changes).join(", ")
+        );
+
+        console.log("🔄 Reloading BONY-XMD connection...");
+
+        try {
+          if (sock?.ws) {
+            sock.ws.close();
+          }
+        } catch (error) {
+          console.error(
+            "⚠️ Error closing old connection:",
+            error.message
+          );
+        }
+
+      }
+    } catch (error) {
+      console.error(
+        "⚠️ BONY-CONTROL watcher error:",
+        error.message
+      );
+    }
+  }, 10000);
+}
+
 
 console.log("🚀 Starting BONY XMD...");
 
@@ -39,6 +89,7 @@ async function startBonyXmd() {
     console.log("🔌 Authentication state loaded...");
   }
 
+  await syncCentralSettings();
   console.log("🔌 Creating WhatsApp connection...");
 
   sock = makeWASocket({
@@ -46,6 +97,9 @@ async function startBonyXmd() {
     logger: P({ level: "info" }),
     syncFullHistory: false
   });
+
+  startCentralSettingsWatcher();
+
 
   console.log("🧪 EVENT EMITTER TEST: socket created");
 
@@ -70,7 +124,9 @@ async function startBonyXmd() {
       console.log("Connection status:", connection);
 
       if (connection === "open") {
+        centralReloading = false;
         const connectedNumber = sock.user.id.split(":")[0];
+          await reportBotStatus({ number: connectedNumber, status: "online" });
         console.log("🔎 ACTUAL CONNECTED ID:", sock.user?.id);
         console.log("╔══════════════════════════════════╗");
         console.log("║       BONY-XMD CONNECTED 🟢      ║");
@@ -132,8 +188,10 @@ async function startBonyXmd() {
           statusCode !== DisconnectReason.loggedOut;
 
         console.log("❌ BONY XMD connection closed.");
+          const disconnectedNumber = sock?.user?.id?.split(":")[0] || "unknown";
 
         if (shouldReconnect) {
+            await reportBotStatus({ number: disconnectedNumber, status: "disconnected" });
           console.log("🔄 Reconnecting...");
 
           if (reconnectTimer) {
@@ -147,6 +205,7 @@ async function startBonyXmd() {
             });
           }, 5000);
         } else {
+            await reportBotStatus({ number: disconnectedNumber, status: "logged_out" });
           console.log("⚠️ Session logged out. Pair again.");
 
           try {

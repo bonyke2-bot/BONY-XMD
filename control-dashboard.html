@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>BONY-XMD CONTROL</title>
+  <style>
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial,sans-serif;
+      background:#080b12;
+      color:#fff;
+    }
+    .wrap{
+      max-width:900px;
+      margin:auto;
+      padding:20px;
+    }
+    .card{
+      background:#111722;
+      border:1px solid #263044;
+      border-radius:16px;
+      padding:20px;
+      margin-bottom:16px;
+    }
+    h1{margin:0 0 6px}
+    h2{margin-top:0}
+    .muted{color:#9ba6b7}
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+      gap:12px;
+    }
+    label{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      padding:12px;
+      background:#0b1019;
+      border-radius:10px;
+    }
+    input,select,button{
+      font:inherit;
+    }
+    input[type="text"],input[type="password"],select{
+      width:100%;
+      padding:11px;
+      border:1px solid #303b50;
+      border-radius:9px;
+      background:#080b12;
+      color:#fff;
+    }
+    input[type="checkbox"]{
+      width:20px;
+      height:20px;
+    }
+    button{
+      border:0;
+      border-radius:10px;
+      padding:12px 18px;
+      cursor:pointer;
+      background:#7c3aed;
+      color:white;
+      font-weight:bold;
+    }
+    button.secondary{background:#273449}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    #dashboard{display:none}
+    #loginError{color:#ff7070;margin-top:10px}
+    #status{margin-top:12px;color:#8ee6a8}
+  </style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div id="login" class="card">
+    <h1>👑 BONY-XMD CONTROL</h1>
+    <p class="muted">Central settings dashboard</p>
+
+    <input id="apiKey" type="password" placeholder="BONY Control API Key">
+
+    <div class="row" style="margin-top:12px">
+      <button onclick="login()">Login</button>
+    </div>
+
+    <div id="loginError"></div>
+  </div>
+
+  <div id="dashboard">
+
+    <div class="card">
+      <h1>👑 BONY-XMD CONTROL</h1>
+      <p class="muted">Central settings for connected BONY-XMD bots</p>
+
+      <div class="row">
+        <button onclick="loadSettings()">↻ Refresh</button>
+        <button class="secondary" onclick="saveSettings()">💾 Save Changes</button>
+      </div>
+
+      <div id="status"></div>
+    </div>
+
+    <div class="card">
+      <h2>⚙️ Bot Settings</h2>
+
+      <div class="grid">
+
+        <label>Auto React
+          <input id="autoreact" type="checkbox">
+        </label>
+
+        <label>Auto Read
+          <input id="autoread" type="checkbox">
+        </label>
+
+        <label>Auto Typing
+          <input id="autotyping" type="checkbox">
+        </label>
+
+        <label>Auto Recording
+          <input id="autorecording" type="checkbox">
+        </label>
+
+        <label>Always Online
+          <input id="alwaysonline" type="checkbox">
+        </label>
+
+        <label>Anti Link
+          <input id="antilink" type="checkbox">
+        </label>
+
+        <label>Anti Spam
+          <input id="antiSpam" type="checkbox">
+        </label>
+
+        <label>Anti Delete
+          <input id="antiDelete" type="checkbox">
+        </label>
+
+        <label>Welcome
+          <input id="welcome" type="checkbox">
+        </label>
+
+        <label>Goodbye
+          <input id="goodbye" type="checkbox">
+        </label>
+
+        <label>Status Enabled
+          <input id="statusEnabled" type="checkbox">
+        </label>
+
+        <label>Status Auto View
+          <input id="statusAutoView" type="checkbox">
+        </label>
+
+        <label>Status Auto React
+          <input id="statusAutoReact" type="checkbox">
+        </label>
+
+        <label>Status Auto Reply
+          <input id="statusAutoReply" type="checkbox">
+        </label>
+
+        <label>Status Download
+          <input id="statusDownload" type="checkbox">
+        </label>
+
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🎛️ Text & Reaction Settings</h2>
+
+      <div class="grid">
+
+        <div>
+          <p class="muted">Bot Name</p>
+          <input id="botName" type="text">
+        </div>
+
+        <div>
+          <p class="muted">Owner Name</p>
+          <input id="ownerName" type="text">
+        </div>
+
+        <div>
+          <p class="muted">Prefix</p>
+          <input id="prefix" type="text">
+        </div>
+
+        <div>
+          <p class="muted">Reaction Emoji</p>
+          <input id="reaction" type="text">
+        </div>
+
+        <div>
+          <p class="muted">Status Reaction Emoji</p>
+          <input id="statusReaction" type="text">
+        </div>
+
+        <div>
+          <p class="muted">Sticker Pack Name</p>
+          <input id="packname" type="text">
+        </div>
+
+        <div>
+          <p class="muted">Sticker Author</p>
+          <input id="author" type="text">
+        </div>
+
+        <div>
+          <p class="muted">Mode</p>
+          <select id="mode">
+            <option value="public">Public</option>
+            <option value="private">Private</option>
+          </select>
+        </div>
+
+        <div>
+          <p class="muted">Language</p>
+          <input id="language" type="text">
+        </div>
+
+        <div>
+          <p class="muted">Timezone</p>
+          <input id="timezone" type="text">
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let API_KEY = "";
+
+const fields = [
+  "autoreact",
+  "autoread",
+  "autotyping",
+  "autorecording",
+  "alwaysonline",
+  "antilink",
+  "antiSpam",
+  "antiDelete",
+  "welcome",
+  "goodbye",
+  "statusEnabled",
+  "statusAutoView",
+  "statusAutoReact",
+  "statusAutoReply",
+  "statusDownload"
+];
+
+const textFields = [
+  "botName",
+  "ownerName",
+  "prefix",
+  "reaction",
+  "statusReaction",
+  "packname",
+  "author",
+  "mode",
+  "language",
+  "timezone"
+];
+
+async function request(url, options = {}) {
+  options.headers = {
+    ...(options.headers || {}),
+    "x-api-key": API_KEY
+  };
+
+  const response = await fetch(url, options);
+
+  if (!response.ok) {
+    throw new Error("HTTP " + response.status);
+  }
+
+  return response.json();
+}
+
+async function login() {
+  const key = document.getElementById("apiKey").value.trim();
+
+  if (!key) {
+    document.getElementById("loginError").textContent =
+      "Enter the BONY Control API key.";
+    return;
+  }
+
+  API_KEY = key;
+
+  try {
+    await loadSettings();
+
+    document.getElementById("login").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+    document.getElementById("loginError").textContent = "";
+  } catch (error) {
+    API_KEY = "";
+    document.getElementById("loginError").textContent =
+      "Login failed. Check the API key.";
+  }
+}
+
+async function loadSettings() {
+  const data = await request("/api/settings");
+  const settings = data.settings || {};
+
+  for (const key of fields) {
+    const element = document.getElementById(key);
+    if (element) element.checked = Boolean(settings[key]);
+  }
+
+  for (const key of textFields) {
+    const element = document.getElementById(key);
+    if (element && settings[key] !== undefined) {
+      element.value = settings[key];
+    }
+  }
+
+  document.getElementById("status").textContent =
+    "Settings loaded successfully.";
+}
+
+async function saveSettings() {
+  const updates = {};
+
+  for (const key of fields) {
+    updates[key] = document.getElementById(key).checked;
+  }
+
+  for (const key of textFields) {
+    updates[key] = document.getElementById(key).value;
+  }
+
+  try {
+    await request("/api/settings", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(updates)
+    });
+
+    document.getElementById("status").textContent =
+      "✅ Central settings saved successfully.";
+  } catch (error) {
+    document.getElementById("status").textContent =
+      "❌ Failed to save settings.";
+  }
+}
+</script>
+
+</body>
+</html>
