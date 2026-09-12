@@ -70,6 +70,14 @@
     #dashboard{display:none}
     #loginError{color:#ff7070;margin-top:10px}
     #status{margin-top:12px;color:#8ee6a8}
+    .bot-status{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;background:#0b1019;border-radius:10px;margin-bottom:10px}
+    .bot-info{display:flex;flex-direction:column;gap:4px}
+    .bot-number{font-weight:bold}
+    .bot-time{font-size:12px;color:#9ba6b7}
+    .online{color:#8ee6a8;font-weight:bold}
+    .disconnected{color:#ffd166;font-weight:bold}
+    .logged-out{color:#ff7070;font-weight:bold}
+    .empty-status{color:#9ba6b7}
   </style>
 </head>
 <body>
@@ -101,6 +109,13 @@
       </div>
 
       <div id="status"></div>
+    </div>
+
+    <div class="card">
+      <h2>👥 Users / Bots</h2>
+      <div id="botStatuses">
+        <div class="empty-status">No bots connected yet.</div>
+      </div>
     </div>
 
     <div class="card">
@@ -300,11 +315,50 @@ async function login() {
 
     document.getElementById("login").style.display = "none";
     document.getElementById("dashboard").style.display = "block";
+    await startBotStatusPolling();
     document.getElementById("loginError").textContent = "";
   } catch (error) {
     API_KEY = "";
     document.getElementById("loginError").textContent =
       "Login failed. Check the API key.";
+  }
+}
+
+async function loadBotStatuses() {
+  try {
+    const data = await request("/api/bots/status");
+    const container = document.getElementById("botStatuses");
+
+    if (!data.bots || data.bots.length === 0) {
+      container.innerHTML =
+        '<div class="empty-status">No bots connected yet.</div>';
+      return;
+    }
+
+    container.innerHTML = data.bots.map((bot) => {
+      const status = String(bot.status || "unknown");
+      const statusClass =
+        status === "online"
+          ? "online"
+          : status === "logged_out"
+            ? "logged-out"
+            : "disconnected";
+
+      const time = bot.lastSeen || bot.updatedAt || "Unknown";
+
+      return `
+        <div class="bot-status">
+          <div class="bot-info">
+            <div class="bot-number">${bot.number || "Unknown number"}</div>
+            <div class="bot-time">${bot.botName || "BONY-XMD"} • Last seen: ${time}</div>
+          </div>
+          <div class="${statusClass}">${status}</div>
+        </div>
+      `;
+    }).join("");
+  } catch (error) {
+    document.getElementById("botStatuses").innerHTML =
+      '<div class="empty-status">Unable to load bot status.</div>';
   }
 }
 
@@ -355,6 +409,18 @@ async function saveSettings() {
       "❌ Failed to save settings.";
   }
 }
+  let botStatusTimer = null;
+
+  async function startBotStatusPolling() {
+    await loadBotStatuses();
+
+    if (botStatusTimer) {
+      clearInterval(botStatusTimer);
+    }
+
+    botStatusTimer = setInterval(loadBotStatuses, 10000);
+  }
+
 </script>
 
 </body>

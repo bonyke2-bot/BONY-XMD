@@ -7,6 +7,7 @@ const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.BONY_CONTROL_API_KEY || "";
 
 const DATABASE_FILE = path.join(__dirname, "control-database.json");
+const botStatuses = new Map();
 
 app.use(express.json());
 
@@ -87,15 +88,39 @@ app.post("/api/bots/status", (req, res) => {
 
   const { number, status, botName, updatedAt } = req.body || {};
 
-  console.log("📡 BOT STATUS:", {
-    number,
-    status,
-    botName,
-    updatedAt
+  if (!number || !status) {
+    return res.status(400).json({
+      success: false,
+      error: "number and status are required"
+    });
+  }
+
+  botStatuses.set(String(number), {
+    number: String(number),
+    status: String(status),
+    botName: botName || "BONY-XMD",
+    updatedAt: updatedAt || new Date().toISOString(),
+    lastSeen: new Date().toISOString()
   });
+
+  console.log("📡 BOT STATUS:", botStatuses.get(String(number)));
 
   res.json({
     success: true
+  });
+});
+
+app.get("/api/bots/status", (req, res) => {
+  if (!authorized(req)) {
+    return res.status(401).json({
+      success: false,
+      error: "Unauthorized"
+    });
+  }
+
+  res.json({
+    success: true,
+    bots: Array.from(botStatuses.values())
   });
 });
 
