@@ -334,7 +334,7 @@ async function startBonyXmd() {
 
     for (const item of updates) {
       const update = item.update;
-      const isRevoke = update?.messageStubType === 0;
+      const isRevoke = update?.messageStubType === 1;
 
       if (!isRevoke) continue;
 
