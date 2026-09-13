@@ -236,6 +236,48 @@ app.post("/api/bots/status", (req, res) => {
   });
 });
 
+app.post("/api/bot/status", (req, res) => {
+  const botNumber = authorizedBot(req);
+
+  if (!botNumber) {
+    return res.status(401).json({
+      success: false,
+      error: "Invalid bot token"
+    });
+  }
+
+  const { number, status, botName, updatedAt } = req.body || {};
+  const normalizedNumber = String(number || "").trim();
+
+  if (!normalizedNumber || !status) {
+    return res.status(400).json({
+      success: false,
+      error: "number and status are required"
+    });
+  }
+
+  if (normalizedNumber !== botNumber) {
+    return res.status(403).json({
+      success: false,
+      error: "Bot token does not match number"
+    });
+  }
+
+  botStatuses.set(normalizedNumber, {
+    number: normalizedNumber,
+    status: String(status),
+    botName: botName || "BONY-XMD",
+    updatedAt: updatedAt || new Date().toISOString(),
+    lastSeen: new Date().toISOString()
+  });
+
+  console.log("📡 BOT STATUS (TOKEN):", botStatuses.get(normalizedNumber));
+
+  res.json({
+    success: true
+  });
+});
+
 app.get("/api/master-settings", (req, res) => {
   if (!authorized(req)) {
     return res.status(401).json({
