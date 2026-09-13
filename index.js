@@ -39,26 +39,10 @@ async function startCentralSettingsWatcher() {
       const result = await syncCentralSettings();
 
       if (result && result.changed) {
-        centralReloading = true;
-
         console.log(
-          "🔄 BONY-CONTROL detected settings change:",
+          "🔄 BONY-CONTROL settings applied:",
           Object.keys(result.changes).join(", ")
         );
-
-        console.log("🔄 Reloading BONY-XMD connection...");
-
-        try {
-          if (sock?.user && sock?.ws) {
-            sock.ws.close();
-          }
-        } catch (error) {
-          console.error(
-            "⚠️ Error closing old connection:",
-            error.message
-          );
-        }
-
       }
     } catch (error) {
       console.error(
@@ -100,25 +84,10 @@ async function startBotSettingsWatcher(number) {
       const result = await syncBotSettings(number);
 
       if (result && result.changed) {
-        centralReloading = true;
-
         console.log(
-          "🔄 BONY-CONTROL bot settings changed:",
+          "🔄 BONY-CONTROL bot settings applied:",
           Object.keys(result.changes).join(", ")
         );
-
-        console.log("🔄 Reloading BONY-XMD connection...");
-
-        try {
-          if (sock?.user && sock?.ws) {
-            sock.ws.close();
-          }
-        } catch (error) {
-          console.error(
-            "⚠️ Error closing old connection:",
-            error.message
-          );
-        }
       }
     } catch (error) {
       console.error(
