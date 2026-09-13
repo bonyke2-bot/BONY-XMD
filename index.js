@@ -78,6 +78,21 @@ async function startBotSettingsWatcher(number) {
   botSettingsWatcherStarted = true;
   console.log("🤖 BONY-CONTROL individual bot settings watcher started.");
 
+  try {
+    const initialResult = await syncBotSettings(number);
+    if (initialResult?.changed) {
+      console.log(
+        "🔄 BONY-CONTROL initial bot settings synced:",
+        Object.keys(initialResult.changes).join(", ")
+      );
+    }
+  } catch (error) {
+    console.error(
+      "⚠️ BONY-CONTROL initial bot settings sync error:",
+      error.message
+    );
+  }
+
   setInterval(async () => {
     if (centralReloading) return;
 
