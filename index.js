@@ -24,6 +24,7 @@ import P from "pino";
 
 let centralSettingsWatcherStarted = false;
 let centralReloading = false;
+let alwaysOnlineTimer;
 
 async function startCentralSettingsWatcher() {
   if (centralSettingsWatcherStarted) return;
@@ -185,12 +186,27 @@ async function startBonyXmd() {
         console.log("╚══════════════════════════════════╝");
         if (getSetting("alwaysonline")) {
           try {
-            await sock.sendPresenceUpdate("available");
-            console.log("🟢 Always Online enabled.");
-          } catch (error) {
-            console.error("⚠️ Always Online error:", error.message);
+              await sock.sendPresenceUpdate("available");
+              console.log("🟢 Always Online enabled.");
+
+              if (alwaysOnlineTimer) {
+                clearInterval(alwaysOnlineTimer);
+              }
+
+              alwaysOnlineTimer = setInterval(async () => {
+                try {
+                  if (sock?.user && getSetting("alwaysonline")) {
+                    await sock.sendPresenceUpdate("available");
+                    console.log("🟢 Always Online presence refreshed.");
+                  }
+                } catch (error) {
+                  console.error("⚠️ Always Online refresh error:", error.message);
+                }
+              }, 60000);
+            } catch (error) {
+              console.error("⚠️ Always Online error:", error.message);
+            }
           }
-        }
 
         try {
           await sock.sendMessage(sock.user.id, {
@@ -240,6 +256,10 @@ async function startBonyXmd() {
       }
 
       if (connection === "close") {
+        if (alwaysOnlineTimer) {
+          clearInterval(alwaysOnlineTimer);
+          alwaysOnlineTimer = undefined;
+        }
         const statusCode =
           lastDisconnect?.error?.output?.statusCode;
 
