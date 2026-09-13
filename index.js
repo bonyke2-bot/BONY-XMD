@@ -334,12 +334,12 @@ async function startBonyXmd() {
 
     for (const item of updates) {
       const update = item.update;
-      const protocolType = update?.message?.protocolMessage?.type;
+      const isRevoke = update?.messageStubType === 0;
 
-      if (protocolType !== 0) continue;
+      if (!isRevoke) continue;
 
       const deletedKey =
-        update?.message?.protocolMessage?.key ||
+        item.key ||
         update?.key;
 
       if (!deletedKey?.id || !deletedKey?.remoteJid) continue;
