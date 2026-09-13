@@ -72,8 +72,8 @@ async function startCentralSettingsWatcher() {
 
 let botSettingsWatcherStarted = false;
 
-async function startBotSettingsWatcher() {
-  if (botSettingsWatcherStarted || !process.env.BONY_BOT_TOKEN) return;
+async function startBotSettingsWatcher(number) {
+  if (botSettingsWatcherStarted || !number) return;
 
   botSettingsWatcherStarted = true;
   console.log("🤖 BONY-CONTROL individual bot settings watcher started.");
@@ -82,7 +82,7 @@ async function startBotSettingsWatcher() {
     if (centralReloading) return;
 
     try {
-      const result = await syncBotSettings();
+      const result = await syncBotSettings(number);
 
       if (result && result.changed) {
         centralReloading = true;
@@ -172,12 +172,9 @@ async function startBonyXmd() {
       if (connection === "open") {
         centralReloading = false;
         const connectedNumber = sock.user.id.split(":")[0];
-
-          if (process.env.BONY_BOT_TOKEN) {
-            await connectBot({ number: connectedNumber });
-            await startBotSettingsWatcher();
-          }
-          await reportBotStatus({ number: connectedNumber, status: "online" });
+        await connectBot({ number: connectedNumber });
+        await startBotSettingsWatcher(connectedNumber);
+        await reportBotStatus({ number: connectedNumber, status: "online" });
         console.log("🔎 ACTUAL CONNECTED ID:", sock.user?.id);
         console.log("╔══════════════════════════════════╗");
         console.log("║       BONY-XMD CONNECTED 🟢      ║");

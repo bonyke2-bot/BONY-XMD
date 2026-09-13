@@ -501,6 +501,40 @@ app.post("/api/bot/connect", (req, res) => {
   });
 });
 
+app.get("/api/bots/:number/settings", (req, res) => {
+  if (!authorized(req)) {
+    return res.status(401).json({
+      success: false,
+      error: "Unauthorized"
+    });
+  }
+
+  const botNumber = String(req.params.number);
+  const registry = loadBotRegistry();
+  const bot = registry.bots[botNumber];
+
+  if (!bot) {
+    return res.status(404).json({
+      success: false,
+      error: "Bot not registered"
+    });
+  }
+
+  const settings = {
+    ...bot.settings
+  };
+
+  delete settings.geminiApiKey;
+  delete settings.mongodbUrl;
+
+  res.json({
+    success: true,
+    number: botNumber,
+    updatedAt: bot.updatedAt,
+    settings
+  });
+});
+
 app.get("/api/bot/settings", (req, res) => {
   const botNumber = authorizedBot(req);
 
