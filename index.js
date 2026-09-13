@@ -48,7 +48,7 @@ async function startCentralSettingsWatcher() {
         console.log("🔄 Reloading BONY-XMD connection...");
 
         try {
-          if (sock?.ws) {
+          if (sock?.user && sock?.ws) {
             sock.ws.close();
           }
         } catch (error) {
@@ -94,7 +94,7 @@ async function startBotSettingsWatcher() {
         console.log("🔄 Reloading BONY-XMD connection...");
 
         try {
-          if (sock?.ws) {
+          if (sock?.user && sock?.ws) {
             sock.ws.close();
           }
         } catch (error) {
