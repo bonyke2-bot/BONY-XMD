@@ -11,7 +11,7 @@
   "author": "BONY-XMD 💜",
   "antilink": false,
   "antiSpam": true,
-  "antiDelete": false,
+  "antiDelete": true,
   "antiDeleteMode": "pm",
   "autoreact": false,
   "autoread": false,
