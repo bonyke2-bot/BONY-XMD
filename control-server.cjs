@@ -42,6 +42,28 @@ function saveBotRegistry(registry) {
   );
 }
 
+function applyMasterSettings(registry, updates, allowedKeys) {
+  if (!registry.masterSettings) {
+    registry.masterSettings = {};
+  }
+
+  for (const [key, value] of Object.entries(updates)) {
+    if (!allowedKeys.has(key)) continue;
+
+    registry.masterSettings[key] = value;
+
+    for (const bot of Object.values(registry.bots || {})) {
+      if (!bot.settings) bot.settings = {};
+      if (!bot.customSettings) bot.customSettings = {};
+
+      if (!bot.customSettings[key]) {
+        bot.settings[key] = value;
+        bot.updatedAt = new Date().toISOString();
+      }
+    }
+  }
+}
+
 const CREDENTIALS_FILE = path.join(
   __dirname,
   "control-bot-credentials.json"
@@ -197,6 +219,9 @@ app.post("/api/settings", (req, res) => {
   }
 
   saveSettings(current);
+  const registry = loadBotRegistry();
+  applyMasterSettings(registry, updates, allowedKeys);
+  saveBotRegistry(registry);
 
   res.json({
     success: true,
@@ -307,11 +332,7 @@ app.post("/api/master-settings", (req, res) => {
   const updates = req.body || {};
   const allowedKeys = new Set(Object.keys(current));
 
-  for (const [key, value] of Object.entries(updates)) {
-    if (allowedKeys.has(key)) {
-      registry.masterSettings[key] = value;
-    }
-  }
+  applyMasterSettings(registry, updates, allowedKeys);
 
   saveBotRegistry(registry);
 
@@ -455,7 +476,8 @@ app.post("/api/bot/connect", (req, res) => {
       updatedAt: now,
       settings: {
         ...registry.masterSettings
-      }
+      },
+      customSettings: {}
     };
 
     console.log("👤 BOT AUTO-REGISTERED:", normalizedNumber);
@@ -582,6 +604,16 @@ app.post("/api/bots/:number/settings", (req, res) => {
   for (const [key, value] of Object.entries(updates)) {
     if (allowedKeys.has(key)) {
       registry.bots[number].settings[key] = value;
+
+      if (!registry.bots[number].customSettings) {
+        registry.bots[number].customSettings = {};
+      }
+
+      if (value === registry.masterSettings[key]) {
+        delete registry.bots[number].customSettings[key];
+      } else {
+        registry.bots[number].customSettings[key] = true;
+      }
     }
   }
 
