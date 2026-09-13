@@ -144,6 +144,7 @@ let authState;
 let saveCreds;
 let sock;
 let reconnectTimer;
+let socketGeneration = 0;
 
 async function startBonyXmd() {
   if (!authState) {
@@ -162,11 +163,15 @@ async function startBonyXmd() {
   await syncCentralSettings();
   console.log("🔌 Creating WhatsApp connection...");
 
+  const generation = ++socketGeneration;
+
   sock = makeWASocket({
     auth: authState,
     logger: P({ level: "info" }),
     syncFullHistory: false
   });
+
+  const currentSock = sock;
 
   startCentralSettingsWatcher();
 
@@ -182,6 +187,11 @@ async function startBonyXmd() {
   sock.ev.on(
     "connection.update",
     async ({ connection, lastDisconnect }) => {
+      if (generation !== socketGeneration || currentSock !== sock) {
+        console.log("⚠️ Ignoring event from old BONY-XMD socket.");
+        return;
+      }
+
       console.log("Connection status:", connection);
 
       if (connection === "open") {
@@ -290,6 +300,8 @@ async function startBonyXmd() {
           }
 
           reconnectTimer = setTimeout(() => {
+            if (generation !== socketGeneration) return;
+
             startBonyXmd().catch((error) => {
               console.error("❌ Reconnect error:");
               console.error(error);
