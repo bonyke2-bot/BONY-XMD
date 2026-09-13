@@ -9,8 +9,8 @@ const {
   getSetting
 } = require("./lib/settings.cjs");
 const { handleStatus } = require("./lib/status.cjs");
-const { reportBotStatus } = require("./lib/control-client.cjs");
-const { syncCentralSettings } = require("./lib/central-settings.cjs");
+const { reportBotStatus, connectBot } = require("./lib/control-client.cjs");
+const { syncCentralSettings, syncBotSettings } = require("./lib/central-settings.cjs");
 
 const { sendWithFooter } = require("./lib/footer.cjs");
 
@@ -62,6 +62,51 @@ async function startCentralSettingsWatcher() {
     } catch (error) {
       console.error(
         "⚠️ BONY-CONTROL watcher error:",
+        error.message
+      );
+    }
+  }, 10000);
+}
+
+
+let botSettingsWatcherStarted = false;
+
+async function startBotSettingsWatcher() {
+  if (botSettingsWatcherStarted || !process.env.BONY_BOT_TOKEN) return;
+
+  botSettingsWatcherStarted = true;
+  console.log("🤖 BONY-CONTROL individual bot settings watcher started.");
+
+  setInterval(async () => {
+    if (centralReloading) return;
+
+    try {
+      const result = await syncBotSettings();
+
+      if (result && result.changed) {
+        centralReloading = true;
+
+        console.log(
+          "🔄 BONY-CONTROL bot settings changed:",
+          Object.keys(result.changes).join(", ")
+        );
+
+        console.log("🔄 Reloading BONY-XMD connection...");
+
+        try {
+          if (sock?.ws) {
+            sock.ws.close();
+          }
+        } catch (error) {
+          console.error(
+            "⚠️ Error closing old connection:",
+            error.message
+          );
+        }
+      }
+    } catch (error) {
+      console.error(
+        "⚠️ BONY-CONTROL bot watcher error:",
         error.message
       );
     }
@@ -135,6 +180,11 @@ async function startBonyXmd() {
       if (connection === "open") {
         centralReloading = false;
         const connectedNumber = sock.user.id.split(":")[0];
+
+          if (process.env.BONY_BOT_TOKEN) {
+            await connectBot({ number: connectedNumber });
+            await startBotSettingsWatcher();
+          }
           await reportBotStatus({ number: connectedNumber, status: "online" });
         console.log("🔎 ACTUAL CONNECTED ID:", sock.user?.id);
         console.log("╔══════════════════════════════════╗");

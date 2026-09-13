@@ -24,3 +24,6 @@ session-invalid-*/
 *.before-channel-follow-fix
 *.antidelete-backup
 session-loggedout-backup-*/
+
+# BONY-CONTROL bot credentials
+control-bot-credentials.json

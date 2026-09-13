@@ -119,6 +119,18 @@
     </div>
 
     <div class="card">
+        <h2>🎯 Selected Bot</h2>
+        <div class="row">
+          <select id="selectedBot" onchange="loadSelectedBot()">
+            <option value="">Select a bot...</option>
+          </select>
+          <button class="secondary" onclick="loadSelectedBot()">↻ Load Bot</button>
+          <button onclick="saveSelectedBot()">💾 Save Bot Settings</button>
+        </div>
+        <div id="selectedBotStatus"></div>
+      </div>
+      <div class="card">
+
       <h2>⚙️ Bot Settings</h2>
 
       <div class="grid">
@@ -312,6 +324,7 @@ async function login() {
 
   try {
     await loadSettings();
+      await loadRegisteredBots();
 
     document.getElementById("login").style.display = "none";
     document.getElementById("dashboard").style.display = "block";
@@ -409,7 +422,92 @@ async function saveSettings() {
       "❌ Failed to save settings.";
   }
 }
-  let botStatusTimer = null;
+    async function loadRegisteredBots() {
+    try {
+      const data = await request("/api/bots");
+      const select = document.getElementById("selectedBot");
+      const bots = Array.isArray(data.bots) ? data.bots : [];
+
+      select.innerHTML =
+        '<option value="">Select a bot...</option>' +
+        bots.map((bot) =>
+          `<option value="${bot.number}">${bot.number} — ${bot.botName || "BONY-XMD"}</option>`
+        ).join("");
+    } catch (error) {
+      console.error("Failed to load registered bots:", error.message);
+    }
+  }
+
+  async function saveSelectedBot() {
+    const number = document.getElementById("selectedBot").value;
+    const status = document.getElementById("selectedBotStatus");
+
+    if (!number) {
+      status.textContent = "Select a bot first.";
+      return;
+    }
+
+    const updates = {};
+
+    for (const key of fields) {
+      updates[key] = document.getElementById(key).checked;
+    }
+
+    for (const key of textFields) {
+      updates[key] = document.getElementById(key).value;
+    }
+
+    try {
+      await request("/api/bots/" + encodeURIComponent(number) + "/settings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(updates)
+      });
+
+      status.textContent = "✅ Settings saved for " + number;
+    } catch (error) {
+      status.textContent = "❌ Failed to save settings for " + number;
+      console.error("Failed to save selected bot:", error.message);
+    }
+  }
+
+  async function loadSelectedBot() {
+    const number = document.getElementById("selectedBot").value;
+    const status = document.getElementById("selectedBotStatus");
+
+    if (!number) {
+      status.textContent = "Select a bot first.";
+      return;
+    }
+
+    try {
+      const data = await request("/api/bots/" + encodeURIComponent(number));
+      const settings = data.bot?.settings || {};
+
+      for (const key of fields) {
+        const element = document.getElementById(key);
+        if (element && settings[key] !== undefined) {
+          element.checked = Boolean(settings[key]);
+        }
+      }
+
+      for (const key of textFields) {
+        const element = document.getElementById(key);
+        if (element && settings[key] !== undefined) {
+          element.value = settings[key];
+        }
+      }
+
+      status.textContent = "✅ Loaded settings for " + number;
+    } catch (error) {
+      status.textContent = "❌ Failed to load bot settings.";
+      console.error("Failed to load selected bot:", error.message);
+    }
+  }
+
+let botStatusTimer = null;
 
   async function startBotStatusPolling() {
     await loadBotStatuses();
