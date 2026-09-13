@@ -258,10 +258,10 @@ async function startBonyXmd() {
           statusCode !== DisconnectReason.loggedOut;
 
         console.log("❌ BONY XMD connection closed.");
-          const disconnectedNumber = sock?.user?.id?.split(":")[0] || "unknown";
+          const disconnectedNumber = sock?.user?.id?.split(":")[0];
 
         if (shouldReconnect) {
-            await reportBotStatus({ number: disconnectedNumber, status: "disconnected" });
+            if (disconnectedNumber) await reportBotStatus({ number: disconnectedNumber, status: "disconnected" });
           console.log("🔄 Reconnecting...");
 
           if (reconnectTimer) {
@@ -277,7 +277,7 @@ async function startBonyXmd() {
             });
           }, 5000);
         } else {
-            await reportBotStatus({ number: disconnectedNumber, status: "logged_out" });
+            if (disconnectedNumber) await reportBotStatus({ number: disconnectedNumber, status: "logged_out" });
           console.log("⚠️ Session logged out. Pair again.");
 
           try {
