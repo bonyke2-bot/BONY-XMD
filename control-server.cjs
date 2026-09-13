@@ -230,13 +230,6 @@ app.post("/api/settings", (req, res) => {
 });
 
 app.post("/api/bots/status", (req, res) => {
-  if (!authorized(req)) {
-    return res.status(401).json({
-      success: false,
-      error: "Unauthorized"
-    });
-  }
-
   const { number, status, botName, updatedAt } = req.body || {};
 
   if (!number || !status) {
@@ -246,18 +239,49 @@ app.post("/api/bots/status", (req, res) => {
     });
   }
 
-  botStatuses.set(String(number), {
-    number: String(number),
+  const normalizedNumber = String(number).trim();
+  const now = new Date().toISOString();
+  const registry = loadBotRegistry();
+
+  if (!registry.bots[normalizedNumber]) {
+    registry.bots[normalizedNumber] = {
+      number: normalizedNumber,
+      botName: botName || "BONY-XMD",
+      status: String(status),
+      createdAt: now,
+      updatedAt: now,
+      settings: { ...registry.masterSettings },
+      customSettings: {}
+    };
+
+    console.log("👤 BOT AUTO-REGISTERED FROM STATUS:", normalizedNumber);
+  } else {
+    const bot = registry.bots[normalizedNumber];
+
+    bot.status = String(status);
+    bot.updatedAt = now;
+
+    if (botName) bot.botName = botName;
+    if (!bot.settings) bot.settings = { ...registry.masterSettings };
+    if (!bot.customSettings) bot.customSettings = {};
+
+    console.log("📡 BOT STATUS:", normalizedNumber, "→", status);
+  }
+
+  saveBotRegistry(registry);
+
+  botStatuses.set(normalizedNumber, {
+    number: normalizedNumber,
     status: String(status),
-    botName: botName || "BONY-XMD",
-    updatedAt: updatedAt || new Date().toISOString(),
-    lastSeen: new Date().toISOString()
+    botName: registry.bots[normalizedNumber].botName,
+    updatedAt: updatedAt || now,
+    lastSeen: now
   });
 
-  console.log("📡 BOT STATUS:", botStatuses.get(String(number)));
-
   res.json({
-    success: true
+    success: true,
+    registered: true,
+    status: String(status)
   });
 });
 
@@ -359,13 +383,6 @@ app.get("/api/bots", (req, res) => {
 });
 
 app.post("/api/bots/register", (req, res) => {
-  if (!authorized(req)) {
-    return res.status(401).json({
-      success: false,
-      error: "Unauthorized"
-    });
-  }
-
   const { number, botName } = req.body || {};
 
   if (!number) {
@@ -502,13 +519,6 @@ app.post("/api/bot/connect", (req, res) => {
 });
 
 app.get("/api/bots/:number/settings", (req, res) => {
-  if (!authorized(req)) {
-    return res.status(401).json({
-      success: false,
-      error: "Unauthorized"
-    });
-  }
-
   const botNumber = String(req.params.number);
   const registry = loadBotRegistry();
   const bot = registry.bots[botNumber];
@@ -571,20 +581,28 @@ app.get("/api/bot/settings", (req, res) => {
 });
 
   app.get("/api/bots/status", (req, res) => {
-    if (!authorized(req)) {
-      return res.status(401).json({
-        success: false,
-        error: "Unauthorized"
-      });
-    }
-
-    res.json({
-      success: true,
-      bots: Array.from(botStatuses.values())
+  if (!authorized(req)) {
+    return res.status(401).json({
+      success: false,
+      error: "Unauthorized"
     });
-  });
+  }
 
-  app.get("/api/bots/:number", (req, res) => {
+  const registry = loadBotRegistry();
+
+  res.json({
+    success: true,
+    bots: Object.values(registry.bots || {}).map(bot => ({
+      number: bot.number,
+      botName: bot.botName || "BONY-XMD",
+      status: bot.status || "offline",
+      updatedAt: bot.updatedAt,
+      lastSeen: bot.updatedAt
+    }))
+  });
+});
+
+app.get("/api/bots/:number", (req, res) => {
     if (!authorized(req)) {
       return res.status(401).json({
         success: false,
