@@ -163,15 +163,6 @@ async function startBonyXmd() {
 
   sock.ev.on("creds.update", saveCreds);
 
-  if (getSetting("alwaysonline")) {
-    try {
-      await sock.sendPresenceUpdate("available");
-      console.log("🟢 Always Online enabled.");
-    } catch (error) {
-      console.error("⚠️ Always Online error:", error.message);
-    }
-  }
-
   sock.ev.on(
     "connection.update",
     async ({ connection, lastDisconnect }) => {
@@ -192,6 +183,15 @@ async function startBonyXmd() {
         console.log(`║       Number: ${connectedNumber}       ║`);
         console.log("║       Online 🟢                  ║");
         console.log("╚══════════════════════════════════╝");
+        if (getSetting("alwaysonline")) {
+          try {
+            await sock.sendPresenceUpdate("available");
+            console.log("🟢 Always Online enabled.");
+          } catch (error) {
+            console.error("⚠️ Always Online error:", error.message);
+          }
+        }
+
         try {
           await sock.sendMessage(sock.user.id, {
             text: `╭─「 *𝗕𝗢𝗡𝗬 𝗫𝗠𝗗* 」
