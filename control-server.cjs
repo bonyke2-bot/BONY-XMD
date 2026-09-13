@@ -425,6 +425,36 @@ app.post("/api/bots/register", (req, res) => {
   });
 });
 
+app.delete("/api/bots/:number", (req, res) => {
+  if (!authorized(req)) {
+    return res.status(401).json({
+      success: false,
+      error: "Unauthorized"
+    });
+  }
+
+  const number = String(req.params.number).trim();
+  const registry = loadBotRegistry();
+
+  if (!registry.bots[number]) {
+    return res.status(404).json({
+      success: false,
+      error: "Bot not found"
+    });
+  }
+
+  delete registry.bots[number];
+  saveBotRegistry(registry);
+  botStatuses.delete(number);
+
+  console.log("🗑️ BOT REMOVED:", number);
+
+  res.json({
+    success: true,
+    removed: number
+  });
+});
+
 app.post("/api/bots/:number/token", (req, res) => {
   if (!authorized(req)) {
     return res.status(401).json({
