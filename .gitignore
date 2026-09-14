@@ -26,4 +26,3 @@ session-invalid-*/
 session-loggedout-backup-*/
 
 # BONY-CONTROL bot credentials
-control-bot-credentials.json
