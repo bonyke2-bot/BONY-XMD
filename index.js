@@ -62,6 +62,30 @@ async function startBonyXmd() {
 
   const currentSock = sock;
 
+  const commandSock = new Proxy(sock, {
+    get(target, prop) {
+      if (prop === "sendMessage") {
+        return async (jid, content, options) => {
+          if (
+            content &&
+            typeof content === "object" &&
+            typeof content.text === "string" &&
+            !content.buttons &&
+            !content.image &&
+            !content.video &&
+            !content.audio &&
+            !content.sticker &&
+            !content.document
+          ) {
+            return sendWithFooter(target, jid, content.text, options);
+          }
+          return target.sendMessage(jid, content, options);
+        };
+      }
+      return target[prop];
+    }
+  });
+
   // 📵 BONY-XMD AntiCall
   sock.ev.on("call", async (calls) => {
     for (const call of calls) {
@@ -427,25 +451,12 @@ async function startBonyXmd() {
     }
   });
 
-sock.ev.on("messages.upsert", ({ messages, type }) => console.log("🧪 SECOND UPSERT TEST:", messages.length, type));
 
 sock.ev.on(
     "messages.upsert",
     async ({ messages, type }) => {
-      console.log("🔥 MESSAGE EVENT RECEIVED:", messages.length, "TYPE:", type);
 
-      for (const m of messages) {
-        console.log("📩 MESSAGE DETAILS:", {
-          id: m.key?.id,
-          remoteJid: m.key?.remoteJid,
-          fromMe: m.key?.fromMe,
-          participant: m.key?.participant,
-          participantPn: m.key?.participantPn,
-          msgParticipant: m.participant,
-          msgParticipantPn: m.participantPn,
-          hasMessage: !!m.message
-        });
-      }
+
 
       const currentSettings = getAllSettings();
 
@@ -456,10 +467,12 @@ sock.ev.on(
         cacheMessage(msg);
 
         // 🗃️ STATUS HANDLER
-        try {
-          await handleStatus(sock, msg);
-        } catch (error) {
-          console.error("❌ Status processing error:", error.message);
+        if (msg.key?.remoteJid === "status@broadcast") {
+          try {
+            await handleStatus(sock, msg);
+          } catch (error) {
+            console.error("❌ Status processing error:", error.message);
+          }
         }
 
         const text =
@@ -519,30 +532,20 @@ sock.ev.on(
           }
         }
 
-        console.log(
-          "📨 RECEIVED TEXT:",
-          JSON.stringify(text)
-        );
 
-        console.log(
-          "👤 SENDER:",
-          msg.key.remoteJid,
-          "FROM ME:",
-          msg.key.fromMe
-        );
 
         // PRIVATE MODE: only owner/fromMe can use bot commands
         if (
           currentSettings.mode === "private" &&
           !msg.key.fromMe &&
-          msg.key.remoteJid !== `${String(getSetting("ownerNumber") || "").replace(/[^0-9]/g, "")}@s.whatsapp.net`
+          msg.key.remoteJid !== `${String(currentSettings.ownerNumber || "").replace(/[^0-9]/g, "")}@s.whatsapp.net`
         ) {
           continue;
         }
 
         const trimmed = text.trim();
 
-        const currentPrefix = getSetting("prefix") || ".";
+        const currentPrefix = currentSettings.prefix || ".";
 
         if (!trimmed.startsWith(currentPrefix)) continue;
 
@@ -568,32 +571,6 @@ sock.ev.on(
           console.log(
             `⚡ Running command: ${prefix}${commandName}`
           );
-
-          const commandSock = new Proxy(sock, {
-            get(target, prop) {
-              if (prop === "sendMessage") {
-                return async (jid, content, options) => {
-                  if (
-                    content &&
-                    typeof content === "object" &&
-                    typeof content.text === "string" &&
-                    !content.buttons &&
-                    !content.image &&
-                    !content.video &&
-                    !content.audio &&
-                    !content.sticker &&
-                    !content.document
-                  ) {
-                    return sendWithFooter(target, jid, content.text, options);
-                  }
-
-                  return target.sendMessage(jid, content, options);
-                };
-              }
-
-              return target[prop];
-            }
-          });
 
           await command(commandSock, msg, args);
 
