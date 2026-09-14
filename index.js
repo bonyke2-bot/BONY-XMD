@@ -468,8 +468,8 @@ async function startBonyXmd() {
         `╭─「 🗑️ *MESSAGE DELETED* 」\n` +
         `│ ${isGroup ? "👥 GROUP" : "👤 PRIVATE"}\n` +
         `│ 📍 ${chatName}\n` +
-        `│ 👤 Message sender: ${sender}\n` +
-          `│ 🗑️ Deleted by: ${deletedBy}\n` +
+        `│ 👤 Message sender: ${String(sender).split("@")[0]}\n` +
+          `│ 🗑️ Deleted by: ${String(deletedBy).split("@")[0]}\n` +
         `│ 🆔 ID: ${deletedKey.id}\n` +
         `├──────────────\n` +
         `│ 📝 Original:\n` +
