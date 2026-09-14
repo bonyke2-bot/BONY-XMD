@@ -9,8 +9,6 @@ const {
   getSetting
 } = require("./lib/settings.cjs");
 const { handleStatus } = require("./lib/status.cjs");
-const { reportBotStatus, connectBot } = require("./lib/control-client.cjs");
-const { syncCentralSettings, syncBotSettings } = require("./lib/central-settings.cjs");
 
 const { sendWithFooter } = require("./lib/footer.cjs");
 
@@ -21,83 +19,6 @@ import {
 } from "@whiskeysockets/baileys";
 import makeWASocket from "@whiskeysockets/baileys";
 import P from "pino";
-
-let centralSettingsWatcherStarted = false;
-let centralReloading = false;
-let alwaysOnlineTimer;
-
-async function startCentralSettingsWatcher() {
-  if (centralSettingsWatcherStarted) return;
-
-  centralSettingsWatcherStarted = true;
-  console.log("🌐 BONY-CONTROL settings watcher started.");
-
-  setInterval(async () => {
-    if (centralReloading) return;
-
-    try {
-      const result = await syncCentralSettings();
-
-      if (result && result.changed) {
-        console.log(
-          "🔄 BONY-CONTROL settings applied:",
-          Object.keys(result.changes).join(", ")
-        );
-      }
-    } catch (error) {
-      console.error(
-        "⚠️ BONY-CONTROL watcher error:",
-        error.message
-      );
-    }
-  }, 10000);
-}
-
-
-let botSettingsWatcherStarted = false;
-
-async function startBotSettingsWatcher(number) {
-  if (botSettingsWatcherStarted || !number) return;
-
-  botSettingsWatcherStarted = true;
-  console.log("🤖 BONY-CONTROL individual bot settings watcher started.");
-
-  try {
-    const initialResult = await syncBotSettings(number);
-    if (initialResult?.changed) {
-      console.log(
-        "🔄 BONY-CONTROL initial bot settings synced:",
-        Object.keys(initialResult.changes).join(", ")
-      );
-    }
-  } catch (error) {
-    console.error(
-      "⚠️ BONY-CONTROL initial bot settings sync error:",
-      error.message
-    );
-  }
-
-  setInterval(async () => {
-    if (centralReloading) return;
-
-    try {
-      const result = await syncBotSettings(number);
-
-      if (result && result.changed) {
-        console.log(
-          "🔄 BONY-CONTROL bot settings applied:",
-          Object.keys(result.changes).join(", ")
-        );
-      }
-    } catch (error) {
-      console.error(
-        "⚠️ BONY-CONTROL bot watcher error:",
-        error.message
-      );
-    }
-  }, 10000);
-}
-
 
 const PORT = process.env.PORT || 10000;
 http.createServer((req, res) => {
@@ -129,7 +50,6 @@ async function startBonyXmd() {
     console.log("🔌 Authentication state loaded...");
   }
 
-  await syncCentralSettings();
   console.log("🔌 Creating WhatsApp connection...");
 
   const generation = ++socketGeneration;
@@ -176,7 +96,6 @@ async function startBonyXmd() {
     }
   });
 
-  startCentralSettingsWatcher();
 
 
   console.log("🧪 EVENT EMITTER TEST: socket created");
@@ -200,9 +119,6 @@ async function startBonyXmd() {
       if (connection === "open") {
         centralReloading = false;
         const connectedNumber = sock.user.id.split(":")[0];
-        await connectBot({ number: connectedNumber });
-        await startBotSettingsWatcher(connectedNumber);
-        await reportBotStatus({ number: connectedNumber, status: "online" });
         console.log("🔎 ACTUAL CONNECTED ID:", sock.user?.id);
         console.log("╔══════════════════════════════════╗");
         console.log("║       BONY-XMD CONNECTED 🟢      ║");
@@ -295,8 +211,7 @@ async function startBonyXmd() {
           const disconnectedNumber = sock?.user?.id?.split(":")[0];
 
         if (shouldReconnect) {
-            if (disconnectedNumber) await reportBotStatus({ number: disconnectedNumber, status: "disconnected" });
-          console.log("🔄 Reconnecting...");
+            console.log("🔄 Reconnecting...");
 
           if (reconnectTimer) {
             clearTimeout(reconnectTimer);
@@ -311,8 +226,7 @@ async function startBonyXmd() {
             });
           }, 5000);
         } else {
-            if (disconnectedNumber) await reportBotStatus({ number: disconnectedNumber, status: "logged_out" });
-          console.log("⚠️ Session logged out. Pair again.");
+            console.log("⚠️ Session logged out. Pair again.");
 
           try {
             await fs.promises.rm("./session", {
