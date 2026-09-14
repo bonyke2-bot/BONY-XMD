@@ -425,18 +425,18 @@ async function startBonyXmd() {
       const isGroup = deletedKey.remoteJid.endsWith("@g.us");
       const mode = deleteSettings.antiDeleteMode || "pm";
 
-    const sender =
-      deletedKey.senderPn ||
-      deletedKey.participant ||
-      deletedKey.remoteJid ||
-      "Unknown";
+      const sender =
+        cached?.key?.senderPn ||
+        cached?.key?.participant ||
+        deletedKey.senderPn ||
+        deletedKey.participant ||
+        (isGroup ? "Unknown" : deletedKey.remoteJid) ||
+        "Unknown";
 
-    const deletedBy =
-      update?.participant ||
-      update?.participantPn ||
-      (isGroup
-        ? "Not provided by WhatsApp"
-        : sender);
+      const deletedBy =
+        update?.participantPn ||
+        update?.participant ||
+        sender;
 
       let originalText =
         "⚠️ Original content was not cached.";
