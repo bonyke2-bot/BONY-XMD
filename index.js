@@ -142,6 +142,40 @@ async function startBonyXmd() {
 
   const currentSock = sock;
 
+  // 📵 BONY-XMD AntiCall
+  sock.ev.on("call", async (calls) => {
+    for (const call of calls) {
+      if (call?.status !== "offer") continue;
+
+      const settings = getAllSettings();
+
+      if (!settings.antiCall) continue;
+
+      try {
+        await sock.rejectCall(call.id, call.from);
+
+        console.log(
+          `📵 AntiCall declined incoming call from ${call.from}`
+        );
+
+        const message =
+          settings.antiCallMessage ||
+          "🚫 Calls are not allowed. Please send a message instead.";
+
+        await sock.sendMessage(call.from, {
+          text: message
+        });
+
+        console.log("📩 AntiCall message sent.");
+      } catch (error) {
+        console.error(
+          "❌ AntiCall error:",
+          error.message
+        );
+      }
+    }
+  });
+
   startCentralSettingsWatcher();
 
 
