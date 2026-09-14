@@ -471,6 +471,9 @@ sock.ev.on(
           remoteJid: m.key?.remoteJid,
           fromMe: m.key?.fromMe,
           participant: m.key?.participant,
+          participantPn: m.key?.participantPn,
+          msgParticipant: m.participant,
+          msgParticipantPn: m.participantPn,
           hasMessage: !!m.message
         });
       }
