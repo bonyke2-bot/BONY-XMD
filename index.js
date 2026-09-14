@@ -180,18 +180,18 @@ async function startBonyXmd() {
 │
 │ 🟢 *𝗢𝗡𝗟𝗜𝗡𝗘*
 │    Ready
-│──────────────
+│──────────
 │ ⚙️ *𝗠𝗢𝗗𝗘*
 │    PUBLIC
-│──────────────
+│──────────
 │ ⌨️ *𝗣𝗥𝗘𝗙𝗜𝗫*
 │    .
-│──────────────
+│──────────
 │ 🔋 *𝗦𝗧𝗔𝗧𝗨𝗦*
 │    ACTIVE
 │
 ╰──────────────────╯
-     ☠️𝗣𝗼𝘄𝗲𝗿𝗲𝗱 𝗯𝘆 𝗕𝗢𝗡𝗬 𝗞𝗘 ☠️`,
+     𝗣𝗼𝘄𝗲𝗿𝗲𝗱 𝗯𝘆 𝗕𝗢𝗡𝗬 𝗞𝗘 🇱🇹`,
                                             });
           console.log("✅ Connection notification sent to connected number.");
         } catch (error) {
