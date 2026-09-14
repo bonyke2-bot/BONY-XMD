@@ -574,7 +574,17 @@ sock.ev.on(
             `⚡ Running command: ${prefix}${commandName}`
           );
 
-          await command(commandSock, msg, args);
+          await commandSock.sendMessage(
+          msg.key.remoteJid,
+          {
+            react: {
+              text: "👻",
+              key: msg.key
+            }
+          }
+        );
+
+        await command(commandSock, msg, args);
 
           console.log(
             `✅ Command completed: ${prefix}${commandName}`
