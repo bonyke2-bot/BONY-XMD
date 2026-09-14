@@ -175,15 +175,24 @@ async function startBonyXmd() {
 
         try {
           await sock.sendMessage(sock.user.id, {
-            text: `╭─「 *𝗕𝗢𝗡𝗬 𝗫𝗠𝗗* 」
-│ ✅ *𝗢𝗡𝗟𝗜𝗡𝗘*
-├──────────────
-│ ⚙️ 𝗠𝗼𝗱𝗲: *PUBLIC*
-│ ⌨️ 𝗣𝗿𝗲𝗳𝗶𝘅: *.*
-│ 📣 *𝗢𝗳𝗳𝗶𝗰𝗶𝗮𝗹 𝗖𝗵𝗮𝗻𝗻𝗲𝗹*
-╰──────────────`,
-            contextInfo: {
-              externalAdReply: {
+            text: `╭─〔 ⚡ *𝗕𝗢𝗡𝗬 𝗫𝗠𝗗* 〕─╮
+│
+│ 🟢 *𝗢𝗡𝗟𝗜𝗡𝗘*
+│    Ready
+│
+│ ⚙️ *𝗠𝗢𝗗𝗘*
+│    PUBLIC
+│
+│ ⌨️ *𝗣𝗥𝗘𝗙𝗜𝗫*
+│    .
+│
+│ 🔋 *𝗦𝗧𝗔𝗧𝗨𝗦*
+│    ACTIVE
+│
+╰──────────────────╯
+     *𝗣𝗼𝘄𝗲𝗿𝗲𝗱 𝗯𝘆 𝗕𝗢𝗡𝗬 𝗞𝗘*`,
+                                  contextInfo: {
+                                    externalAdReply: {
                 title: "𝗢𝗳𝗳𝗶𝗰𝗶𝗮𝗹 𝗖𝗵𝗮𝗻𝗻𝗲𝗹",
                 body: "Tap to view BONY XMD Channel",
                 mediaType: 1,
