@@ -301,29 +301,47 @@ async function startBonyXmd() {
   const deletedMessageCache = new Map();
   const MAX_CACHED_MESSAGES = 1500;
 
-  function cacheMessage(msg) {
-    if (!msg?.message || !msg?.key?.id || !msg?.key?.remoteJid) return;
+    function cacheMessage(msg) {
+      if (!msg?.message || !msg?.key?.id || !msg?.key?.remoteJid) return;
 
-    const cacheKey = `${msg.key.remoteJid}:${msg.key.id}`;
+      const keys = [
+        `${msg.key.remoteJid}:${msg.key.id}`,
+        msg.key.senderPn
+          ? `${msg.key.senderPn}:${msg.key.id}`
+          : null
+      ].filter(Boolean);
 
-    deletedMessageCache.set(cacheKey, {
-      message: msg.message,
-      key: msg.key,
-      timestamp: Date.now()
-    });
+      for (const cacheKey of keys) {
+        deletedMessageCache.set(cacheKey, {
+          message: msg.message,
+          key: msg.key,
+          timestamp: Date.now()
+        });
+      }
 
-    if (deletedMessageCache.size > MAX_CACHED_MESSAGES) {
-      const oldestKey = deletedMessageCache.keys().next().value;
-      if (oldestKey) deletedMessageCache.delete(oldestKey);
+      if (deletedMessageCache.size > MAX_CACHED_MESSAGES) {
+        const oldestKey = deletedMessageCache.keys().next().value;
+        if (oldestKey) deletedMessageCache.delete(oldestKey);
+      }
     }
-  }
 
-  function getCachedMessage(key) {
-    if (!key?.id || !key?.remoteJid) return null;
+    function getCachedMessage(key) {
+      if (!key?.id || !key?.remoteJid) return null;
 
-    const cacheKey = `${key.remoteJid}:${key.id}`;
-    return deletedMessageCache.get(cacheKey) || null;
-  }
+      const keys = [
+        `${key.remoteJid}:${key.id}`,
+        key.senderPn
+          ? `${key.senderPn}:${key.id}`
+          : null
+      ].filter(Boolean);
+
+      for (const cacheKey of keys) {
+        const cached = deletedMessageCache.get(cacheKey);
+        if (cached) return cached;
+      }
+
+      return null;
+    }
 
   // 🗑️ DELETED MESSAGE DETECTOR
   sock.ev.on("messages.update", async (updates) => {
@@ -344,7 +362,7 @@ async function startBonyXmd() {
 
       if (!deletedKey?.id || !deletedKey?.remoteJid) continue;
 
-      const cached = getCachedMessage(deletedKey);
+      const cached = getCachedMessage(deletedKey) || getCachedMessage(update?.key);
       const inbox = sock.user?.id;
 
       if (!inbox) continue;
@@ -352,10 +370,18 @@ async function startBonyXmd() {
       const isGroup = deletedKey.remoteJid.endsWith("@g.us");
       const mode = deleteSettings.antiDeleteMode || "pm";
 
-      const sender =
-        deletedKey.participant ||
-        deletedKey.remoteJid ||
-        "Unknown";
+    const sender =
+      deletedKey.senderPn ||
+      deletedKey.participant ||
+      deletedKey.remoteJid ||
+      "Unknown";
+
+    const deletedBy =
+      update?.participant ||
+      update?.participantPn ||
+      (isGroup
+        ? "Not provided by WhatsApp"
+        : sender);
 
       let originalText =
         "⚠️ Original content was not cached.";
@@ -387,7 +413,8 @@ async function startBonyXmd() {
         `╭─「 🗑️ *MESSAGE DELETED* 」\n` +
         `│ ${isGroup ? "👥 GROUP" : "👤 PRIVATE"}\n` +
         `│ 📍 ${chatName}\n` +
-        `│ 👤 Sender: ${sender}\n` +
+        `│ 👤 Message sender: ${sender}\n` +
+          `│ 🗑️ Deleted by: ${deletedBy}\n` +
         `│ 🆔 ID: ${deletedKey.id}\n` +
         `├──────────────\n` +
         `│ 📝 Original:\n` +
