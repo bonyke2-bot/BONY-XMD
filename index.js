@@ -35,6 +35,7 @@ let saveCreds;
 let sock;
 let reconnectTimer;
 let socketGeneration = 0;
+let centralReloading = false;
 
 async function startBonyXmd() {
   if (!authState) {
