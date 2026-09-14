@@ -347,6 +347,27 @@ async function startBonyXmd() {
   sock.ev.on("messages.update", async (updates) => {
     console.log("🗑️ MESSAGE UPDATE RECEIVED:", JSON.stringify(updates));
 
+    // 🔎 STATUS REACTION ACK DIAGNOSTIC
+    for (const item of updates) {
+      const update = item?.update;
+
+      if (
+        update?.status === 8 ||
+        update?.messageStubParameters?.length
+      ) {
+        console.log(
+          "🚨 MESSAGE ACK/STATUS ERROR:",
+          JSON.stringify({
+            id: item?.key?.id,
+            remoteJid: item?.key?.remoteJid,
+            fromMe: item?.key?.fromMe,
+            status: update?.status,
+            messageStubParameters: update?.messageStubParameters
+          })
+        );
+      }
+    }
+
     const deleteSettings = getAllSettings();
     if (!deleteSettings.antiDelete) return;
 
