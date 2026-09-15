@@ -35,6 +35,7 @@ let saveCreds;
 let sock;
 let reconnectTimer;
 let alwaysOnlineTimer;
+const processedMessageIds = new Set();
 let socketGeneration = 0;
 let connectionNotificationSent = false;
 let centralReloading = false;
@@ -469,6 +470,21 @@ sock.ev.on(
 
       for (const msg of messages) {
         if (!msg.message) continue;
+
+        const messageId = msg.key?.id;
+        if (messageId) {
+          if (processedMessageIds.has(messageId)) {
+            console.log(`⏭️ Skipping duplicate message: ${messageId}`);
+            continue;
+          }
+
+          processedMessageIds.add(messageId);
+
+          if (processedMessageIds.size > 5000) {
+            const oldestId = processedMessageIds.values().next().value;
+            if (oldestId) processedMessageIds.delete(oldestId);
+          }
+        }
 
         // 🗃️ Save message so deleted content can be recovered
         cacheMessage(msg);
