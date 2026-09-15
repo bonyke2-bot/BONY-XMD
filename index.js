@@ -370,10 +370,10 @@ async function startBonyXmd() {
       const mode = deleteSettings.antiDeleteMode || "pm";
 
       const sender =
-        cached?.key?.senderPn ||
         cached?.key?.participant ||
-        deletedKey.senderPn ||
+        cached?.key?.senderPn ||
         deletedKey.participant ||
+        deletedKey.senderPn ||
         (isGroup ? "Unknown" : deletedKey.remoteJid) ||
         "Unknown";
 
