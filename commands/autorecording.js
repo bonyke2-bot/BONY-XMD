@@ -2,8 +2,17 @@ const {
   getSetting,
   saveSettings
 } = require("../lib/settings.cjs");
+const { isOwner } = require("../lib/owner.cjs");
 
 const autorecordingCommand = async (sock, m, args) => {
+  if (!isOwner(m)) {
+    return await sock.sendMessage(
+      m.key.remoteJid,
+      { text: "❌ *Only the BONY-XMD owner can change this setting.*" },
+      { quoted: m }
+    );
+  }
+
   const chatId = m.key.remoteJid;
   const status = args[0]?.toLowerCase();
 

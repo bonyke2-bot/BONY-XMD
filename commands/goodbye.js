@@ -6,6 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const { getSetting } = require('../lib/settings.cjs');
+const { isOwner } = require('../lib/owner.cjs');
 
 const dbPath = path.join(__dirname, '..', 'database.json');
 
@@ -22,6 +23,12 @@ function saveDb(db) {
 
 module.exports = async (sock, m, args) => {
     const chatId = m.key.remoteJid;
+
+    if (!isOwner(m)) {
+        return await sock.sendMessage(chatId, {
+            text: `❌ *Only the BONY-XMD owner can change this setting.*`
+        }, { quoted: m });
+    }
     const isGroup = chatId.endsWith('@g.us');
 
     if (!isGroup) {
