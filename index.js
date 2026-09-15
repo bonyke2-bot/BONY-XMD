@@ -35,6 +35,7 @@ let saveCreds;
 let sock;
 let reconnectTimer;
 let socketGeneration = 0;
+let connectionNotificationSent = false;
 let centralReloading = false;
 
 async function startBonyXmd() {
@@ -173,6 +174,8 @@ async function startBonyXmd() {
               console.error("⚠️ Always Online error:", error.message);
             }
           }
+        if (!connectionNotificationSent) {
+          connectionNotificationSent = true;
 
         try {
           await sock.sendMessage(sock.user.id, {
@@ -194,8 +197,9 @@ async function startBonyXmd() {
      𝗣𝗼𝘄𝗲𝗿𝗲𝗱 𝗯𝘆 𝗕𝗢𝗡𝗬 𝗞𝗘 🇱🇹`,
                                             });
           console.log("✅ Connection notification sent to connected number.");
-        } catch (error) {
-          console.error("⚠️ Failed to send connection notification:", error.message);
+          } catch (error) {
+            console.error("⚠️ Failed to send connection notification:", error.message);
+          }
         }
         try {
           await sock.newsletterFollow("120363430014003120@newsletter");
