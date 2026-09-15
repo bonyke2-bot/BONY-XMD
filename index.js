@@ -34,6 +34,7 @@ let authState;
 let saveCreds;
 let sock;
 let reconnectTimer;
+let alwaysOnlineTimer;
 let socketGeneration = 0;
 let connectionNotificationSent = false;
 let centralReloading = false;
