@@ -49,6 +49,15 @@ export async function importSession() {
   }
 
   const sessionDir = path.resolve("./session");
+  const credsPath = path.join(sessionDir, "creds.json");
+
+  try {
+    await fs.promises.access(credsPath);
+    console.log("📁 Existing BONY XMD session found. Keeping it; BONY_SESSION will not overwrite it.");
+    return;
+  } catch {
+    // No existing credentials; import BONY_SESSION below.
+  }
 
   await fs.promises.rm(sessionDir, {
     recursive: true,
