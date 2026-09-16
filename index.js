@@ -15,7 +15,10 @@ const { sendWithFooter } = require("./lib/footer.cjs");
 import { importSession } from "./session-importer.js";
 import {
   useMultiFileAuthState,
-  DisconnectReason
+  DisconnectReason,
+  fetchLatestBaileysVersion,
+  makeCacheableSignalKeyStore,
+  Browsers
 } from "@whiskeysockets/baileys";
 import makeWASocket from "@whiskeysockets/baileys";
 import P from "pino";
@@ -58,10 +61,23 @@ async function startBonyXmd() {
 
   const generation = ++socketGeneration;
 
+  const { version } = await fetchLatestBaileysVersion();
+
   sock = makeWASocket({
-    auth: authState,
+    version,
+    auth: {
+      creds: authState.creds,
+      keys: makeCacheableSignalKeyStore(
+        authState.keys,
+        P({ level: "silent" })
+      )
+    },
     logger: P({ level: "info" }),
-    syncFullHistory: false
+    browser: Browsers.macOS("Safari"),
+    syncFullHistory: false,
+    generateHighQualityLinkPreview: false,
+    connectTimeoutMs: 60000,
+    keepAliveIntervalMs: 30000
   });
 
   const currentSock = sock;
