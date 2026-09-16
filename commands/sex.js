@@ -2,44 +2,43 @@ module.exports = async (sock, msg) => {
   const jid = msg.key.remoteJid;
   const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+  const frames = [0, 20, 40, 60, 80, 100];
+
+  const makeText = (progress) => {
+    const filled = Math.round(progress / 10);
+    const bar = "█".repeat(filled) + "░".repeat(10 - filled);
+
+    return (
+      "🔓 *BONY-XMD BODY SCANNER V2* 🎵\n" +
+      "──────────────────────\n" +
+      "⚠️ WARNING: Secrets, confidence & bad decisions detected! 💀\n" +
+      "🔍 Scanning…\n" +
+      "🧠 Checking common sense…\n" +
+      "🔥 Detecting vibes…\n" +
+      "SCAN PROGRESS:\n" +
+      `${bar} ${progress}%\n` +
+      (progress === 100
+        ? "✅ SCAN COMPLETE!\n" +
+          "📊 BODY COUNT FOUND: 87 😭🔥\n" +
+          "Embarrassed? Blame the scanner! 🤣\n" +
+          "🐺 BONY-XMD — exposing absolutely nothing! 👑\n" +
+          "😂 This is a prank made by BONY-XMD!"
+        : "")
+    );
+  };
+
   const sent = await sock.sendMessage(
     jid,
-    { text: "🔍 *BONY-XMD BODY COUNT SCANNER*\n\n📡 Connecting to scanner..." },
+    { text: makeText(0) },
     { quoted: msg }
   );
 
-  const update = async (text) => {
+  for (let i = 1; i < frames.length; i++) {
+    await sleep(1200);
+
     await sock.sendMessage(jid, {
-      text,
+      text: makeText(frames[i]),
       edit: sent.key
     });
-  };
-
-  const steps = [
-    ["⏳ Initializing scan...", 1200],
-    ["🔎 Searching available data...", 1200],
-    ["...........", 900],
-    ["........", 900],
-    ["...", 900],
-    ["🧬 Analyzing results...", 1200],
-    ["📊 Calculating body count...", 1200],
-    ["🔐 Verifying results...", 1200],
-    ["⚠️ Almost complete...", 1200],
-    ["████████████████ 100%", 1000]
-  ];
-
-  for (const [text, delay] of steps) {
-    await sleep(delay);
-    await update(`🔍 *BONY-XMD BODY COUNT SCANNER*\n\n${text}`);
   }
-
-  await sleep(1500);
-
-  await update(
-    "✅ *SCAN COMPLETED!*\n\n" +
-    "📋 *Final result:*\n" +
-    "👤 Body count detected: *82* 🤫😂\n\n" +
-    "💀 *BONY-XMD knows everything...*\n" +
-    "😏 *Why you like sex?* 😂💜"
-  );
 };

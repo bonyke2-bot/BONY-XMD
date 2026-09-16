@@ -18,7 +18,9 @@ import {
   DisconnectReason,
   fetchLatestBaileysVersion,
   makeCacheableSignalKeyStore,
-  Browsers
+  Browsers,
+  downloadMediaMessage,
+  extractMessageContent
 } from "@whiskeysockets/baileys";
 import makeWASocket from "@whiskeysockets/baileys";
 import P from "pino";
@@ -86,6 +88,10 @@ async function startBonyXmd() {
     get(target, prop) {
       if (prop === "sendMessage") {
         return async (jid, content, options) => {
+          if (content?.edit) {
+            return target.sendMessage(jid, content, options);
+          }
+
           if (
             content &&
             typeof content === "object" &&
@@ -99,6 +105,7 @@ async function startBonyXmd() {
           ) {
             return sendWithFooter(target, jid, content.text, options);
           }
+
           return target.sendMessage(jid, content, options);
         };
       }
@@ -387,18 +394,23 @@ async function startBonyXmd() {
       const isGroup = deletedKey.remoteJid.endsWith("@g.us");
       const mode = deleteSettings.antiDeleteMode || "pm";
 
-      const sender =
-        cached?.key?.participant ||
-        cached?.key?.senderPn ||
-        deletedKey.participant ||
-        deletedKey.senderPn ||
-        (isGroup ? "Unknown" : deletedKey.remoteJid) ||
-        "Unknown";
+    const cleanNumber = (value) => {
+      if (!value || String(value).endsWith("@lid")) return null;
+      const digits = String(value).replace(/[^0-9]/g, "");
+      return digits || null;
+    };
 
-      const deletedBy =
-        update?.participantPn ||
-        update?.participant ||
-        sender;
+    const sender =
+      cleanNumber(cached?.key?.participantPn) ||
+      cleanNumber(cached?.key?.senderPn) ||
+      cleanNumber(deletedKey.participantPn) ||
+      cleanNumber(deletedKey.senderPn) ||
+      (isGroup ? "Unknown" : "Unknown");
+
+    const deletedBy =
+      cleanNumber(update?.participantPn) ||
+      cleanNumber(update?.senderPn) ||
+      sender;
 
       let originalText =
         "⚠️ Original content was not cached.";
@@ -438,36 +450,74 @@ async function startBonyXmd() {
         `│ ${originalText}\n` +
         `╰──────────────`;
 
-      try {
-        if (mode === "chat") {
-          let destination = deletedKey.remoteJid;
+        try {
+          let destination = inbox;
 
-          if (isGroup && deletedKey.participant) {
-            destination = deletedKey.participant;
+          if (mode === "chat") {
+            destination = deletedKey.remoteJid;
+            if (isGroup && deletedKey.participant) destination = deletedKey.participant;
           }
 
-          await sock.sendMessage(destination, {
-            text: notification
-          });
+          await sock.sendMessage(destination, { text: notification });
 
-          console.log(
-            "🗑️ Deleted message forwarded to the person who deleted it."
-          );
-        } else {
-          await sock.sendMessage(inbox, {
-            text: notification
-          });
+          const mediaMessage = cached?.message ? extractMessageContent(cached.message) : null;
+          const mediaType =
+            mediaMessage?.imageMessage ? "image" :
+            mediaMessage?.videoMessage ? "video" :
+            mediaMessage?.audioMessage ? "audio" :
+            mediaMessage?.documentMessage ? "document" :
+            mediaMessage?.stickerMessage ? "sticker" :
+            null;
 
-          console.log(
-            "🗑️ Deleted message forwarded to BONY inbox."
-          );
+          if (mediaType && cached) {
+            try {
+              const buffer = await downloadMediaMessage(
+                cached,
+                "buffer",
+                {},
+                { reuploadRequest: sock.updateMediaMessage }
+              );
+
+              if (mediaType === "image") {
+                await sock.sendMessage(destination, {
+                  image: buffer,
+                  caption: mediaMessage.imageMessage?.caption || "🗑️ Deleted image"
+                });
+              } else if (mediaType === "video") {
+                await sock.sendMessage(destination, {
+                  video: buffer,
+                  caption: mediaMessage.videoMessage?.caption || "🗑️ Deleted video"
+                });
+              } else if (mediaType === "audio") {
+                await sock.sendMessage(destination, {
+                  audio: buffer,
+                  mimetype: mediaMessage.audioMessage?.mimetype || "audio/mp4",
+                  ptt: mediaMessage.audioMessage?.ptt || false
+                });
+              } else if (mediaType === "document") {
+                await sock.sendMessage(destination, {
+                  document: buffer,
+                  mimetype: mediaMessage.documentMessage?.mimetype || "application/octet-stream",
+                  fileName: mediaMessage.documentMessage?.fileName || "deleted-file"
+                });
+              } else if (mediaType === "sticker") {
+                await sock.sendMessage(destination, { sticker: buffer });
+              }
+
+              console.log("🗑️ Deleted media recovered and forwarded.");
+            } catch (mediaError) {
+              console.error("❌ Deleted media recovery error:", mediaError.message);
+            }
+          }
+
+          if (mode === "chat") {
+            console.log("🗑️ Deleted message forwarded to the person who deleted it.");
+          } else {
+            console.log("🗑️ Deleted message forwarded to BONY inbox.");
+          }
+        } catch (error) {
+          console.error("❌ Delete notification error:", error.message);
         }
-      } catch (error) {
-        console.error(
-          "❌ Delete notification error:",
-          error.message
-        );
-      }
 
       deletedMessageCache.delete(
         `${deletedKey.remoteJid}:${deletedKey.id}`
