@@ -20,6 +20,7 @@
   "autotyping": true,
   "autorecording": false,
   "alwaysonline": true,
+  "chatbot": false,
   "reaction": "👻",
   "welcome": true,
   "goodbye": true,

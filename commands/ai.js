@@ -1,194 +1,185 @@
-const axios = require("axios");
 const { getAllSettings } = require("../lib/settings.cjs");
 
 const conversationHistory = new Map();
 const MAX_HISTORY = 8;
 
+const normalize = text =>
+  String(text || "")
+    .toLowerCase()
+    .replace(/[.!?,]+$/g, "")
+    .trim();
+
+const send = (sock, m, text) =>
+  sock.sendMessage(
+    m.key.remoteJid,
+    { text: `🤖 *BONY-XMD AI*\n\n${text}` },
+    { quoted: m }
+  );
+
+function remember(chatId, role, text) {
+  const history = conversationHistory.get(chatId) || [];
+  history.push({ role, text });
+  conversationHistory.set(chatId, history.slice(-(MAX_HISTORY * 2)));
+}
+
+function recent(chatId) {
+  return conversationHistory.get(chatId) || [];
+}
+
 module.exports = async (sock, m, args) => {
+  const question = args.join(" ").trim();
   const chatId = m.key.remoteJid;
   const settings = getAllSettings();
-  const question = args.join(" ").trim();
+  const ownerName = settings.ownerName || "BONY KE";
+  const ownerNumber = String(settings.ownerNumber || "").replace(/[^0-9]/g, "");
+  const prefix = settings.prefix || ".";
 
   if (!question) {
-    return await sock.sendMessage(
-      chatId,
-      {
-        text: `🤖 *BONY-XMD AI*
+    return send(
+      sock,
+      m,
+      `Hi 👋 I'm *BONY-XMD AI*, the built-in AI assistant of *BONY-XMD*.
 
-Ask me anything and I'll help you.
+I was developed by *${ownerName}*.
 
-Examples:
-• .ai Hi
-• .ai Habari
-• .ai Uko aje?
-• .ai Who built BONY-XMD?
-• .ai Explain WhatsApp bots
-• .ai Nisaidie kujifunza coding
+You can chat with me naturally or ask about BONY-XMD, programming, WhatsApp bots and general topics.
 
 🌍 I can communicate in English, Kiswahili and other languages.
 
-🔐 I don't provide private owner documents, credentials, sessions, API keys or secrets.`
-      },
-      { quoted: m }
+🔐 I can share public BONY-XMD/developer information, but I don't reveal passwords, credentials, sessions, API keys, private messages, private files or other confidential information.`
     );
   }
 
-  const ownerName = settings.ownerName || "BONY KE";
-  const apiKey = process.env.OPENAI_API_KEY || "";
+  remember(chatId, "user", question);
 
-  const casualReplies = {
-    hi: "Hi 👋 How can I help you?",
-    hello: "Hello 👋 How can I help you?",
-    hey: "Hey 👋 What can I help you with?",
-    "how are you": "I'm good, thank you! 😊 How are you?",
-    "how are you?": "I'm good, thank you! 😊 How are you?",
-    "am good": "Glad to hear that! 😊",
-    "i am good": "Glad to hear that! 😊",
-    "i'm good": "Glad to hear that! 😊",
-    habari: "Habari 👋 Nikusaidie nini?",
-    "habari?": "Habari 👋 Nikusaidie nini?",
-    "uko aje": "Niko vizuri, asante! 😊 Wewe je?",
-    "uko aje?": "Niko vizuri, asante! 😊 Wewe je?",
-    "niko poa": "Vizuri sana! 😊",
-    "asante": "Karibu sana! 😊",
-    "shukran": "Karibu sana! 😊"
-  };
+  const q = normalize(question);
 
-  const casualKey = question.toLowerCase().replace(/[.!?]+$/g, "").trim();
+  const replies = [
+    {
+      test: /^(hi|hello|hey|yo|hallo|hiya)$/,
+      answer: "Hello 👋 How can I help you today?"
+    },
+    {
+      test: /^(habari|mambo|vipi)$/,
+      answer: "Habari 👋 Niko vizuri! Nikusaidie nini?"
+    },
+    {
+      test: /^(uko aje|uko vipi|habari yako)$/,
+      answer: "Niko vizuri, asante! 😊 Wewe je?"
+    },
+    {
+      test: /^(niko poa|niko vizuri|niko sawa|i am good|im good|i'm good)$/,
+      answer: "Vizuri sana! 😊 Nimefurahi kusikia hivyo."
+    },
+    {
+      test: /^(asante|shukran|thanks|thank you)$/,
+      answer: "Karibu sana! 😊"
+    },
+    {
+      test: /^(bye|goodbye|tutaonana|kwa heri)$/,
+      answer: "Tutaonana 👋 Stay safe!"
+    },
+    {
+      test: /(who|nani).*(you|wewe|are you|nani wewe)/,
+      answer: `Mimi ni *BONY-XMD AI*, AI assistant wa *BONY-XMD*.
 
-  if (casualReplies[casualKey]) {
-    return await sock.sendMessage(
-      chatId,
-      {
-        text: `🤖 *BONY-XMD AI*\n\n${casualReplies[casualKey]}`
-      },
-      { quoted: m }
-    );
-  }
+Nimetengenezwa na kuendelezwa na *${ownerName}*. 👑`
+    },
+    {
+      test: /(who|nani).*(created|built|made|developed|creator|developer|owner|alikujenga|alitengeneza|developer wako)/,
+      answer: `*${ownerName}* ndiye developer na creator wa *BONY-XMD*.
 
-  const creatorQuestion =
-    /who (built|created|made|developed) (you|bony|bony-xmd)|who is (your|the) (owner|creator|developer)|who made you|who created you|nani alikujenga|nani alitengeneza|nani ni developer wako/i.test(question);
+Mimi ni AI assistant wa BONY-XMD, niliyejengwa kusaidia watumiaji kwa mazungumzo na taarifa kuhusu bot.`
+    },
+    {
+      test: /(owner number|owner phone|developer number|developer phone|namba ya owner|namba ya developer|contact.*owner|contact.*developer)/,
+      answer: ownerNumber
+        ? `Namba ya *${ownerName}* (developer wa BONY-XMD) ni:\n\n📱 +${ownerNumber}`
+        : `Namba ya owner bado haijawekwa kwenye settings za BONY-XMD.`
+    },
+    {
+      test: /(what is|what's|tell me about|elezea|ni nini).*(bony.?xmd|bony xmd)/,
+      answer: `*BONY-XMD* ni WhatsApp bot yenye commands na automation features.
 
-  if (creatorQuestion) {
-    return await sock.sendMessage(
-      chatId,
-      {
-        text: `🤖 *BONY-XMD AI*
+Developer: *${ownerName}*
+Mode: ${settings.mode || "public"}
+Prefix: ${prefix}
 
-I was built and developed by *${ownerName}*.
+Tumia \`${prefix}menu\` kuona commands zinazopatikana.`
+    },
+    {
+      test: /(how.*use|how.*command|jinsi.*tumia|nawezaje.*tumia|commands|command)/,
+      answer: `Kutumia BONY-XMD ni rahisi. Anza na:
 
-Mimi ni AI assistant wa BONY-XMD na ninaweza kujibu maswali, kueleza mambo na kusaidia watumiaji.
+\`${prefix}menu\`
 
-🔐 Siwezi kutoa taarifa binafsi, documents, credentials, session data, API keys au siri za owner.`
-      },
-      { quoted: m }
-    );
-  }
+Kwa mfano:
+\`${prefix}owner\`
+\`${prefix}alive\`
+\`${prefix}ping\`
+\`${prefix}ai\``
+    },
+    {
+      test: /(javascript|js|node\.?js)/,
+      answer: "JavaScript ni lugha ya programming inayotumika sana kwenye web, automation na Node.js. BONY-XMD yenyewe hutumia Node.js. Ukiambia unachotaka kujifunza, naweza kukupa maelezo na mifano ya msingi."
+    },
+    {
+      test: /(whatsapp bot|whatsapp bots|bot ni nini|what is a bot)/,
+      answer: "WhatsApp bot ni programu inayopokea messages na kutekeleza actions automatically. BONY-XMD hutumia commands na automation features kusaidia watumiaji."
+    },
+    {
+      test: /(help|msaada|nisaidie)/,
+      answer: `Niko tayari kukusaidia 👋
 
-  if (!apiKey) {
-    return await sock.sendMessage(
-      chatId,
-      {
-        text: `⚠️ *BONY-XMD AI*
+Unaweza kuniuliza kuhusu BONY-XMD, programming, computers, WhatsApp bots, au maswali ya kawaida.
 
-The AI service is not configured yet.
-
-I can still identify my creator as *${ownerName}*, but general AI questions require the OpenAI service.`
-      },
-      { quoted: m }
-    );
-  }
-
-  try {
-    await sock.sendMessage(chatId, {
-      react: { text: "🤔", key: m.key }
-    });
-
-    const history = conversationHistory.get(chatId) || [];
-    const input = [...history, { role: "user", content: question }];
-
-    const response = await axios.post(
-      "https://api.openai.com/v1/responses",
-      {
-        model: "gpt-5.6-luna",
-        instructions: `You are BONY-XMD AI, an assistant inside the BONY-XMD WhatsApp bot.
-
-Your role:
-- Answer questions clearly, accurately and helpfully.
-- Guide users step-by-step when they need help.
-- Detect the language used by the user and normally reply in the same language.
-- You can communicate naturally in English, Kiswahili and other languages.
-- For mixed English/Kiswahili messages, respond naturally using the user's style.
-- Keep simple conversation natural and concise.
-- Do not invent facts when uncertain.
-- If information may be uncertain or changing, clearly say so.
-
-Creator:
-- BONY KE is the developer and creator of BONY-XMD.
-- You may identify BONY KE as the creator/developer when asked about the project.
-
-Privacy:
-- Never reveal private owner documents, credentials, passwords, API keys, WhatsApp session information, private messages, personal files or confidential data.
-- If asked for private owner information, politely refuse and offer general help.
-- Do not claim access to private information you do not have.
-
-Project:
-- The bot is called BONY-XMD.
-- You are its AI assistant.`,
-        input
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json"
-        },
-        timeout: 30000
-      }
-    );
-
-    const answer = (
-      response.data?.output_text ||
-      response.data?.output
-        ?.flatMap(item => item.content || [])
-        .map(item => item.text || "")
-        .join("") ||
-      ""
-    ).trim();
-
-    if (!answer) {
-      throw new Error("AI returned an empty response");
+Kwa commands za bot tumia \`${prefix}menu\`.`
+    },
+    {
+      test: /(good morning|morning|asubuhi)/,
+      answer: "Good morning ☀️ Habari ya asubuhi! Nikusaidie nini?"
+    },
+    {
+      test: /(good night|usiku mwema)/,
+      answer: "Good night 🌙 Lala salama!"
     }
+  ];
 
-    conversationHistory.set(
-      chatId,
-      [...input, { role: "assistant", content: answer }].slice(-(MAX_HISTORY * 2))
-    );
+  const matched = replies.find(item => item.test.test(q));
 
-    await sock.sendMessage(
-      chatId,
-      { text: `🤖 *BONY-XMD AI*\n\n${answer}` },
-      { quoted: m }
-    );
+  let answer;
 
-    await sock.sendMessage(chatId, {
-      react: { text: "✅", key: m.key }
-    });
-  } catch (error) {
-    console.error(
-      "AI Command Error:",
-      error.response?.data || error.message
-    );
+  if (matched) {
+    answer = matched.answer;
+  } else {
+    const history = recent(chatId);
+    const previous = history
+      .filter(item => item.role === "user")
+      .slice(-3)
+      .map(item => item.text);
 
-    await sock.sendMessage(chatId, {
-      react: { text: "❌", key: m.key }
-    });
-
-    await sock.sendMessage(
-      chatId,
-      {
-        text: "❌ *BONY-XMD AI*\n\nI couldn't get an answer from the AI service right now. Please try again later."
-      },
-      { quoted: m }
-    );
+    if (
+      /(password|credential|api key|secret|session|private messages|private files|siri|credentials)/i.test(q)
+    ) {
+      answer =
+        "Siwezi kutoa private information, passwords, credentials, API keys, WhatsApp sessions, private messages au confidential files. 🔐\n\nNaweza kusaidia kwa taarifa za jumla au za BONY-XMD ambazo si za siri.";
+    } else if (previous.length > 1 && /(what|hiyo|that|it|yake|wake|endelea|continue|more)/i.test(q)) {
+      answer =
+        `Ninaweza kuendelea na mazungumzo yetu. Umeuliza kuhusu: *${previous[previous.length - 2]}*.\n\nNiambie sehemu gani ungependa nieleze zaidi.`;
+    } else if (q.length < 4) {
+      answer =
+        `Niko hapa 👋 Niambie unachotaka kujua au tumia \`${prefix}menu\` kuona commands.`;
+    } else {
+      answer =
+        "Nimekupata 👌 Kwa sasa mimi ni chatbot wa built-in wa BONY-XMD, hivyo ninaweza kusaidia kwa mazungumzo ya kawaida, BONY-XMD na mwongozo wa msingi.\n\nJaribu kuniuliza swali kwa maelezo zaidi.";
+    }
   }
+
+  remember(chatId, "assistant", answer);
+
+  await sock.sendMessage(chatId, {
+    react: { text: "🤖", key: m.key }
+  });
+
+  return send(sock, m, answer);
 };
