@@ -545,6 +545,30 @@ sock.ev.on(
           }
 
           processedMessageIds.add(messageId);
+      if (currentSettings.autotyping) {
+          try {
+            await sock.sendPresenceUpdate(
+              "composing",
+              msg.key.remoteJid
+            );
+          } catch (error) {
+            console.error("⚠️ Autotyping error:", error.message);
+          }
+        }
+
+        if (currentSettings.autorecording) {
+          try {
+            await sock.sendPresenceUpdate(
+              "recording",
+              msg.key.remoteJid
+            );
+          } catch (error) {
+            console.error("⚠️ Autorecording error:", error.message);
+          }
+        }
+
+
+
 
           if (processedMessageIds.size > 5000) {
             const oldestId = processedMessageIds.values().next().value;
@@ -598,30 +622,6 @@ sock.ev.on(
             console.error("⚠️ Autoreact error:", error.message);
           }
         }
-
-        if (currentSettings.autotyping) {
-          try {
-            await sock.sendPresenceUpdate(
-              "composing",
-              msg.key.remoteJid
-            );
-          } catch (error) {
-            console.error("⚠️ Autotyping error:", error.message);
-          }
-        }
-
-        if (currentSettings.autorecording) {
-          try {
-            await sock.sendPresenceUpdate(
-              "recording",
-              msg.key.remoteJid
-            );
-          } catch (error) {
-            console.error("⚠️ Autorecording error:", error.message);
-          }
-        }
-
-
 
         // PRIVATE MODE: only owner/fromMe can use bot commands
         if (
