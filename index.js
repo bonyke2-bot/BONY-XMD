@@ -636,25 +636,6 @@ sock.ev.on(
 
         const currentPrefix = currentSettings.prefix || ".";
 
-if (
-currentSettings.chatbot === true &&
-!msg.key.fromMe &&
-msg.key.remoteJid !== "status@broadcast" &&
-!trimmed.startsWith(currentPrefix)
-) {
-const chatbotCommand = commands.get("ai");
-
-if (chatbotCommand) {
-try {
-await chatbotCommand(commandSock, msg, [trimmed]);
-} catch (error) {
-console.error("❌ Chatbot error:", error.message);
-}
-}
-
-continue;
-}
-
         if (!trimmed.startsWith(currentPrefix)) continue;
 
         const prefix = currentPrefix;
