@@ -422,7 +422,7 @@ async function startBonyXmd() {
           cached.message.imageMessage?.caption ||
           cached.message.videoMessage?.caption ||
           cached.message.documentMessage?.caption ||
-          "[Media / unsupported message type]";
+          "[Media]";
       }
 
       let chatName = deletedKey.remoteJid;
