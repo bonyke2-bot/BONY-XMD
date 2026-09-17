@@ -24,3 +24,6 @@ session-invalid-*/
 *.before-channel-follow-fix
 *.antidelete-backup
 session-loggedout-backup-*/
+
+# Local WhatsApp test session backup
+session-old-test-*/
