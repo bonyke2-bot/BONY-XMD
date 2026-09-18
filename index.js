@@ -39,7 +39,6 @@ let authState;
 let saveCreds;
 let sock;
 let reconnectTimer;
-let alwaysOnlineTimer;
 const processedMessageIds = new Set();
 let socketGeneration = 0;
 let connectionNotificationSent = false;
@@ -181,20 +180,6 @@ async function startBonyXmd() {
               await sock.sendPresenceUpdate("available");
               console.log("🟢 Always Online enabled.");
 
-              if (alwaysOnlineTimer) {
-                clearInterval(alwaysOnlineTimer);
-              }
-
-              alwaysOnlineTimer = setInterval(async () => {
-                try {
-                  if (sock?.user && getSetting("alwaysonline")) {
-                    await sock.sendPresenceUpdate("available");
-                    console.log("🟢 Always Online presence refreshed.");
-                  }
-                } catch (error) {
-                  console.error("⚠️ Always Online refresh error:", error.message);
-                }
-              }, 60000);
             } catch (error) {
               console.error("⚠️ Always Online error:", error.message);
             }
@@ -252,10 +237,6 @@ async function startBonyXmd() {
       }
 
       if (connection === "close") {
-        if (alwaysOnlineTimer) {
-          clearInterval(alwaysOnlineTimer);
-          alwaysOnlineTimer = undefined;
-        }
         const statusCode =
           lastDisconnect?.error?.output?.statusCode;
 
