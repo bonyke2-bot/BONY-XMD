@@ -156,6 +156,25 @@ async function startBonyXmd() {
 
   sock.ev.on("creds.update", saveCreds);
 
+  // 📱 Track WhatsApp LID → phone-number mappings
+  sock.ev.on("chats.phoneNumberShare", ({ lid, jid }) => {
+    if (!lid || !jid) return;
+
+    const normalizedLid = String(lid).endsWith("@lid")
+      ? String(lid)
+      : `${lid}@lid`;
+
+    const normalizedJid = String(jid).includes("@")
+      ? String(jid)
+      : `${jid}@s.whatsapp.net`;
+
+    lidToPhoneMap.set(normalizedLid, normalizedJid);
+
+    console.log(
+      `📱 LID mapping: ${normalizedLid} → ${normalizedJid}`
+    );
+  });
+
   sock.ev.on(
     "connection.update",
     async ({ connection, lastDisconnect }) => {
@@ -281,7 +300,10 @@ async function startBonyXmd() {
     }
   );
 
-  // 🗃️ MESSAGE CACHE FOR DELETE RECOVERY
+  // 📱 LID → PHONE NUMBER MAPPING FOR ANTIDELETE
+const lidToPhoneMap = new Map();
+
+// 🗃️ MESSAGE CACHE FOR DELETE RECOVERY
 const deletedMessageCache = new Map();
 const MAX_CACHED_MESSAGES = 1500;
 
@@ -366,6 +388,16 @@ function getSenderJid(key) {
   ];
 
   for (const candidate of candidates) {
+    const mappedJid = candidate
+      ? lidToPhoneMap.get(
+          String(candidate).endsWith("@lid")
+            ? String(candidate)
+            : `${candidate}@lid`
+        )
+      : null;
+
+    if (mappedJid) return mappedJid;
+
     const number = getCleanPhone(candidate);
     if (number) return `${number}@s.whatsapp.net`;
   }
@@ -387,6 +419,16 @@ function getDeletedByJid(update, deletedKey, cached) {
   ];
 
   for (const candidate of candidates) {
+    const mappedJid = candidate
+      ? lidToPhoneMap.get(
+          String(candidate).endsWith("@lid")
+            ? String(candidate)
+            : `${candidate}@lid`
+        )
+      : null;
+
+    if (mappedJid) return mappedJid;
+
     const number = getCleanPhone(candidate);
     if (number) return `${number}@s.whatsapp.net`;
   }
