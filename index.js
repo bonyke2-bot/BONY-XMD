@@ -705,6 +705,7 @@ sock.ev.on(
         }
 
         // 🗃️ Save message so deleted content can be recovered
+        console.log("🧪 ANTIDELETE KEY:", JSON.stringify({ remoteJid: msg.key?.remoteJid, id: msg.key?.id, participant: msg.key?.participant, participantPn: msg.key?.participantPn, participantLid: msg.key?.participantLid, senderPn: msg.key?.senderPn, senderLid: msg.key?.senderLid, fromMe: msg.key?.fromMe }));
         cacheMessage(msg);
 
         // 🗃️ STATUS HANDLER
