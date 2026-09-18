@@ -282,230 +282,358 @@ async function startBonyXmd() {
   );
 
   // 🗃️ MESSAGE CACHE FOR DELETE RECOVERY
-  const deletedMessageCache = new Map();
-  const MAX_CACHED_MESSAGES = 1500;
+const deletedMessageCache = new Map();
+const MAX_CACHED_MESSAGES = 1500;
 
-    function cacheMessage(msg) {
-      if (!msg?.message || !msg?.key?.id || !msg?.key?.remoteJid) return;
+function cacheMessage(msg) {
+  if (!msg?.message || !msg?.key?.id || !msg?.key?.remoteJid) return;
 
-      const keys = [
-        `${msg.key.remoteJid}:${msg.key.id}`,
-        msg.key.senderPn
-          ? `${msg.key.senderPn}:${msg.key.id}`
-          : null
-      ].filter(Boolean);
+  const keys = [
+    `${msg.key.remoteJid}:${msg.key.id}`,
+    msg.key.senderPn
+      ? `${msg.key.senderPn}:${msg.key.id}`
+      : null,
+    msg.key.participantPn
+      ? `${msg.key.participantPn}:${msg.key.id}`
+      : null,
+    msg.key.senderLid
+      ? `${msg.key.senderLid}:${msg.key.id}`
+      : null,
+    msg.key.participant
+      ? `${msg.key.participant}:${msg.key.id}`
+      : null
+  ].filter(Boolean);
 
-      for (const cacheKey of keys) {
-        deletedMessageCache.set(cacheKey, {
-          message: msg.message,
-          key: msg.key,
-          timestamp: Date.now()
-        });
-      }
+  for (const cacheKey of keys) {
+    deletedMessageCache.set(cacheKey, {
+      message: msg.message,
+      key: msg.key,
+      timestamp: Date.now()
+    });
+  }
 
-      if (deletedMessageCache.size > MAX_CACHED_MESSAGES) {
-        const oldestKey = deletedMessageCache.keys().next().value;
-        if (oldestKey) deletedMessageCache.delete(oldestKey);
-      }
-    }
+  if (deletedMessageCache.size > MAX_CACHED_MESSAGES) {
+    const oldestKey = deletedMessageCache.keys().next().value;
+    if (oldestKey) deletedMessageCache.delete(oldestKey);
+  }
+}
 
-    function getCachedMessage(key) {
-      if (!key?.id || !key?.remoteJid) return null;
+function getCachedMessage(key) {
+  if (!key?.id || !key?.remoteJid) return null;
 
-      const keys = [
-        `${key.remoteJid}:${key.id}`,
-        key.senderPn
-          ? `${key.senderPn}:${key.id}`
-          : null
-      ].filter(Boolean);
+  const keys = [
+    `${key.remoteJid}:${key.id}`,
+    key.senderPn
+      ? `${key.senderPn}:${key.id}`
+      : null,
+    key.participantPn
+      ? `${key.participantPn}:${key.id}`
+      : null,
+    key.senderLid
+      ? `${key.senderLid}:${key.id}`
+      : null,
+    key.participant
+      ? `${key.participant}:${key.id}`
+      : null
+  ].filter(Boolean);
 
-      for (const cacheKey of keys) {
-        const cached = deletedMessageCache.get(cacheKey);
-        if (cached) return cached;
-      }
+  for (const cacheKey of keys) {
+    const cached = deletedMessageCache.get(cacheKey);
+    if (cached) return cached;
+  }
 
-      return null;
-    }
+  return null;
+}
 
-  // 🗑️ DELETED MESSAGE DETECTOR
-  sock.ev.on("messages.update", async (updates) => {
-    console.log("🗑️ MESSAGE UPDATE RECEIVED:", JSON.stringify(updates));
+function getCleanPhone(value) {
+  if (!value) return null;
 
-    // 🔎 STATUS REACTION ACK DIAGNOSTIC
-    for (const item of updates) {
-      const update = item?.update;
+  const raw = String(value);
+  if (raw.endsWith("@lid")) return null;
 
-      if (
-        update?.status === 8 ||
-        update?.messageStubParameters?.length
-      ) {
-        console.log(
-          "🚨 MESSAGE ACK/STATUS ERROR:",
-          JSON.stringify({
-            id: item?.key?.id,
-            remoteJid: item?.key?.remoteJid,
-            fromMe: item?.key?.fromMe,
-            status: update?.status,
-            messageStubParameters: update?.messageStubParameters
-          })
-        );
-      }
-    }
+  const digits = raw.replace(/[^0-9]/g, "");
+  return digits || null;
+}
 
-    const deleteSettings = getAllSettings();
-    if (!deleteSettings.antiDelete) return;
+function getSenderJid(key) {
+  if (!key) return null;
 
-    for (const item of updates) {
-      const update = item.update;
-      const isRevoke = update?.messageStubType === 1;
+  const candidates = [
+    key.participantPn,
+    key.senderPn,
+    key.participant,
+    key.senderLid
+  ];
 
-      if (!isRevoke) continue;
+  for (const candidate of candidates) {
+    const number = getCleanPhone(candidate);
+    if (number) return `${number}@s.whatsapp.net`;
+  }
 
-      const deletedKey =
-        item.key ||
-        update?.key;
+  return null;
+}
 
-      if (!deletedKey?.id || !deletedKey?.remoteJid) continue;
+function getDeletedByJid(update, deletedKey, cached) {
+  const candidates = [
+    update?.participantPn,
+    update?.senderPn,
+    update?.participant,
+    deletedKey?.participantPn,
+    deletedKey?.senderPn,
+    deletedKey?.participant,
+    cached?.key?.participantPn,
+    cached?.key?.senderPn,
+    cached?.key?.participant
+  ];
 
-      const cached = getCachedMessage(deletedKey) || getCachedMessage(update?.key);
-      const inbox = sock.user?.id;
+  for (const candidate of candidates) {
+    const number = getCleanPhone(candidate);
+    if (number) return `${number}@s.whatsapp.net`;
+  }
 
-      if (!inbox) continue;
+  return getSenderJid(cached?.key) || getSenderJid(deletedKey);
+}
 
-      const isGroup = deletedKey.remoteJid.endsWith("@g.us");
-      const mode = deleteSettings.antiDeleteMode || "pm";
+function getDeletedByText(jid) {
+  if (!jid) return null;
 
-    const cleanNumber = (value) => {
-      if (!value || String(value).endsWith("@lid")) return null;
-      const digits = String(value).replace(/[^0-9]/g, "");
-      return digits || null;
-    };
+  const number = getCleanPhone(jid);
+  if (!number) return null;
 
-    const sender =
-      cleanNumber(cached?.key?.participantPn) ||
-      cleanNumber(cached?.key?.senderPn) ||
-      cleanNumber(deletedKey.participantPn) ||
-      cleanNumber(deletedKey.senderPn) ||
-      (isGroup ? "Unknown" : "Unknown");
+  return `Deleted by @${number}`;
+}
 
-    const deletedBy =
-      cleanNumber(update?.participantPn) ||
-      cleanNumber(update?.senderPn) ||
-      sender;
+function getMessageText(message) {
+  if (!message) return null;
 
-      let originalText =
-        "⚠️ Original content was not cached.";
+  return (
+    message.conversation ||
+    message.extendedTextMessage?.text ||
+    message.imageMessage?.caption ||
+    message.videoMessage?.caption ||
+    message.documentMessage?.caption ||
+    message.buttonsResponseMessage?.selectedDisplayText ||
+    message.listResponseMessage?.title ||
+    null
+  );
+}
 
-      if (cached?.message) {
-        originalText =
-          cached.message.conversation ||
-          cached.message.extendedTextMessage?.text ||
-          cached.message.imageMessage?.caption ||
-          cached.message.videoMessage?.caption ||
-          cached.message.documentMessage?.caption ||
-          "[Media]";
-      }
+// 🗑️ DELETED MESSAGE DETECTOR
+sock.ev.on("messages.update", async (updates) => {
+  console.log("🗑️ MESSAGE UPDATE RECEIVED:", JSON.stringify(updates));
 
-      let chatName = deletedKey.remoteJid;
+  // 🔎 STATUS REACTION ACK DIAGNOSTIC
+  for (const item of updates) {
+    const update = item?.update;
 
-      if (isGroup) {
-        try {
-          const metadata = await sock.groupMetadata(
-            deletedKey.remoteJid
-          );
-          chatName = metadata?.subject || "Unknown Group";
-        } catch {
-          chatName = "Unknown Group";
-        }
-      }
-
-      const notification =
-        `╭─「 🗑️ *MESSAGE DELETED* 」\n` +
-        `│ ${isGroup ? "👥 GROUP" : "👤 PRIVATE"}\n` +
-        `│ 📍 ${chatName}\n` +
-        `│ 👤 Message sender: ${String(sender).split("@")[0]}\n` +
-          `│ 🗑️ Deleted by: ${String(deletedBy).split("@")[0]}\n` +
-        `│ 🆔 ID: ${deletedKey.id}\n` +
-        `├──────────────\n` +
-        `│ 📝 Original:\n` +
-        `│ ${originalText}\n` +
-        `╰──────────────`;
-
-        try {
-          let destination = inbox;
-
-          if (mode === "chat") {
-            destination = deletedKey.remoteJid;
-            if (isGroup && deletedKey.participant) destination = deletedKey.participant;
-          }
-
-          await sock.sendMessage(destination, { text: wolfFont(notification) });
-
-          const mediaMessage = cached?.message ? extractMessageContent(cached.message) : null;
-          const mediaType =
-            mediaMessage?.imageMessage ? "image" :
-            mediaMessage?.videoMessage ? "video" :
-            mediaMessage?.audioMessage ? "audio" :
-            mediaMessage?.documentMessage ? "document" :
-            mediaMessage?.stickerMessage ? "sticker" :
-            null;
-
-          if (mediaType && cached) {
-            try {
-              const buffer = await downloadMediaMessage(
-                cached,
-                "buffer",
-                {},
-                { reuploadRequest: sock.updateMediaMessage }
-              );
-
-              if (mediaType === "image") {
-                await sock.sendMessage(destination, {
-                  image: buffer,
-                  caption: mediaMessage.imageMessage?.caption || "🗑️ Deleted image"
-                });
-              } else if (mediaType === "video") {
-                await sock.sendMessage(destination, {
-                  video: buffer,
-                  caption: mediaMessage.videoMessage?.caption || "🗑️ Deleted video"
-                });
-              } else if (mediaType === "audio") {
-                await sock.sendMessage(destination, {
-                  audio: buffer,
-                  mimetype: mediaMessage.audioMessage?.mimetype || "audio/mp4",
-                  ptt: mediaMessage.audioMessage?.ptt || false
-                });
-              } else if (mediaType === "document") {
-                await sock.sendMessage(destination, {
-                  document: buffer,
-                  mimetype: mediaMessage.documentMessage?.mimetype || "application/octet-stream",
-                  fileName: mediaMessage.documentMessage?.fileName || "deleted-file"
-                });
-              } else if (mediaType === "sticker") {
-                await sock.sendMessage(destination, { sticker: buffer });
-              }
-
-              console.log("🗑️ Deleted media recovered and forwarded.");
-            } catch (mediaError) {
-              console.error("❌ Deleted media recovery error:", mediaError.message);
-            }
-          }
-
-          if (mode === "chat") {
-            console.log("🗑️ Deleted message forwarded to the person who deleted it.");
-          } else {
-            console.log("🗑️ Deleted message forwarded to BONY inbox.");
-          }
-        } catch (error) {
-          console.error("❌ Delete notification error:", error.message);
-        }
-
-      deletedMessageCache.delete(
-        `${deletedKey.remoteJid}:${deletedKey.id}`
+    if (
+      update?.status === 8 ||
+      update?.messageStubParameters?.length
+    ) {
+      console.log(
+        "🚨 MESSAGE ACK/STATUS ERROR:",
+        JSON.stringify({
+          id: item?.key?.id,
+          remoteJid: item?.key?.remoteJid,
+          fromMe: item?.key?.fromMe,
+          status: update?.status,
+          messageStubParameters: update?.messageStubParameters
+        })
       );
     }
-  });
+  }
 
+  const deleteSettings = getAllSettings();
+  if (!deleteSettings.antiDelete) return;
+
+  for (const item of updates) {
+    const update = item?.update;
+    const isRevoke = update?.messageStubType === 1;
+
+    if (!isRevoke) continue;
+
+    const deletedKey = item?.key || update?.key;
+
+    if (!deletedKey?.id || !deletedKey?.remoteJid) continue;
+
+    const cached =
+      getCachedMessage(deletedKey) ||
+      getCachedMessage(update?.key);
+
+    const inbox = sock.user?.id;
+    if (!inbox || !cached?.message) continue;
+
+    const mediaMessage = extractMessageContent(cached.message);
+    const deletedByJid = getDeletedByJid(
+      update,
+      deletedKey,
+      cached
+    );
+    const deletedByText = getDeletedByText(deletedByJid);
+
+    const mentions = deletedByJid ? [deletedByJid] : [];
+
+    try {
+      const text = getMessageText(mediaMessage);
+
+      // 📝 TEXT MESSAGE
+      if (
+        text &&
+        !mediaMessage.imageMessage &&
+        !mediaMessage.videoMessage &&
+        !mediaMessage.audioMessage &&
+        !mediaMessage.documentMessage &&
+        !mediaMessage.stickerMessage
+      ) {
+        const body = deletedByText
+          ? `${text}\n\n${deletedByText}`
+          : text;
+
+        await sock.sendMessage(inbox, {
+          text: wolfFont(body),
+          mentions
+        });
+
+        console.log("🗑️ Deleted text recovered to BONY inbox.");
+      }
+
+      // 🖼️ IMAGE
+      else if (mediaMessage.imageMessage) {
+        const buffer = await downloadMediaMessage(
+          cached,
+          "buffer",
+          {},
+          { reuploadRequest: sock.updateMediaMessage }
+        );
+
+        const caption = deletedByText
+          ? `${mediaMessage.imageMessage.caption || ""}${mediaMessage.imageMessage.caption ? "\n\n" : ""}${deletedByText}`
+          : mediaMessage.imageMessage.caption || "";
+
+        await sock.sendMessage(inbox, {
+          image: buffer,
+          caption: wolfFont(caption),
+          mentions
+        });
+
+        console.log("🗑️ Deleted image recovered to BONY inbox.");
+      }
+
+      // 🎥 VIDEO
+      else if (mediaMessage.videoMessage) {
+        const buffer = await downloadMediaMessage(
+          cached,
+          "buffer",
+          {},
+          { reuploadRequest: sock.updateMediaMessage }
+        );
+
+        const caption = deletedByText
+          ? `${mediaMessage.videoMessage.caption || ""}${mediaMessage.videoMessage.caption ? "\n\n" : ""}${deletedByText}`
+          : mediaMessage.videoMessage.caption || "";
+
+        await sock.sendMessage(inbox, {
+          video: buffer,
+          caption: wolfFont(caption),
+          mentions
+        });
+
+        console.log("🗑️ Deleted video recovered to BONY inbox.");
+      }
+
+      // 🎵 AUDIO
+      else if (mediaMessage.audioMessage) {
+        const buffer = await downloadMediaMessage(
+          cached,
+          "buffer",
+          {},
+          { reuploadRequest: sock.updateMediaMessage }
+        );
+
+        await sock.sendMessage(inbox, {
+          audio: buffer,
+          mimetype:
+            mediaMessage.audioMessage.mimetype ||
+            "audio/mp4",
+          ptt:
+            mediaMessage.audioMessage.ptt ||
+            false,
+          mentions
+        });
+
+        console.log("🗑️ Deleted audio recovered to BONY inbox.");
+      }
+
+      // 📄 DOCUMENT
+      else if (mediaMessage.documentMessage) {
+        const buffer = await downloadMediaMessage(
+          cached,
+          "buffer",
+          {},
+          { reuploadRequest: sock.updateMediaMessage }
+        );
+
+        const caption = deletedByText
+          ? `${mediaMessage.documentMessage.caption || ""}${mediaMessage.documentMessage.caption ? "\n\n" : ""}${deletedByText}`
+          : mediaMessage.documentMessage.caption || "";
+
+        await sock.sendMessage(inbox, {
+          document: buffer,
+          mimetype:
+            mediaMessage.documentMessage.mimetype ||
+            "application/octet-stream",
+          fileName:
+            mediaMessage.documentMessage.fileName ||
+            "deleted-file",
+          caption: wolfFont(caption),
+          mentions
+        });
+
+        console.log("🗑️ Deleted document recovered to BONY inbox.");
+      }
+
+      // 🏷️ STICKER
+      else if (mediaMessage.stickerMessage) {
+        const buffer = await downloadMediaMessage(
+          cached,
+          "buffer",
+          {},
+          { reuploadRequest: sock.updateMediaMessage }
+        );
+
+        await sock.sendMessage(inbox, {
+          sticker: buffer,
+          mentions
+        });
+
+        console.log("🗑️ Deleted sticker recovered to BONY inbox.");
+      }
+
+      // 📦 OTHER CONTENT
+      else {
+        const body = deletedByText
+          ? `🗑️ Deleted content\n\n${deletedByText}`
+          : "🗑️ Deleted content recovered.";
+
+        await sock.sendMessage(inbox, {
+          text: wolfFont(body),
+          mentions
+        });
+
+        console.log("🗑️ Deleted content recovered to BONY inbox.");
+      }
+    } catch (error) {
+      console.error(
+        "❌ Delete recovery error:",
+        error.message
+      );
+    }
+
+    deletedMessageCache.delete(
+      `${deletedKey.remoteJid}:${deletedKey.id}`
+    );
+  }
+});
 
 sock.ev.on(
     "messages.upsert",
