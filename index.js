@@ -10,7 +10,7 @@ const {
 } = require("./lib/settings.cjs");
 const { handleStatus } = require("./lib/status.cjs");
 
-const { sendWithFooter } = require("./lib/footer.cjs");
+const { sendWithFooter, wolfFont } = require("./lib/footer.cjs");
 
 import { importSession } from "./session-importer.js";
 import {
@@ -133,7 +133,7 @@ async function startBonyXmd() {
           "🚫 Calls are not allowed. Please send a message instead.";
 
         await sock.sendMessage(call.from, {
-          text: message
+          text: wolfFont(message)
         });
 
         console.log("📩 AntiCall message sent.");
@@ -189,7 +189,7 @@ async function startBonyXmd() {
 
         try {
           await sock.sendMessage(sock.user.id, {
-            text: `╭─〔 ⚡ *𝗕𝗢𝗡𝗬 𝗫𝗠𝗗* 〕─╮
+            text: wolfFont(`╭─〔 ⚡ *BONY XMD* 〕─╮
 │
 │ 🟢 *𝗢𝗡𝗟𝗜𝗡𝗘*
 │    Ready
@@ -200,11 +200,11 @@ async function startBonyXmd() {
 │ ⌨️ *𝗣𝗥𝗘𝗙𝗜𝗫*
 │    .
 │──────────
-│ 🔋 *𝗦𝗧𝗔𝗧𝗨𝗦*
+│ 🔋 *STATUS*
 │    ACTIVE
 │
 ╰──────────────────╯
-     𝗣𝗼𝘄𝗲𝗿𝗲𝗱 𝗯𝘆 𝗕𝗢𝗡𝗬 𝗞𝗘 🇱🇹`,
+     Powered by BONY KE 🇱🇹`),
                                             });
           console.log("✅ Connection notification sent to connected number.");
           } catch (error) {
@@ -439,7 +439,7 @@ async function startBonyXmd() {
             if (isGroup && deletedKey.participant) destination = deletedKey.participant;
           }
 
-          await sock.sendMessage(destination, { text: notification });
+          await sock.sendMessage(destination, { text: wolfFont(notification) });
 
           const mediaMessage = cached?.message ? extractMessageContent(cached.message) : null;
           const mediaType =

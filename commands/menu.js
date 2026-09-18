@@ -1,4 +1,5 @@
 const { getSetting } = require("../lib/settings.cjs");
+const { wolfFont } = require("../lib/footer.cjs");
 const fs = require("fs");
 const path = require("path");
 
@@ -122,7 +123,7 @@ module.exports = async (sock, m, args) => {
         }
 
         const menu =
-`*╭┈───〔 𝐁𝐎𝐍𝐘-𝐗𝐌𝐃 〕┈───⊷*
+`*╭┈───〔 BONY-XMD 〕┈───⊷*
 *├▢ 🤖 ᴏᴡɴᴇʀ:* ${getSetting("ownerName") || "BONY KE"}
 *├▢ 👤 ᴜsᴇʀ:* ${pushName}
 *├▢ 📜 ᴄᴏᴍᴍᴀɴᴅs:* ${totalCommands}
@@ -132,7 +133,7 @@ module.exports = async (sock, m, args) => {
 *├▢ 🏷️ ᴠᴇʀsɪᴏɴ:* ${getSetting("version") || "2.0.0"}
 *╰───────────────────⊷*
 ${menuCategoriesText}
-> *©️ ᴘᴏᴡᴇʀᴇᴅ ʙʏ 𝐁𝐎𝐍𝐘-𝐗𝐌𝐃*`;
+> *©️ ᴘᴏᴡᴇʀᴇᴅ ʙʏ BONY-XMD*`;
 
         await sock.sendMessage(
             chatId,
@@ -140,7 +141,7 @@ ${menuCategoriesText}
                 image: {
                     url: "https://files.catbox.moe/8rcgs3.jpg"
                 },
-                caption: menu
+                caption: wolfFont(menu)
             },
             {
                 quoted: m
