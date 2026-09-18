@@ -523,7 +523,7 @@ sock.ev.on("messages.update", async (updates) => {
     const chatType = isStatus ? "📱 STATUS" : isGroup ? "👥 GROUP" : "👤 PRIVATE";
     let chatName = null;
     if (isGroup) { try { const metadata = await sock.groupMetadata(deletedKey.remoteJid); chatName = metadata?.subject || null; } catch {} }
-    const notice = `╭─「 🗑️ *MESSAGE DELETED* 」\\n│ ${chatType}\\n${chatName ? `│ 📍 ${chatName}\\n` : ""}│ 👤 Message sender: ${senderText}\\n│ 🗑️ Deleted by: ${actualDeletedByText || "Unknown"}\\n├──────────────\\n│ 📝 Original:\\n│ [Media]\\n╰──────────────`;
+    const notice = `╭─「 🗑️ *MESSAGE DELETED* 」\n│ ${chatType}\n${chatName ? `│ 📍 ${chatName}\n` : ""}│ 👤 Message sender: ${senderText}\n│ 🗑️ Deleted by: ${actualDeletedByText || "Unknown"}\n├──────────────\n│ 📝 Original:\n│ [Media]\n╰──────────────`;
 
     try {
       const text = getMessageText(mediaMessage);
