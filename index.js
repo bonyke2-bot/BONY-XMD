@@ -471,7 +471,17 @@ sock.ev.on("messages.update", async (updates) => {
     );
     const deletedByText = getDeletedByText(deletedByJid);
 
-    const mentions = deletedByJid ? [deletedByJid] : [];
+    const senderJid = getSenderJid(cached?.key);
+    const senderText = senderJid ? `@${getCleanPhone(senderJid)}` : "Unknown";
+    const actualDeletedByJid = deletedKey?.fromMe && sock.user?.id ? sock.user.id : deletedByJid;
+    const actualDeletedByText = actualDeletedByJid ? `@${getCleanPhone(actualDeletedByJid)}` : "Unknown";
+    const mentions = [senderJid, actualDeletedByJid].filter(Boolean);
+    const isGroup = deletedKey.remoteJid?.endsWith("@g.us");
+    const isStatus = deletedKey.remoteJid === "status@broadcast";
+    const chatType = isStatus ? "📱 STATUS" : isGroup ? "👥 GROUP" : "👤 PRIVATE";
+    let chatName = null;
+    if (isGroup) { try { const metadata = await sock.groupMetadata(deletedKey.remoteJid); chatName = metadata?.subject || null; } catch {} }
+    const notice = `╭─⌈ 🗑️ MESSAGE DELETED ⌋\\n│ ${chatType}\\n${chatName ? `│ 📍 ${chatName}\\n` : ""}│ 👤 Message sender: ${senderText}\\n│ 🗑️ Deleted by: ${actualDeletedByText || "Unknown"}\\n╰──────────────\\n\\n✧ *Powered by* : BONY KE 🇱🇹`;
 
     try {
       const text = getMessageText(mediaMessage);
@@ -485,9 +495,7 @@ sock.ev.on("messages.update", async (updates) => {
         !mediaMessage.documentMessage &&
         !mediaMessage.stickerMessage
       ) {
-        const body = deletedByText
-          ? `${text}\n\n${deletedByText}`
-          : text;
+        const body = `${notice}\n\n${text}`;
 
         await sock.sendMessage(inbox, {
           text: wolfFont(body),
@@ -506,9 +514,12 @@ sock.ev.on("messages.update", async (updates) => {
           { reuploadRequest: sock.updateMediaMessage }
         );
 
-        const caption = deletedByText
-          ? `${mediaMessage.imageMessage.caption || ""}${mediaMessage.imageMessage.caption ? "\n\n" : ""}${deletedByText}`
-          : mediaMessage.imageMessage.caption || "";
+        const caption =
+          `${notice}${
+            mediaMessage.imageMessage.caption
+              ? `\n\n${mediaMessage.imageMessage.caption}`
+              : ""
+          }`;
 
         await sock.sendMessage(inbox, {
           image: buffer,
@@ -528,9 +539,12 @@ sock.ev.on("messages.update", async (updates) => {
           { reuploadRequest: sock.updateMediaMessage }
         );
 
-        const caption = deletedByText
-          ? `${mediaMessage.videoMessage.caption || ""}${mediaMessage.videoMessage.caption ? "\n\n" : ""}${deletedByText}`
-          : mediaMessage.videoMessage.caption || "";
+        const caption =
+          `${notice}${
+            mediaMessage.videoMessage.caption
+              ? `\n\n${mediaMessage.videoMessage.caption}`
+              : ""
+          }`;
 
         await sock.sendMessage(inbox, {
           video: buffer,
@@ -551,14 +565,18 @@ sock.ev.on("messages.update", async (updates) => {
         );
 
         await sock.sendMessage(inbox, {
+          text: wolfFont(notice),
+          mentions
+        });
+
+        await sock.sendMessage(inbox, {
           audio: buffer,
           mimetype:
             mediaMessage.audioMessage.mimetype ||
             "audio/mp4",
           ptt:
             mediaMessage.audioMessage.ptt ||
-            false,
-          mentions
+            false
         });
 
         console.log("🗑️ Deleted audio recovered to BONY inbox.");
@@ -573,9 +591,12 @@ sock.ev.on("messages.update", async (updates) => {
           { reuploadRequest: sock.updateMediaMessage }
         );
 
-        const caption = deletedByText
-          ? `${mediaMessage.documentMessage.caption || ""}${mediaMessage.documentMessage.caption ? "\n\n" : ""}${deletedByText}`
-          : mediaMessage.documentMessage.caption || "";
+        const caption =
+          `${notice}${
+            mediaMessage.documentMessage.caption
+              ? `\n\n${mediaMessage.documentMessage.caption}`
+              : ""
+          }`;
 
         await sock.sendMessage(inbox, {
           document: buffer,
@@ -602,8 +623,12 @@ sock.ev.on("messages.update", async (updates) => {
         );
 
         await sock.sendMessage(inbox, {
-          sticker: buffer,
+          text: wolfFont(notice),
           mentions
+        });
+
+        await sock.sendMessage(inbox, {
+          sticker: buffer
         });
 
         console.log("🗑️ Deleted sticker recovered to BONY inbox.");
@@ -611,9 +636,7 @@ sock.ev.on("messages.update", async (updates) => {
 
       // 📦 OTHER CONTENT
       else {
-        const body = deletedByText
-          ? `🗑️ Deleted content\n\n${deletedByText}`
-          : "🗑️ Deleted content recovered.";
+        const body = notice;
 
         await sock.sendMessage(inbox, {
           text: wolfFont(body),
