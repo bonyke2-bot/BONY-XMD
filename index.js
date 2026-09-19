@@ -83,6 +83,23 @@ async function startBonyXmd() {
 
   const currentSock = sock;
 
+  let unexpectedErrorHandled = false;
+  const originalOnUnexpectedError = sock.onUnexpectedError;
+
+  sock.onUnexpectedError = (error, message) => {
+    originalOnUnexpectedError(error, message);
+
+    if (message === "init queries" && !unexpectedErrorHandled) {
+      unexpectedErrorHandled = true;
+
+      console.error(
+        "❌ BONY XMD init queries failed. Restarting connection..."
+      );
+
+      sock.end(error);
+    }
+  };
+
   const commandSock = new Proxy(sock, {
     get(target, prop) {
       if (prop === "sendMessage") {
