@@ -728,6 +728,7 @@ sock.ev.on("messages.update", async (updates) => {
 sock.ev.on(
     "messages.upsert",
     async ({ messages, type }) => {
+        console.log(`📥 MESSAGES UPSERT: ${messages.length} message(s), type=${type}`);
 
 
 
