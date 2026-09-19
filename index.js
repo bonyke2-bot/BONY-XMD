@@ -64,6 +64,31 @@ async function startBonyXmd() {
 
   const { version } = await fetchLatestBaileysVersion();
 
+  let unexpectedErrorHandled = false;
+  const logger = P({ level: "info" });
+  const originalLoggerError = logger.error.bind(logger);
+
+  logger.error = (data, message, ...args) => {
+    originalLoggerError(data, message, ...args);
+
+    if (
+      message === "unexpected error in 'init queries'" &&
+      !unexpectedErrorHandled
+    ) {
+      unexpectedErrorHandled = true;
+
+      console.error(
+        "❌ BONY XMD init queries failed. Restarting connection..."
+      );
+
+      setTimeout(() => {
+        if (generation === socketGeneration && sock) {
+          sock.end(data?.err);
+        }
+      }, 0);
+    }
+  };
+
   sock = makeWASocket({
     version,
     auth: {
@@ -73,7 +98,7 @@ async function startBonyXmd() {
         P({ level: "silent" })
       )
     },
-    logger: P({ level: "info" }),
+    logger,
     browser: Browsers.macOS("Safari"),
     syncFullHistory: false,
     generateHighQualityLinkPreview: false,
@@ -82,23 +107,6 @@ async function startBonyXmd() {
   });
 
   const currentSock = sock;
-
-  let unexpectedErrorHandled = false;
-  const originalOnUnexpectedError = sock.onUnexpectedError;
-
-  sock.onUnexpectedError = (error, message) => {
-    originalOnUnexpectedError(error, message);
-
-    if (message === "init queries" && !unexpectedErrorHandled) {
-      unexpectedErrorHandled = true;
-
-      console.error(
-        "❌ BONY XMD init queries failed. Restarting connection..."
-      );
-
-      sock.end(error);
-    }
-  };
 
   const commandSock = new Proxy(sock, {
     get(target, prop) {
