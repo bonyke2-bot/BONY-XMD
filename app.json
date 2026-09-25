@@ -1,0 +1,37 @@
+{
+  "name": "BONY-XMD",
+  "description": "BONY-XMD WhatsApp Bot",
+  "repository": "https://github.com/bonyke2-bot/BONY-XMD",
+  "keywords": [
+    "whatsapp",
+    "bot",
+    "baileys",
+    "bony-xmd"
+  ],
+  "env": {
+    "SESSION_ID": {
+      "description": "BONY-XMD session ID",
+      "required": true
+    },
+    "OWNER_NUMBER": {
+      "description": "Bot owner's WhatsApp number with country code, without +",
+      "required": true
+    },
+    "PREFIX": {
+      "description": "Bot command prefix",
+      "value": ".",
+      "required": true
+    }
+  },
+  "formation": {
+    "worker": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ]
+}
