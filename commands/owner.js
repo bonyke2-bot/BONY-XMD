@@ -21,6 +21,21 @@ async function ownerCommand(sock, chatId) {
             'END:VCARD',
         ].join('\n');
 
+        const ownerText = `╭━━━〔 👑 BONY-XMD OWNER 〕━━━╮
+┃
+┃ 👤 Name: ${settings.botOwner}
+┃ 📱 Contact: +${settings.ownerNumber}
+┃
+┃ 🤖 Bot: BONY-XMD 👑
+┃ ⚡ Status: Available
+┃ 💬 Feel free to contact owner 🔥
+┃
+╰━━━━━━━━━━━━━━━━━━━━━━╯
+
+📇 Owner's contact card is attached below.`;
+
+        await sock.sendMessage(chatId, { text: ownerText });
+
         await sock.sendMessage(chatId, {
             contacts: {
                 displayName: settings.botOwner,
