@@ -291,7 +291,7 @@ async function downloadSessionData() {
       }
 
       for (const [file, data] of Object.entries(payload.files)) {
-        if (!/^[A-Za-z0-9._+-]+$/.test(file)) {
+        if (!/^[A-Za-z0-9._@+-]+$/.test(file)) {
           throw new Error(`Invalid session filename: ${file}`);
         }
         await fs.promises.writeFile(
