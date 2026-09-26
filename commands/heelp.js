@@ -9,7 +9,7 @@ const { generateWAMessageFromContent } = require('@whiskeysockets/baileys');
 const { getPrefix, handleSetPrefixCommand } = require('./setprefix');
 const { getBotName } = require('../lib/botConfig');
 
-const { getOwnerName, handleSetOwnerCommand } = require('./setowner');
+const { getOwnerName } = require('./setowner');
 
 const more = String.fromCharCode(8206);
 const readmore = more.repeat(4001);

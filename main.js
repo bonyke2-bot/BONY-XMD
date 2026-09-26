@@ -132,10 +132,6 @@ const {
 } = require('./commands/setprefix');
 
 
-const {
-  getOwnerName,
-  handleSetOwnerCommand
-} = require('./commands/setowner');
 
 const {
  autoreadCommand,
@@ -288,7 +284,6 @@ const aliveCommand = require('./commands/alive');
 const timeCommand = require('./commands/time');
 const botInfoCommand = require('./commands/botinfo');
 const setTimezoneCommand = require('./commands/settimezone');
-const setOwnerNumberCommand = require('./commands/setownernumber');
 const blurCommand = require('./commands/img-blur');
 const githubCommand = require('./commands/github');
 const antibadwordCommand = require('./commands/antibadword');
@@ -411,7 +406,6 @@ const teraboxCommand = require('./commands/terabox');
 const magicstudioCommand = require('./commands/magicstudio');
 const gpteditCommand = require('./commands/gptedit');
 const pinterestCommand = require('./commands/pinterest');
-const setBotNameCommand = require('./commands/setbotname');
 const setBioCommand = require('./commands/setbio');
 const { autofontCommand } = require('./commands/autofont');
 const { applyFont } = require('./lib/autoFont');
@@ -842,22 +836,6 @@ return;
                 await handleSetPrefixCommand(sock, chatId, senderId, message, userMessage, prefix);
                 break;
 
-
-            //set owner number (must be checked before setowner)
-            case userMessage.startsWith(`${prefix}setownernumber`) ||
-                 userMessage.startsWith(`${prefix}setownernum`) ||
-                 userMessage.startsWith(`${prefix}ownernumber`):
-                {
-                    const numArgs = userMessage.split(' ').slice(1).join(' ');
-                    await setOwnerNumberCommand(sock, chatId, message, numArgs);
-                }
-                break;
-
-            //set owner
-
-            case userMessage.startsWith(`${prefix}setowner`):
-                await handleSetOwnerCommand(sock, chatId, senderId, message, userMessage, prefix);
-                break;
 
             case userMessage === `${prefix}simage`:
             case userMessage === `${prefix}toimage`: {
@@ -1615,8 +1593,6 @@ case userMessage === `${prefix}forfeit` ||
              await fetchCommand(sock, chatId, message);
                break;
 
-        case userMessage.startsWith(`${prefix}setbotname`):
-             await setBotNameCommand(sock, chatId, message);
                   break;
 
 
