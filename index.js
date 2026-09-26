@@ -266,32 +266,54 @@ async function checkAndHandleSessionFormat() {
 // ── Download / decode session from SESSION_ID ─────────────────────────────────
 
 async function downloadSessionData() {
-    try {
-        await fs.promises.mkdir(sessionDir, { recursive: true });
+  try {
+    await fs.promises.mkdir(sessionDir, { recursive: true });
 
-        if (fs.existsSync(credsPath)) {
-            log('creds.json already present — skipping decode.', 'blue');
-            return;
-        }
-
-        const id = global.SESSION_ID || getRawSessionId();
-        if (!id) {
-            log('No SESSION_ID to decode.', 'yellow');
-            return;
-        }
-
-        // Strip the prefix then decode
-        const base64 = id.startsWith(SESSION_PREFIX)
-            ? id.slice(SESSION_PREFIX.length)
-            : id;
-
-        const decoded = Buffer.from(base64, 'base64');
-        await fs.promises.writeFile(credsPath, decoded);
-        log(`✅ Session decoded and saved`, 'green');
-    } catch (err) {
-        log(`Error decoding session data: ${err.message}`, 'red', true);
-        throw err;
+    if (fs.existsSync(credsPath)) {
+      log('creds.json already present — skipping decode.', 'blue');
+      return;
     }
+
+    const id = global.SESSION_ID || getRawSessionId();
+    if (!id) {
+      log('No SESSION_ID to decode.', 'yellow');
+      return;
+    }
+
+    if (id.startsWith('BONY-XMD:~2')) {
+      const zlib = await import('zlib');
+      const encoded = id.slice('BONY-XMD:~2'.length);
+      const decoded = zlib.gunzipSync(Buffer.from(encoded, 'base64url'));
+      const payload = JSON.parse(decoded.toString());
+
+      if (payload.version !== 2 || !payload.files || typeof payload.files !== 'object') {
+        throw new Error('Invalid portable session format');
+      }
+
+      for (const [file, data] of Object.entries(payload.files)) {
+        if (!/^[A-Za-z0-9._+-]+$/.test(file)) {
+          throw new Error(`Invalid session filename: ${file}`);
+        }
+        await fs.promises.writeFile(
+          path.join(sessionDir, file),
+          Buffer.from(data, 'base64')
+        );
+      }
+
+      log('✅ Portable multi-file session decoded and saved', 'green');
+      return;
+    }
+
+    const base64 = id.startsWith(SESSION_PREFIX)
+      ? id.slice(SESSION_PREFIX.length)
+      : id;
+    const decoded = Buffer.from(base64, 'base64');
+    await fs.promises.writeFile(credsPath, decoded);
+    log(`✅ Session decoded and saved`, 'green');
+  } catch (err) {
+    log(`Error decoding session data: ${err.message}`, 'red', true);
+    throw err;
+  }
 }
 
 // ── Pairing code ───────────────────────────────────────────────────────────────
