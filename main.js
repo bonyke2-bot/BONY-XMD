@@ -519,9 +519,9 @@ async function handleMessages(sock, messageUpdate, printLog) {
                     quotedParticipant: options?.quoted?.participant || options?.quoted?.key?.participant || null,
                     quotedId: options?.quoted?.key?.id || null,
                     hasQuotedMessage: !!options?.quoted?.message,
-                    editId: options?.edit?.id || null,
-                    editRemoteJid: options?.edit?.remoteJid || null,
-                    editFromMe: options?.edit?.fromMe ?? null,
+                    editId: content?.edit?.id || null,
+                    editRemoteJid: content?.edit?.remoteJid || null,
+                    editFromMe: content?.edit?.fromMe ?? null,
                     contentType: content && typeof content === 'object' ? Object.keys(content)[0] : null
                 }));
                 return _origSend(jid, content, options);
