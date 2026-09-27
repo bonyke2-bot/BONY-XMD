@@ -531,6 +531,17 @@ async function handleMessages(sock, messageUpdate, printLog) {
         const chatId = message.key.remoteJid;
         const senderId = message.key.participant || message.key.remoteJid;
 
+        console.log('[DIAG MESSAGE]', JSON.stringify({
+            fromMe: !!message.key.fromMe,
+            remoteJidType: chatId?.split('@')[1] || null,
+            participantType: message.key.participant?.split('@')[1] || null,
+            participantPn: message.key.participantPn || null,
+            senderPn: message.key.senderPn || null,
+            messageType: message.message ? Object.keys(message.message)[0] : null,
+            messageStubType: message.messageStubType ?? null,
+            messageStubParameters: message.messageStubParameters ?? null
+        }));
+
 
 
        /*━━━━━━━━━━━━━━━━━━━━*/
