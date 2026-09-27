@@ -596,6 +596,7 @@ async function startXeonBotInc() {
     });
 
     store.bind(XeonBotInc.ev);
+    console.log('[DIAG IDENTITY]', JSON.stringify({meId: state.creds.me?.id || null, meLid: state.creds.me?.lid || null}));
 
     // ── Message logger + handler ───────────────────────────────────────────────
     XeonBotInc.ev.on('messages.upsert', async chatUpdate => {
