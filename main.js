@@ -512,6 +512,15 @@ async function handleMessages(sock, messageUpdate, printLog) {
                     }
                 }
 
+                console.log('[DIAG OUTGOING]', JSON.stringify({
+                    jid: jid || null,
+                    jidType: jid?.split('@')[1] || null,
+                    quotedRemoteJid: options?.quoted?.key?.remoteJid || null,
+                    quotedParticipant: options?.quoted?.participant || options?.quoted?.key?.participant || null,
+                    quotedId: options?.quoted?.key?.id || null,
+                    hasQuotedMessage: !!options?.quoted?.message,
+                    contentType: content && typeof content === 'object' ? Object.keys(content)[0] : null
+                }));
                 return _origSend(jid, content, options);
             };
             sock._fontPatched = true;
