@@ -499,13 +499,15 @@ async function handleViewOnceForward(sock, config, storedMessage) {
 // Get notification targets based on mode
 function getNotificationTargets(sock, chatId, config) {
     const targets = [];
-    const ownerNumber = `${getOwnerNumber().replace(/[^0-9]/g, '')}@s.whatsapp.net`;
+    const connectedNumber = sock?.user?.id
+        ? `${sock.user.id.split(':')[0]}@s.whatsapp.net`
+        : null;
 
-    if (config.mode === 'private' || config.mode === 'both') {
-        targets.push(ownerNumber);
+    if ((config.mode === 'private' || config.mode === 'both') && connectedNumber) {
+        targets.push(connectedNumber);
     }
 
-    if ((config.mode === 'chat' || config.mode === 'both') && chatId !== ownerNumber) {
+    if ((config.mode === 'chat' || config.mode === 'both') && chatId !== connectedNumber) {
         targets.push(chatId);
     }
 
