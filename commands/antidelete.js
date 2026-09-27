@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
 const { writeFile, unlink, readdir, stat } = require('fs/promises');
+const { getOwnerNumber } = require('../lib/botConfig');
 
 const messageStore = new Map();
 const CONFIG_PATH = path.join(__dirname, '../data/antidelete.json');
@@ -498,7 +499,7 @@ async function handleViewOnceForward(sock, config, storedMessage) {
 // Get notification targets based on mode
 function getNotificationTargets(sock, chatId, config) {
     const targets = [];
-    const ownerNumber = sock.user.id.split(':')[0] + '@s.whatsapp.net';
+    const ownerNumber = `${getOwnerNumber().replace(/[^0-9]/g, '')}@s.whatsapp.net`;
 
     if (config.mode === 'private' || config.mode === 'both') {
         targets.push(ownerNumber);
