@@ -13,7 +13,8 @@
     "install:panel": "npm install --legacy-peer-deps",
     "install:force": "npm install --force",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "docker:build": "docker build -t bony-xmd ."
+    "docker:build": "docker build -t bony-xmd .",
+    "postinstall": "node scripts/patch-baileys-lid-pn.js"
   },
   "keywords": [
     "whatsapp-bot",
