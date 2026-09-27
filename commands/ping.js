@@ -11,8 +11,8 @@ async function pingCommand(sock, chatId, message) {
 
     const start = Date.now();
     const sentMsg = await sock.sendMessage(chatId, {
-      text: '*🔹pong!...*'}, { quoted: createFakeContact(message) }
-    );
+      text: '*🔹pong!...*'
+    });
 
     const ping = Date.now() - start;
 
