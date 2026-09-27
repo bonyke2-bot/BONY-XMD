@@ -1,1 +1,14 @@
-{"enabled":true}
+{
+  "enabled": true,
+  "mode": "private",
+  "notifyGroups": true,
+  "notifyPM": true,
+  "maxStorageMB": 200,
+  "cleanupInterval": 60,
+  "autoCleanup": true,
+  "excludedChats": [],
+  "captureMedia": true,
+  "captureText": true,
+  "antiViewOnce": true,
+  "maxMessages": 5000
+}
