@@ -459,14 +459,12 @@ async function sendWelcomeMessage(XeonBotInc) {
            ───────────────
           ᴘᴏᴡᴇʀᴇᴅ ʙʏ ʙᴏɴʏ ᴋᴇ`,
       contextInfo: {
-        externalAdReply: {
-          showAdAttribution: false,
-          title: "BONY-XMD",
-          body: "View Channel",
-          thumbnailUrl: "https://i.ibb.co/xqfJYpgc/IMG-20260924-WA1075.jpg",
-          sourceUrl: "https://whatsapp.com/channel/0029Vb8coEnKAwEcRBDDnq0Z",
-          mediaType: 1,
-          renderLargerThumbnail: true
+        forwardingScore: 1,
+        isForwarded: true,
+        forwardedNewsletterMessageInfo: {
+          newsletterJid: "120363430014003120@newsletter",
+          newsletterName: "BONY-XMD",
+          serverMessageId: -1
         }
       }
     });
