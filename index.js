@@ -447,20 +447,31 @@ async function sendWelcomeMessage(XeonBotInc) {
         const currentMode = data.isPublic ? 'public' : 'private';
         const prefix      = getPrefix() || '.';
         const platform    = detectPlatform();
-
-        await XeonBotInc.sendMessage(pNumber, {
-            text:
-`┏━━━━━✧ BONY-XMD CONNECTED ✧━━━━━━━
+    await XeonBotInc.sendMessage(pNumber, {
+      text: `┏━━━━━✧ BONY-XMD CONNECTED ✧━━━━━━━
 ┃✧ Prefix:   [ ${prefix} ]
 ┃✧ Mode:     ${currentMode}
 ┃✧ Platform: ${platform}
 ┃✧ Bot:      BONY-XMD
 ┃✧ Status:   Active ✅
 ┃✧ Time:     ${new Date().toLocaleString()}
-┗━━━━━━━━━━━━━━━━━━━━━`
-        });
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+           ───────────────
+          ᴘᴏᴡᴇʀᴇᴅ ʙʏ ʙᴏɴʏ ᴋᴇ`,
+      contextInfo: {
+        externalAdReply: {
+          showAdAttribution: false,
+          title: "BONY-XMD",
+          body: "View Channel",
+          thumbnailUrl: "https://i.ibb.co/xqfJYpgc/IMG-20260924-WA1075.jpg",
+          sourceUrl: "https://whatsapp.com/channel/0029Vb8coEnKAwEcRBDDnq0Z",
+          mediaType: 1,
+          renderLargerThumbnail: true
+        }
+      }
+    });
 
-        log('[ BOT ] Successfully connected.', 'blue');
+    log('[ BOT ] Successfully connected.', 'blue');
 
         // Auto-follow newsletters
         const newsletters = ['120363430014003120@newsletter'];
