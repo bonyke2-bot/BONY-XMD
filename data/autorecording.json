@@ -1,1 +1,5 @@
-{"enabled":true}
+{
+  "enabled": true,
+  "autorecording": true,
+  "autotyping": false
+}
