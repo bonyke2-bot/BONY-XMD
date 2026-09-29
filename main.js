@@ -1015,7 +1015,7 @@ return;
 
 
             case userMessage.startsWith(`${prefix}retrive`) ||
-                 userMessage.startsWith(`${prefix}viewonce`):
+                 userMessage.startsWith(`${prefix}vv`):
                 await viewonceCommand(sock, chatId, message);
                 break;
 
