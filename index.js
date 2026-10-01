@@ -443,8 +443,8 @@ async function sendWelcomeMessage(XeonBotInc) {
         global.isBotConnected = true;
 
         const pNumber     = XeonBotInc.user.id.split(':')[0] + '@s.whatsapp.net';
-        const data        = JSON.parse(fs.readFileSync('./data/messageCount.json'));
-        const currentMode = data.isPublic ? 'public' : 'private';
+        const modeData    = fs.existsSync('./data/botMode.json') ? JSON.parse(fs.readFileSync('./data/botMode.json')) : { isPublic: true, mode: 'public' };
+        const currentMode = (modeData.mode || (modeData.isPublic ? 'public' : 'private')).toLowerCase();
         const prefix      = getPrefix() || '.';
         const platform    = detectPlatform();
     await XeonBotInc.sendMessage(pNumber, {
