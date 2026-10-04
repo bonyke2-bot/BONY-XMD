@@ -110,6 +110,17 @@ async function menuCommand(sock, chatId, message) {
                     quoted: message
                 }
             );
+        } else if (imagePath && fs.existsSync(imagePath)) {
+            await sock.sendMessage(
+                chatId,
+                {
+                    image: fs.readFileSync(imagePath),
+                    caption: menuText
+                },
+                {
+                    quoted: message
+                }
+            );
         } else {
             await sock.sendMessage(
                 chatId,
