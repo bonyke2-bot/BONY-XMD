@@ -301,7 +301,7 @@ async function sendMenuWithStyle(sock, chatId, message, menulist, menustyle, thu
             image: { url: "https://i.ibb.co/xqfJYpgc/IMG-20260924-WA1075.jpg" },
             caption: menulist,
             jpegThumbnail: thumbnailBuffer.toString('base64')
-        }, { quoted: createFakeContact(message) });
+        }, {});
     } else if (menustyle === '3') {
         await sock.sendMessage(chatId, {
             text: menulist,
