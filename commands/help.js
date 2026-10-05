@@ -298,9 +298,8 @@ async function sendMenuWithStyle(sock, chatId, message, menulist, menustyle, thu
         }, { quoted: createFakeContact(message) });
     } else if (menustyle === '2') {
         return await sock.sendMessage(chatId, {
-            image: { url: "https://i.ibb.co/xqfJYpgc/IMG-20260924-WA1075.jpg" },
-            caption: menulist,
-            jpegThumbnail: thumbnailBuffer.toString('base64')
+            image: fs.readFileSync(path.join(__dirname, "..", "assets", "menu.jpg")),
+            caption: menulist
         }, {});
     } else if (menustyle === '3') {
         await sock.sendMessage(chatId, {
@@ -316,7 +315,7 @@ async function sendMenuWithStyle(sock, chatId, message, menulist, menustyle, thu
                     renderLargerThumbnail: true,
                 },
             },
-        }, { quoted: createFakeContact(message) });
+        }, {});
     } else if (menustyle === '4') {
         await sock.sendMessage(chatId, {
             image: tylorkids,
