@@ -117,9 +117,7 @@ async function menuCommand(sock, chatId, message) {
                     image: fs.readFileSync(imagePath),
                     caption: menuText
                 },
-                {
-                    quoted: message
-                }
+                {}
             );
         } else {
             await sock.sendMessage(
