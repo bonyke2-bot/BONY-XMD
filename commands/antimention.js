@@ -323,12 +323,6 @@ async function handleAntiStatusMention(sock, message) {
                 try { await sock.sendMessage(chatId, { delete: deleteKey }); } catch (e) {
                     console.error('\x1b[35m[AntiStatusMention] Delete failed:\x1b[0m', e.message);
                 }
-                await sock.sendMessage(chatId, {
-                    text: `🗑️ *Message Deleted*\n\n` +
-                          `@${username} your message was deleted for containing an *@status* mention.\n\n` +
-                          `*Group:* ${groupName}`,
-                    mentions: [userId]
-                });
                 break;
             }
 
