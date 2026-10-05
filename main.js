@@ -874,7 +874,12 @@ return;
 
             case userMessage.startsWith(`${prefix}kick`):
                 const mentionedJidListKick = message.message.extendedTextMessage?.contextInfo?.mentionedJid || [];
-                await kickCommand(sock, chatId, senderId, mentionedJidListKick, message);
+                const kickParts = userMessage.trim().split(/\s+/);
+                const kickNumber = kickParts[1]?.replace(/[^0-9]/g, '');
+                const kickJidList = kickNumber
+                    ? [`${kickNumber}@s.whatsapp.net`]
+                    : mentionedJidListKick;
+                await kickCommand(sock, chatId, senderId, kickJidList, message);
                 break;
 
             case userMessage.startsWith(`${prefix}mute`):
