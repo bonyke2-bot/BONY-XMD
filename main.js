@@ -468,25 +468,32 @@ async function handleMessages(sock, messageUpdate, printLog) {
                     content = { ...content, caption: applyFont(content.caption) };
                 }
 
-                // Global BONY-XMD WhatsApp Channel attribution
-                if (content && typeof content === 'object') {
-                    const existingContextInfo = content.contextInfo || {};
-                    content = {
-                        ...content,
-                        contextInfo: {
-                            ...existingContextInfo,
-                            forwardingScore: 1,
-                            isForwarded: true,
-                            forwardedNewsletterMessageInfo: {
-                                newsletterJid: '120363430014003120@newsletter',
-                                newsletterName: 'BONY-XMD',
-                                serverMessageId: -1
-                            }
-                        }
-                    };
-                }
+                // Keep channel attribution on other messages, but skip chatbot replies.
+        const quoted = options?.quoted;
+        const isChatbotReply =
+            quoted?.key?.remoteJid === 'status@broadcast' &&
+            typeof quoted?.key?.id === 'string' &&
+            quoted?.key?.id === require('./lib/botConfig').getBotName() &&
+            typeof quoted?.message?.contactMessage?.vcard === 'string';
 
-                if (content?.image && !content.jpegThumbnail) {
+        if (!isChatbotReply && content && typeof content === 'object') {
+            const existingContextInfo = content.contextInfo || {};
+            content = {
+                ...content,
+                contextInfo: {
+                    ...existingContextInfo,
+                    forwardingScore: 1,
+                    isForwarded: true,
+                    forwardedNewsletterMessageInfo: {
+                        newsletterJid: '120363430014003120@newsletter',
+                        newsletterName: 'BONY-XMD',
+                        serverMessageId: -1
+                    }
+                }
+            };
+        }
+
+        if (content?.image && !content.jpegThumbnail) {
                     try {
                         let imageBuffer;
 
@@ -737,15 +744,20 @@ if (userMessage && !userMessage.startsWith(prefix)) {
             } else if (isAutorecordingEnabled()) {
                 sendRecording(sock, chatId);
             }
- if (isGroup) {
-                await Promise.allSettled([
-                    handleChatbotResponse(sock, chatId, message, userMessage, senderId),
+            const messageTasks = [
+                handleChatbotResponse(sock, chatId, message, userMessage, senderId)
+            ];
+
+            if (isGroup) {
+                messageTasks.push(
                     handleTagDetection(sock, chatId, message, senderId),
                     handleMentionDetection(sock, chatId, message),
                     handleStickerDetection(sock, chatId, message, senderId),
                     handleImageDetection(sock, chatId, message, senderId)
-                ]);
+                );
             }
+
+            await Promise.allSettled(messageTasks);
 return;
         }
 
@@ -1592,24 +1604,41 @@ case userMessage === `${prefix}forfeit` ||
                 await antibadwordCommand(sock, chatId, message, senderId, isSenderAdmin);
                 break;
 
-            case userMessage.startsWith(`${prefix}chatbot`):
-                if (!isGroup) {
-                    await sock.sendMessage(chatId, { text: 'This command can only be used in groups.', ...channelInfo }, { quoted: message });
-                    return;
-                }
-                // Check if sender is admin or bot owner
-                const chatbotAdminStatus = await isAdmin(sock, chatId, senderId);
-                if (!chatbotAdminStatus.isSenderAdmin && !message.key.fromMe && !senderIsSudo) {
-                    await sock.sendMessage(chatId, { text: '*Only admins or bot owner can use this command*', ...channelInfo }, { quoted: message });
-                    return;
+            case userMessage.startsWith(`${prefix}chatbot`): {
+                const match = userMessage.slice((prefix + 'chatbot').length).trim();
+                const args = match.toLowerCase().split(/\s+/).filter(Boolean);
+                const privateControl = args[0] === 'private';
+
+                if (privateControl) {
+                    if (!message.key.fromMe && !senderIsSudo) {
+                        await sock.sendMessage(chatId, {
+                            text: '❌ Only the bot owner or sudo users can change private chatbot settings.',
+                            ...channelInfo
+                        }, { quoted: message });
+                        return;
+                    }
+                } else {
+                    if (!isGroup) {
+                        await sock.sendMessage(chatId, {
+                            text: 'Use `.chatbot private on/off` in private chats, or `.chatbot group on/off` inside a group.',
+                            ...channelInfo
+                        }, { quoted: message });
+                        return;
+                    }
+
+                    const chatbotAdminStatus = await isAdmin(sock, chatId, senderId);
+                    if (!chatbotAdminStatus.isSenderAdmin && !message.key.fromMe && !senderIsSudo) {
+                        await sock.sendMessage(chatId, {
+                            text: '*Only group admins, the bot owner, or sudo users can change the group chatbot setting.*',
+                            ...channelInfo
+                        }, { quoted: message });
+                        return;
+                    }
                 }
 
-            /*━━━━━━━━━━━━━━━━━━━━*/
-            // Some sticker cmds & fun
-            /*━━━━━━━━━━━━━━━━━━━━*/
-                const match = userMessage.slice((prefix + 'chatbot').length).trim();
                 await handleChatbotCommand(sock, chatId, message, match);
                 break;
+            }
 
         case userMessage.startsWith(`${prefix}yts`) ||
              userMessage.startsWith(`${prefix}ytsearch`):
@@ -2497,7 +2526,6 @@ case userMessage === `${prefix}forfeit` ||
                         handleMentionDetection(sock, chatId, message),
                         handleStickerDetection(sock, chatId, message, senderId)
                     ];
-                    if (userMessage) tasks.unshift(handleChatbotResponse(sock, chatId, message, userMessage, senderId));
                     await Promise.allSettled(tasks);
                 }
                 commandExecuted = false;
