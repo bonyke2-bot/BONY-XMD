@@ -43,6 +43,31 @@ function log(message, color = 'white', isError = false) {
 // ── Global flags ───────────────────────────────────────────────────────────────
 
 global.isBotConnected        = false;
+global.activeBotSocket = null;
+global.botStartPromise = null;
+
+global.reconnectTimer = null;
+global.reconnectAttempts = 0;
+
+function scheduleBotReconnect() {
+    if (global.reconnectTimer) return;
+
+    global.reconnectAttempts = Math.min(global.reconnectAttempts + 1, 6);
+    const waitMs = Math.min(5000 * (2 ** (global.reconnectAttempts - 1)), 30000);
+
+    log(`Reconnect scheduled in ${Math.round(waitMs / 1000)} seconds (attempt ${global.reconnectAttempts}).`, 'yellow');
+
+    global.reconnectTimer = setTimeout(async () => {
+        global.reconnectTimer = null;
+        try {
+            await startXeonBotInc();
+        } catch (err) {
+            log(`Reconnect startup failed: ${err.message}`, 'red', true);
+            scheduleBotReconnect();
+        }
+    }, waitMs);
+}
+
 global.connectDebounceTimeout = null;
 global.errorRetryCount       = 0;
 
@@ -499,22 +524,12 @@ async function handle408Error(statusCode) {
     if (statusCode !== DisconnectReason.connectionTimeout) return false;
 
     global.errorRetryCount++;
-    const MAX_RETRIES  = 3;
-    const errorState   = loadErrorCount();
-    errorState.count   = global.errorRetryCount;
+    const errorState = loadErrorCount();
+    errorState.count = global.errorRetryCount;
     errorState.last_error_timestamp = Date.now();
     saveErrorCount(errorState);
 
-    log(`Connection timeout (408). Retry ${global.errorRetryCount}/${MAX_RETRIES}`, 'yellow');
-
-    if (global.errorRetryCount >= MAX_RETRIES) {
-        log(chalk.white.bgRed(`[MAX TIMEOUTS] ${MAX_RETRIES} reached. Exiting to stop restart loop.`), 'white');
-        deleteErrorCountFile();
-        global.errorRetryCount = 0;
-        await delay(5000);
-        process.exit(1);
-    }
-
+    log(`Connection timeout (408). Automatic reconnection will be scheduled (timeout ${global.errorRetryCount}).`, 'yellow');
     return true;
 }
 
@@ -558,7 +573,7 @@ function checkEnvStatus() {
 
 // ── Main bot socket ────────────────────────────────────────────────────────────
 
-async function startXeonBotInc() {
+async function startXeonBotIncInternal() {
     log('Connecting to WhatsApp...', 'cyan');
 
     const { version } = await fetchLatestBaileysVersion();
@@ -604,6 +619,7 @@ async function startXeonBotInc() {
         msgRetryCounterCache,
     });
 
+    global.activeBotSocket = XeonBotInc;
     store.bind(XeonBotInc.ev);
     console.log('[DIAG IDENTITY]', JSON.stringify({meId: state.creds.me?.id || null, meLid: state.creds.me?.lid || null}));
 
@@ -648,6 +664,9 @@ async function startXeonBotInc() {
 
         if (connection === 'close') {
             global.isBotConnected = false;
+            if (global.activeBotSocket === XeonBotInc) {
+                global.activeBotSocket = null;
+            }
 
             const statusCode      = lastDisconnect?.error?.output?.statusCode;
             const permanentLogout =
@@ -661,12 +680,16 @@ async function startXeonBotInc() {
                 process.exit(1);
             } else {
                 const is408 = await handle408Error(statusCode);
-                if (is408) return;
+                if (is408) {
+                    scheduleBotReconnect();
+                    return;
+                }
                 log(`Temporary disconnect (status ${statusCode}). Reconnecting...`, 'yellow');
-                startXeonBotInc();
+                scheduleBotReconnect();
             }
 
         } else if (connection === 'open') {
+            global.reconnectAttempts = 0;
             log('BONY-XMD BOT CONNECTED ✅', 'yellow');
             await sendWelcomeMessage(XeonBotInc);
         }
@@ -716,6 +739,18 @@ async function startXeonBotInc() {
     setInterval(() => cleanupJunkFiles(XeonBotInc), 30_000);
 
     return XeonBotInc;
+}
+
+async function startXeonBotInc() {
+    if (global.activeBotSocket) return global.activeBotSocket;
+    if (global.botStartPromise) return global.botStartPromise;
+
+    global.botStartPromise = startXeonBotIncInternal();
+    try {
+        return await global.botStartPromise;
+    } finally {
+        global.botStartPromise = null;
+    }
 }
 
 // ── Main entry point ───────────────────────────────────────────────────────────
