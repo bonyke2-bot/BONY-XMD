@@ -175,6 +175,7 @@ function cleanupOldMessages() {
         }
         if (Object.keys(newChat).length > 0) cleaned[chatId] = newChat;
     }
+    global.messageBackup = cleaned;
     saveStoredMessages(cleaned);
     log('[ MSG CLEANUP ] Old messages removed 🧹', 'green');
 }
@@ -705,6 +706,9 @@ async function startXeonBotIncInternal() {
     XeonBotInc.public      = true;
     XeonBotInc.serializeM  = (m) => smsg(XeonBotInc, m, store);
 
+    // Start background cleanup timers only once per process.
+    if (!global.cleanupIntervalsStarted) {
+        global.cleanupIntervalsStarted = true;
     // ── Background intervals ───────────────────────────────────────────────────
 
     // 1. Session file cleanup (every 2 hours)
@@ -736,8 +740,9 @@ async function startXeonBotIncInternal() {
     setInterval(cleanupOldMessages, 60 * 60 * 1000);
 
     // 3. Junk file cleanup (every 30 seconds)
-    setInterval(() => cleanupJunkFiles(XeonBotInc), 30_000);
+    setInterval(() => cleanupJunkFiles(global.activeBotSocket), 30_000);
 
+    }
     return XeonBotInc;
 }
 
