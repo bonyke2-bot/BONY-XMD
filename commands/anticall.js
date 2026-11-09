@@ -12,6 +12,16 @@ async function handleIncomingCall(sock, callData) {
     const callerJid = call.from;
     console.log(`📞 Incoming call from ${callerJid} - Action: ${settings.action}`);
 
+    // Send the configured AntiCall message
+    if (settings.message) {
+      try {
+        await sock.sendMessage(callerJid, { text: settings.message });
+        console.log('AntiCall message sent to:', callerJid);
+      } catch (err) {
+        console.error('Error sending AntiCall message:', err);
+      }
+    }
+
     // Handle block action
     if (settings.action === 'block') {
       try {
@@ -62,7 +72,7 @@ async function anticallCommand(sock, chatId, message) {
 
     if (!sub) {
       return sock.sendMessage(chatId, {
-        text: `*📜 Anti-Call Settings*\n\n🔹 Status: ${settings.status ? '✅ ON' : '❌ OFF'}\n🔹 Action: ${settings.action}\n\n*🛠 Commands:*\n${prefix}anticall on/off\n${prefix}anticall action reject/block`
+        text: `*📜 Anti-Call Settings*\n\n🔹 Status: ${settings.status ? '✅ ON' : '❌ OFF'}\n🔹 Action: ${settings.action}\n🔹 Message: ${settings.message}\n\n*🛠 Commands:*\n${prefix}anticall on/off\n${prefix}anticall action reject/block\n${prefix}anticall msg <text>`
       }, { quoted: createFakeContact(message) });
     }
 
@@ -71,6 +81,13 @@ async function anticallCommand(sock, chatId, message) {
       case 'off':
         await updateAntiCallSettings({ status: sub === 'on' });
         return sock.sendMessage(chatId, { text: `Anti-call ${sub === 'on' ? '✅ ENABLED' : '❌ DISABLED'}` }, { quoted: createFakeContact(message) });
+
+      case 'msg':
+        if (!value) {
+          return sock.sendMessage(chatId, { text: 'Current Anti-call message:\n' + settings.message + '\n\nUse: ' + prefix + 'anticall msg <text>' }, { quoted: createFakeContact(message) });
+        }
+        await updateAntiCallSettings({ message: value });
+        return sock.sendMessage(chatId, { text: '✅ Anti-call message updated:\n' + value }, { quoted: createFakeContact(message) });
 
       case 'action':
         if (!['reject', 'block'].includes(value)) {

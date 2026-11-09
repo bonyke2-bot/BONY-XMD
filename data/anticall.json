@@ -1,1 +1,5 @@
-
+{
+  "status": false,
+  "action": "reject",
+  "message": "📵 Sorry, I don't accept WhatsApp calls. Please send me a message instead. Thank you!"
+}
