@@ -1,54 +1,77 @@
 const { getAntiCallSettings, updateAntiCallSettings } = require('../lib/database');
 const { isSudo } = require('../lib/index');
 
-// Handle incoming calls
+// Handle incoming calls with duplicate protection
+const processedCallIds = new Map();
+const lastAntiCallMessage = new Map();
+const CALL_DEDUP_WINDOW_MS = 120000;
+const MESSAGE_COOLDOWN_MS = 60000;
+
 const { createFakeContact } = require('../lib/fakeContact');
+
 async function handleIncomingCall(sock, callData) {
-  try {
-    const settings = await getAntiCallSettings();
-    if (!settings.status) return;
+    const calls = Array.isArray(callData) ? callData : [callData];
 
-    const call = callData[0];
-    const callerJid = call.from;
-    console.log(`📞 Incoming call from ${callerJid} - Action: ${settings.action}`);
+    for (const call of calls) {
+        if (!call?.id || !call?.from) continue;
 
-    // Send the configured AntiCall message
-    if (settings.message) {
-      try {
-        await sock.sendMessage(callerJid, { text: settings.message });
-        console.log('AntiCall message sent to:', callerJid);
-      } catch (err) {
-        console.error('Error sending AntiCall message:', err);
-      }
-    }
+        const callerJid = call.from;
+        const callKey = `${callerJid}:${call.id}`;
+        const now = Date.now();
 
-    // Handle block action
-    if (settings.action === 'block') {
-      try {
-        await sock.updateBlockStatus(callerJid, 'block');
-        console.log(`🚫 Blocked caller: ${callerJid}`);
-
-        const adminJid = process.env.ADMIN_JID;
-        if (adminJid) {
-          await sock.sendMessage(`${adminJid}@s.whatsapp.net`, {
-            text: `🚨 *Call Blocked*\n📞 Caller: ${callerJid}\n🕐 Time: ${new Date().toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })}\n📝 Reason: Anti-call protection`
-          });
+        for (const [key, timestamp] of processedCallIds) {
+            if (now - timestamp > CALL_DEDUP_WINDOW_MS) {
+                processedCallIds.delete(key);
+            }
         }
-      } catch (err) {
-        console.error('Error blocking user:', err);
-      }
-    }
 
-    // Reject call
-    try {
-      await sock.rejectCall(call.id, call.from);
-      console.log(`❌ Rejected call from: ${callerJid}`);
-    } catch (err) {
-      console.error('Error rejecting call:', err);
+        if (processedCallIds.has(callKey)) continue;
+        processedCallIds.set(callKey, now);
+
+        try {
+            const settings = await getAntiCallSettings();
+            if (!settings.status) continue;
+
+            console.log(`📞 Incoming call from ${callerJid} - Action: ${settings.action}`);
+
+            const lastSent = lastAntiCallMessage.get(callerJid) || 0;
+
+            if (settings.message && now - lastSent >= MESSAGE_COOLDOWN_MS) {
+                lastAntiCallMessage.set(callerJid, now);
+                try {
+                    await sock.sendMessage(callerJid, { text: settings.message });
+                    console.log('AntiCall message sent once to:', callerJid);
+                } catch (err) {
+                    console.error('AntiCall message error:', err);
+                }
+            }
+
+            if (settings.action === 'block') {
+                try {
+                    await sock.updateBlockStatus(callerJid, 'block');
+                    console.log(`🚫 Blocked caller: ${callerJid}`);
+
+                    const adminJid = process.env.ADMIN_JID;
+                    if (adminJid) {
+                        await sock.sendMessage(`${adminJid}@s.whatsapp.net`, {
+                            text: `🚨 *Call Blocked*\n📞 Caller: ${callerJid}\n🕐 Time: ${new Date().toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })}\n📝 Reason: Anti-call protection`
+                        });
+                    }
+                } catch (err) {
+                    console.error('Error blocking user:', err);
+                }
+            }
+
+            try {
+                await sock.rejectCall(call.id, callerJid);
+                console.log(`❌ Rejected call from: ${callerJid}`);
+            } catch (err) {
+                console.error('Error rejecting call:', err);
+            }
+        } catch (err) {
+            console.error('Error in call handler:', err);
+        }
     }
-  } catch (err) {
-    console.error('Error in call handler:', err);
-  }
 }
 
 // Anti-call command
